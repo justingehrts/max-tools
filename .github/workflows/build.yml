@@ -1,0 +1,125 @@
+name: Build and publish site
+
+# One workflow builds everything and deploys once: a Pages deploy replaces the whole site, so two separate
+# workflows would erase each other's files. Anything this run fails to produce is copied from the live site
+# (tools/carry_over.py) before deploying, and the run ends red so you hear about it.
+
+on:
+  schedule:
+    - cron: '20 * * * *'   # 20 minutes past every hour
+  workflow_dispatch:       # lets you (and later the configurator endpoint) run it by hand
+  push:
+    branches: [main]
+    paths:
+      - 'records/**'
+      - 'tools/**'
+      - 'schema/**'
+      - 'configs.json'
+      - 'markets.json'
+      - '.github/workflows/build.yml'
+
+permissions:
+  contents: write          # only used to save newly learned NOAA stations back to records/stations.csv
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    env:
+      NWS_CONTACT: ${{ vars.NWS_CONTACT }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check the National Weather Service contact address is set
+        run: |
+          if [ -z "$NWS_CONTACT" ]; then
+            echo "::error::Add a repository variable named NWS_CONTACT (Settings > Secrets and variables > Actions > Variables) with a shared weather-team email address. NWS asks automated tools to identify an owner."
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python packages
+        run: pip install matplotlib jsonschema numpy scipy pygrib requests
+
+      - name: Check the registry
+        run: python tools/registry.py || echo "::warning::Registry problems found; bad entries are skipped. See above."
+
+      # ---------- record dots ----------
+      - name: Write config for the record dots script
+        run: |
+          mkdir -p site/records/default /tmp/navdata
+          jq -n --arg email "$NWS_CONTACT" --arg kml "$PWD/site/records/default" \
+            '{station:{name:"MaxTools",contactEmail:$email},recordDots:{kmlFolder:$kml,navDataFolder:"/tmp/navdata"}}' > records/config.json
+
+      - name: Fetch NOAA lists and build the default record dot KMZs
+        id: records_fetch
+        continue-on-error: true
+        shell: pwsh
+        working-directory: records
+        run: ./FetchDailyRecords.ps1
+
+      - name: Build each market's styled record dots
+        id: records_styles
+        continue-on-error: true
+        run: python tools/build_record_styles.py --site site --run-log records/run_log.txt
+
+      # ---------- flash flood guidance ----------
+      - name: Build flash flood guidance for every market
+        id: ffg
+        continue-on-error: true
+        run: python tools/build_ffg.py --site site
+
+      # ---------- publish ----------
+      - name: Keep the last published copy of anything that was not rebuilt
+        run: |
+          python tools/carry_over.py --site site --base "https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}" --report carry_report.json
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+
+      - name: Save newly learned NOAA stations
+        run: |
+          if ! git diff --quiet -- records/stations.csv; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add records/stations.csv
+            git commit -m "Learn new NOAA stations"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push
+          fi
+
+      - name: Turn the run red if anything went wrong
+        run: |
+          # The site is already deployed (with the last good copy of anything that failed).
+          # This step only makes sure somebody notices.
+          bad=0
+          if [ "${{ steps.records_fetch.outcome }}" != "success" ]; then echo "::error::Record dots download step failed."; bad=1; fi
+          if [ "${{ steps.records_styles.outcome }}" != "success" ]; then echo "::error::Record dots styling step failed."; bad=1; fi
+          if [ "${{ steps.ffg.outcome }}" != "success" ]; then echo "::error::Flash flood guidance step failed."; bad=1; fi
+          carried=$(jq '.carried | length' carry_report.json)
+          if [ "$carried" -gt 0 ]; then echo "::error::$carried file(s) were not rebuilt this run and show the last published copy."; bad=1; fi
+          skipped=$(jq '[.styles[]? | select(.status=="skipped")] | length' site/records/status.json 2>/dev/null || echo 0)
+          if [ "$skipped" -gt 0 ]; then echo "::error::$skipped registry entr(y/ies) skipped for record dots."; bad=1; fi
+          failed=$(jq '(.failed | length) + (.registryProblems | length)' site/ffg/status.json 2>/dev/null || echo 0)
+          if [ "$failed" -gt 0 ]; then echo "::error::$failed flash flood guidance problem(s); see status.json."; bad=1; fi
+          exit $bad

@@ -73,9 +73,11 @@ def main():
     have = sorted(p.name for p in default_dir.glob('*.kmz')) if default_dir.is_dir() else []
     missing = sorted(set(EXPECTED) - set(have))
     if missing:
-        print(f'::error::Only {len(have)} of 28 default KMZs exist (missing: {", ".join(missing[:6])}...). '
-              'Not publishing, so the previous site stays online.')
-        return 2
+        # Keep the set consistent: drop the partial copy so carry_over restores the last complete one.
+        print(f'::error::Only {len(have)} of 28 default KMZs were produced (missing: {", ".join(missing[:6])}...). '
+              'Keeping the last published record dots instead.')
+        import shutil; shutil.rmtree(site / 'records', ignore_errors=True)
+        return 0
 
     markets, market_problems = registry.load_markets(args.root)
     configs, config_problems = registry.load_configs(args.root, markets)

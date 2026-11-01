@@ -22,10 +22,14 @@ Read `docs/PLAN.md` first (decisions, status, work order; the repo layout is you
 - A failed or partial data run must **not** deploy over the last good site. Fail the job before deploying.
 - PowerShell files shipped to Windows: ASCII only, CRLF, UTF-8 with BOM (Windows PowerShell 5.1 misreads BOM-less UTF-8).
 - Keep the configurator a single self-contained HTML file (no external requests except what is stated in GUI.md).
+- One workflow, one Pages deploy (a deploy replaces the whole site). New pipelines go into `.github/workflows/build.yml`, and their files must be listed in `tools/expected.py`.
 - Don't claim something works on GitHub/Windows unless it was run there. PLAN.md lists what is verified and what is not.
 
 ## Commands that worked in the prototypes
-- Record dots, CI-style run: write `config.json`, then `pwsh -NoProfile -File ./FetchDailyRecords.ps1`, then
-  `python cloud/build_styles.py --site site --styles cloud/styles.json --run-log run_log.txt` (needs `pip install matplotlib`).
+- Record dots, CI-style run: write `records/config.json`, then in `records/`: `pwsh -NoProfile -File ./FetchDailyRecords.ps1`, then
+  `python tools/build_record_styles.py --site site --run-log records/run_log.txt` (needs `pip install matplotlib jsonschema`).
+- FFG: `python tools/build_ffg.py --site site [--grib file] [--only market-id]` (needs numpy scipy matplotlib pygrib requests). Then
+  `python tools/carry_over.py --site site --base https://justingehrts.github.io/max-tools` restores anything not rebuilt.
+- Tests: `python -m unittest discover tests`. Contact sheet: `python reference/contact_sheet.py`.
 - Configurator: `python3 build.py` (inlines src + payload into out/index.html), `node test_lib.js`.
 - PowerShell syntax check without Windows: PowerShell 7 `[System.Management.Automation.Language.Parser]::ParseFile(...)`.
