@@ -6,7 +6,7 @@ name: Build and publish site
 
 on:
   schedule:
-    - cron: '20 * * * *'   # 20 minutes past every hour
+    - cron: '45 * * * *'   # WPC posts the hourly FFG mosaic at ~:38
   workflow_dispatch:       # lets you (and later the configurator endpoint) run it by hand
   push:
     branches: [main]

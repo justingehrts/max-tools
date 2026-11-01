@@ -54,6 +54,36 @@ class FFG(unittest.TestCase):
         self.assertEqual(sorted(e['ffg']), sorted([j[0] for j in jobs] + ['ffg/status.json']))
 
 
+GOOD = b'GRIB' + b'x' * 200_000 + b'7777'
+
+
+class GribHandler(http.server.BaseHTTPRequestHandler):
+    def log_message(self, *a): pass
+    def do_GET(self):
+        body = {'/html': b'<html>error</html>', '/trunc': GOOD[:-10], '/good': GOOD, '/good2': GOOD}.get(self.path)
+        if body is None: self.send_response(404); self.end_headers(); return
+        self.send_response(200); self.end_headers(); self.wfile.write(body)
+
+
+class Download(unittest.TestCase):
+    def test_complete_grib(self):
+        self.assertTrue(build_ffg.complete_grib(GOOD))
+        self.assertFalse(build_ffg.complete_grib(GOOD[:-1])); self.assertFalse(build_ffg.complete_grib(b'<html>' + GOOD))
+
+    def test_falls_through_bad_sources_to_first_good_one(self):
+        srv = http.server.HTTPServer(('127.0.0.1', 0), GribHandler); threading.Thread(target=srv.serve_forever, daemon=True).start()
+        u = f'http://127.0.0.1:{srv.server_port}'
+        loaded, real = [], build_ffg.load_grids
+        build_ffg.load_grids = lambda p: loaded.append(p)
+        try:
+            dest = Path(tempfile.mkdtemp()) / 'g.grib2'
+            src = [('wpc-missing', u + '/nope'), ('wpc-html', u + '/html'), ('wpc-trunc', u + '/trunc'), ('iem', u + '/good'), ('never', u + '/good2')]
+            self.assertEqual(build_ffg.fetch_and_load(dest, src), 'iem'); self.assertEqual(len(loaded), 1)
+            with self.assertRaises(RuntimeError): build_ffg.fetch_and_load(dest, src[:3])
+        finally:
+            build_ffg.load_grids = real; srv.shutdown()
+
+
 class Handler(http.server.BaseHTTPRequestHandler):
     def log_message(self, *a): pass
     def do_GET(self):

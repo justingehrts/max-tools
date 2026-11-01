@@ -3,7 +3,8 @@
 
     python tools/build_ffg.py --site site [--grib file.grib2] [--only columbus-oh] [--workers 4]
 
-Data: the newest NCEP/WPC 5 km FFG GRIB2 file in the IEM archive (today, else 1 or 2 days back).
+Data: the newest hourly WPC 5 km national FFG mosaic (ftp-wpc.ncep.noaa.gov/workoff/ffg/*.g2); if that fails,
+the 6-hourly copy in the IEM archive. Every file is checked complete and must load before it is used.
 Work is done once per duration (convert to inches, NaN-aware Gaussian smoothing), then each render crops
 the grid to its box before contouring.
 
@@ -25,6 +26,7 @@ STANDARD = ['#67000d', '#a50f15', '#cb181d', '#ef3b2c', '#fc9272', '#fff5f0', '#
 LEGACY_BOX = (-85.0, 38.0, -80.0, 42.0)                              # the live Ohio files: never change
 SIGMA = 0.6
 MARGIN = 0.5                                                         # degrees of extra grid kept around a box
+WPC = 'https://ftp-wpc.ncep.noaa.gov/workoff/ffg/'
 IEM = 'https://mesonet.agron.iastate.edu/archive/data/{ymd}/model/ffg/'
 UA = {'User-Agent': 'MaxTools-FFG/1.0 (+https://github.com/justingehrts/max-tools)'}
 
@@ -32,29 +34,58 @@ G = {}   # per-duration grids, shared with worker processes (fork)
 
 
 # ---------------------------------------------------------------- download
-def download_latest(dest, now=None):
-    """Return (grib_id, path). Raises RuntimeError if nothing can be downloaded."""
+def _listing(url):
     import requests
+    r = requests.get(url, headers=UA, timeout=30)
+    r.raise_for_status()
+    return sorted(set(re.findall(r'href="(5kmffg_\d{10}\.(?:g2|grb2|grib2))"', r.text, re.I)), reverse=True)
+
+
+def candidates(now=None):
+    """Yield (label, url) newest-first: WPC hourly mosaic, then IEM's 6-hourly mirror (today, 1 and 2 days back).
+
+    WPC rebuilds the national mosaic every hour at ~:38 from whatever the RFCs have sent (5kmffg_YYYYMMDDHH.g2).
+    The 6-hourly files are snapshots of the same mosaic posted ~4-5 h after the cycle, so they are only a fallback.
+    A listing that cannot be read is skipped; the next source is tried.
+    """
     now = now or datetime.datetime.now(datetime.timezone.utc)
-    last_err = None
+    try:
+        for name in [n for n in _listing(WPC) if n.endswith('.g2')][:3]:
+            yield f'WPC hourly {name}', WPC + name
+    except Exception as ex:
+        print(f'::warning::WPC listing failed ({ex}); falling back to IEM.')
     for back in (0, 1, 2):
         base = IEM.format(ymd=(now - datetime.timedelta(days=back)).strftime('%Y/%m/%d'))
         try:
-            r = requests.get(base, headers=UA, timeout=30)
-            if r.status_code != 200:
-                last_err = f'{base} -> HTTP {r.status_code}'; continue
-            names = sorted(set(re.findall(r'href="([^"/]*5kmffg_\d{10}\.grib2)"', r.text, re.I)))
-            if not names:
-                last_err = f'{base} -> no GRIB files listed'; continue
-            for name in reversed(names):                       # newest first; fall back if one is bad
-                g = requests.get(base + name, headers=UA, timeout=120)
-                if g.status_code == 200 and len(g.content) > 100_000 and g.content[:4] == b'GRIB':
-                    Path(dest).write_bytes(g.content)
-                    return name[:-len('.grib2')], dest
-                last_err = f'{name} -> HTTP {g.status_code}, {len(g.content)} bytes'
-        except Exception as ex:  # network trouble: try the next day back
-            last_err = f'{base}: {ex}'
-    raise RuntimeError(f'no usable FFG GRIB2 file ({last_err})')
+            for name in _listing(base)[:2]:
+                yield f'IEM 6-hourly {name}', base + name
+        except Exception as ex:
+            print(f'::warning::IEM listing {base} failed ({ex}).')
+
+
+def complete_grib(data):
+    """A GRIB2 file starts with 'GRIB' and ends with '7777'; anything else is truncated or an error page."""
+    return len(data) > 100_000 and data[:4] == b'GRIB' and data[-4:] == b'7777'
+
+
+def fetch_and_load(dest, sources=None):
+    """Download candidates in order until one downloads completely AND loads. Returns its label.
+    Raises RuntimeError listing every attempt if none works."""
+    import requests
+    tried = []
+    for label, url in (sources if sources is not None else candidates()):
+        try:
+            r = requests.get(url, headers=UA, timeout=120)
+            if r.status_code != 200 or not complete_grib(r.content):
+                tried.append(f'{label}: HTTP {r.status_code}, {len(r.content)} bytes, incomplete'); continue
+            Path(dest).write_bytes(r.content)
+            load_grids(dest)
+            if tried:
+                print(f'::warning::Used {label} after: ' + '; '.join(tried))
+            return label
+        except Exception as ex:
+            tried.append(f'{label}: {type(ex).__name__}: {ex}')
+    raise RuntimeError('no usable FFG GRIB2 file. Tried: ' + ('; '.join(tried) or 'nothing was listed'))
 
 
 # ---------------------------------------------------------------- data prep
@@ -200,10 +231,9 @@ def main():
 
     try:
         if a.grib:
-            gid, path = Path(a.grib).stem, a.grib
+            gid = f'local {Path(a.grib).name}'; load_grids(a.grib)
         else:
-            gid, path = download_latest('latest_ffg.grib2')
-        load_grids(path)
+            gid = fetch_and_load('latest_ffg.grib2')
     except Exception as ex:
         print(f'::error::FFG data problem, nothing was built: {ex}')
         return 2
@@ -212,7 +242,7 @@ def main():
             Path('latest_ffg.grib2').unlink()
 
     built = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
-    stamp = f'Built {built} from {gid} (valid {G["valid"][:8]} {G["valid"][8:]} UTC)'
+    stamp = f'Built {built} from {gid} (RFC cycle {G["valid"][:8]} {G["valid"][8:]} UTC)'
     jobs, problems, n_custom = make_jobs(a.root, site, stamp, a.only)
     for p in problems:
         print(f'::warning::Registry problem with {p["id"] or "the file"}: {p["message"]}')
@@ -227,7 +257,7 @@ def main():
     failed = [{'file': r, 'error': e} for r, e, _ in results if e]
     for f in failed:
         print(f'::error::FFG render failed for {f["file"]}: {f["error"]}')
-    status = {'generatedUtc': built, 'grib': gid, 'validUtc': G['valid'], 'built': len(results) - len(failed),
+    status = {'generatedUtc': built, 'source': gid, 'grib': gid.split()[-1], 'rfcCycleUtc': G['valid'], 'built': len(results) - len(failed),
               'failed': failed, 'registryProblems': problems, 'customRamps': n_custom,
               'seconds': round(time.time() - t0, 1)}
     (site / 'ffg').mkdir(parents=True, exist_ok=True)

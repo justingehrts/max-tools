@@ -76,8 +76,12 @@ with no software installed locally and an optional way to change how the layers 
 7. **Hardening/docs.** Keepalive for the 60-day rule if real, monitoring page, Max setup instructions for stations.
 
 ## FFG pipeline spec (what the analysis found)
-- Data: IEM archive `https://mesonet.agron.iastate.edu/archive/data/YYYY/MM/DD/model/ffg/5kmffg_YYYYMMDDHH.grib2`
-  (latest file of the day; the existing script tries today, then 1 and 2 days back). 5 messages, `stepRange` = `0-1`, `0-3`,
+- Data (changed Nov 1): **primary = WPC hourly mosaic** `https://ftp-wpc.ncep.noaa.gov/workoff/ffg/5kmffg_YYYYMMDDHH.g2`, posted every hour
+  at ~:38 (~41 h kept; 1/3/6 h only). WPC rebuilds the mosaic hourly from whatever the RFCs have sent; on Nov 1, 2-7% of cells changed in
+  most hours. **Fallback = IEM** `https://mesonet.agron.iastate.edu/archive/data/YYYY/MM/DD/model/ffg/5kmffg_YYYYMMDDHH.grib2`, which mirrors
+  WPC's 6-hourly `.grb2` snapshots, posted ~4.5 h after the cycle (the 18Z file appeared at 22:37 and equals the 22Z hourly file). Every
+  candidate must be complete (`GRIB`...`7777`) and load, else the next is tried. The cycle time inside a file stays e.g. 18Z all afternoon,
+  so the KML stamp names the hourly file. 5 messages, `stepRange` = `0-1`, `0-3`,
   `0-6`, `0-12`, `0-24`, units kg m-2 (multiply by 0.0393701 for inches), grid shape (794, 1082). Match durations exactly
   (existing `'1' in step` only works because of message order). 12 h and 24 h exist if anyone wants them.
 - Fixed thresholds `[0, .5, .75, 1, 1.5, 2, 3, 10]` inches, 7 default colors (see `reference/ffg/generate_ffg.orig.py`).
@@ -111,7 +115,7 @@ with no software installed locally and an optional way to change how the layers 
   and the contact-sheet image (outline + kept/dropped pieces + box per market).
 
 ## Gotchas collected so far
-- IEM publishes a new FFG GRIB only every 6 hours (00/06/12/18 UTC), so an hourly rebuild mostly reproduces the same data (stamped with the GRIB id).
+- GitHub's cron is unreliable: on Nov 1 `20 * * * *` fired 2 of ~9 times between 13:50 and 23:15 UTC, each ~30 min late.
 - A Pages deploy replaces the whole site, so all pipelines share one workflow/deploy; `tools/expected.py` lists every file that must exist.
 - Windows PowerShell 5.1: non-ASCII in BOM-less scripts is misread; use ASCII, CRLF and a BOM. `Move-Item -Force` can fail
   on an existing destination (the script already works around this).
