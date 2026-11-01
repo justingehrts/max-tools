@@ -68,17 +68,22 @@ M = [
  ('spokane-wa', 'Spokane, WA', ['KREM', 'KSKN'], 'Spokane, WA'),
 ]
 
-dmas = dmabox.load()
-out, big = [], []
-for mid, name, calls, src in M:
-    if isinstance(src, tuple):
-        lat, lon = src
-        ext, note = (lon - 0.9, lat - 0.75, lon + 0.9, lat + 0.75), 'hand-sized (no DMA outline)'
-    else:
-        ext, dropped = dmabox.main_extent(dmas[src]); note = f'{len(dropped)} stray piece(s) dropped'
-    b = dmabox.box169(ext)
-    out.append({'id': mid, 'name': name, 'stations': calls, 'bounds': list(b)})
-    w, h = b[2] - b[0], b[3] - b[1]
-    print(f'{mid:30s} {w:5.1f} x {h:4.1f} deg  {note}', file=sys.stderr)
-json.dump({'schemaVersion': 1, 'markets': out}, sys.stdout, indent=1, ensure_ascii=False)
-print()
+def main():
+    dmas = dmabox.load()
+    out, big = [], []
+    for mid, name, calls, src in M:
+        if isinstance(src, tuple):
+            lat, lon = src
+            ext, note = (lon - 0.9, lat - 0.75, lon + 0.9, lat + 0.75), 'hand-sized (no DMA outline)'
+        else:
+            ext, dropped = dmabox.main_extent(dmas[src]); note = f'{len(dropped)} stray piece(s) dropped'
+        b = dmabox.box169(ext)
+        out.append({'id': mid, 'name': name, 'stations': calls, 'bounds': list(b)})
+        w, h = b[2] - b[0], b[3] - b[1]
+        print(f'{mid:30s} {w:5.1f} x {h:4.1f} deg  {note}', file=sys.stderr)
+    json.dump({'schemaVersion': 1, 'markets': out}, sys.stdout, indent=1, ensure_ascii=False)
+    print()
+
+
+if __name__ == '__main__':
+    main()

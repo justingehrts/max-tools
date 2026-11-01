@@ -6,3 +6,4 @@ records/kml_error.log
 __pycache__/
 records/missing_log.txt
 reference/.cache/
+contact-sheet/
