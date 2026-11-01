@@ -47,8 +47,8 @@ with no software installed locally and an optional way to change how the layers 
 | `FetchDailyRecords.ps1` config patch | Done. Reads optional `config.json` (folders, NWS User-Agent). Without it, behaves as before. Verified under PowerShell 7 with live NOAA data (28/28 downloads). Needed by the cloud workflow. |
 | Configurator page (`prototype-configurator/`) | Built for the **old local-installer approach**: Station settings + Record dots tabs, icon editor with live preview, zip download with Install.bat. Browser-tested. Needs rework per docs/GUI.md. Its icon drawing and validation code are reusable. |
 | Local Windows installer (`payload/install.ps1`) | Parses; **never run on Windows**. Now optional/legacy (only for a station that wants to run locally). |
-| FFG multi-market pipeline (`tools/build_ffg.py`) | **Built and tested locally; not yet run on GitHub.** Real GRIB (IEM 2026-11-01 12Z): 165 KMZs (54 markets x 3 + legacy Ohio x 3) in **16 s on 4 cores** (1.5 s data prep, ~0.9 s slowest render). Legacy Ohio output is **pixel-identical** to the original script on the same GRIB. Per-market failure isolation and custom ramps unit-tested. |
-| One workflow, one deploy (`.github/workflows/build.yml`) | Written; **not yet run on GitHub.** Replaces `records.yml`. Missing/failed files are restored from the live site (`tools/carry_over.py`) before deploy; the run then ends red. |
+| FFG multi-market pipeline (`tools/build_ffg.py`) | **Run on GitHub (Nov 1, run 41313087865): green, 165/165 KMZs, 30.7 s on the runner (2.7 s data prep), live on Pages.** Not yet exercised on GitHub: custom ramps, a render failure, carry-over from a real failure. Local tests:  Local, real GRIB (IEM 2026-11-01 12Z): 165 KMZs (54 markets x 3 + legacy Ohio x 3) in **16 s on 4 cores** (1.5 s data prep, ~0.9 s slowest render). Legacy Ohio output is **pixel-identical** to the original script on the same GRIB. Per-market failure isolation and custom ramps unit-tested. |
+| One workflow, one deploy (`.github/workflows/build.yml`) | **Run on GitHub, green** (records + FFG + deploy in ~80 s). Replaces `records.yml`. Missing/failed files are restored from the live site (`tools/carry_over.py`) before deploy; the run then ends red. |
 | Registry + PHP endpoint | **Not built.** |
 
 ### Unverified (do not assume)
@@ -94,7 +94,7 @@ with no software installed locally and an optional way to change how the layers 
   failure (no GRIB) fails before deploying.
 - Useful idea for the GUI: also publish a small indexed "bin map" PNG per market/duration (values 0..6 plus transparent)
   so the page can recolor it live in a canvas for an accurate ramp preview without any server round trip.
-- Size/bandwidth: current files are 150-280 KB each; 54 markets x 3 is ~40 MB; worst case ~27 GB/month if all stations pull
+- Size/bandwidth: current files are 150-280 KB each; 54 markets x 3 measured at 44.5 MB total, median 225 KB, but a few wide markets are big (Denver 1.2-1.5 MB each, Phoenix ~1 MB);  worst case ~27 GB/month if all stations pull
   hourly (soft Pages limit believed to be 100 GB/month; confirm).
 - Keep the repo public: public repos get free runner minutes; a private repo would likely exceed free minutes.
 
