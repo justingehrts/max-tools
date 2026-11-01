@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "styles": [
+    {
+      "id": "same-as-today",
+      "name": "WBNS",
+      "icons": {
+        "ring": {
+          "enabled": true,
+          "color": "#e2e2e2"
+        },
+        "himax": {
+          "shape": "circle",
+          "color": "#e30404"
+        },
+        "lomax": {
+          "shape": "circle",
+          "color": "#8797e8"
+        },
+        "himin": {
+          "shape": "circle",
+          "color": "#ff8c00"
+        },
+        "lomin": {
+          "shape": "circle",
+          "color": "#0021cf"
+        }
+      }
+    },
+    {
+      "id": "distinct",
+      "name": "KXYZ",
+      "icons": {
+        "ring": {
+          "enabled": true,
+          "color": "#e2e2e2"
+        },
+        "himax": {
+          "shape": "triangle",
+          "color": "#d55e00"
+        },
+        "lomax": {
+          "shape": "square",
+          "color": "#56b4e9"
+        },
+        "himin": {
+          "shape": "diamond",
+          "color": "#e69f00"
+        },
+        "lomin": {
+          "shape": "circle",
+          "color": "#0072b2"
+        }
+      }
+    },
+    {
+      "id": "no-ring",
+      "name": "KABC",
+      "icons": {
+        "ring": {
+          "enabled": false,
+          "color": "#e2e2e2"
+        },
+        "himax": {
+          "shape": "triangle",
+          "color": "#d55e00"
+        },
+        "lomax": {
+          "shape": "square",
+          "color": "#56b4e9"
+        },
+        "himin": {
+          "shape": "diamond",
+          "color": "#e69f00"
+        },
+        "lomin": {
+          "shape": "circle",
+          "color": "#0072b2"
+        }
+      }
+    }
+  ]
+}

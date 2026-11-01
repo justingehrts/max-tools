@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "markets": [
+    { "id": "columbus-oh", "name": "Columbus, OH", "bounds": [-86.04, 38.55, -79.43, 41.40] }
+  ]
+}

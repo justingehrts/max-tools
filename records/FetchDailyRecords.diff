@@ -1,0 +1,29 @@
+48a49,70
+> # --- OPTIONAL config.json (written by the station configurator page) ---
+> # If config.json is not next to this script, the built-in defaults above are used,
+> # so a setup that already works keeps working unchanged.
+> $nwsUserAgent = "WBNS-Weather-Bot (justin.gehrts@10tv.com)"
+> $configFile = Join-Path $scriptDir "config.json"
+> $configNote = "No config.json found; using built-in defaults."
+> if (Test-Path -LiteralPath $configFile) {
+>     # A config file means this is a configured station: never fall back to someone else's contact address.
+>     $nwsUserAgent = "Record-Dots-Script"
+>     try {
+>         $cfg = Get-Content -LiteralPath $configFile -Raw -Encoding UTF8 | ConvertFrom-Json
+>         if ($cfg.recordDots.kmlFolder)     { $kmlFolder     = [string]$cfg.recordDots.kmlFolder }
+>         if ($cfg.recordDots.navDataFolder) { $navDataFolder = [string]$cfg.recordDots.navDataFolder }
+>         if ($cfg.station.contactEmail) {
+>             $nwsUserAgent = "{0}-Weather-Bot ({1})" -f ([string]$cfg.station.name), ([string]$cfg.station.contactEmail)
+>         }
+>         $configNote = "Loaded config.json for station '$($cfg.station.name)'."
+>     } catch {
+>         $configNote = "config.json could not be read ($($_.Exception.Message)); using built-in folders."
+>     }
+> }
+> 
+50a73
+> Write-RunLog "$configNote NWS User-Agent: $nwsUserAgent"
+94c117
+<             $res = Invoke-RestMethod -Uri $url -UserAgent "WBNS-Weather-Bot (justin.gehrts@10tv.com)" -TimeoutSec 4 -ErrorAction Stop
+---
+>             $res = Invoke-RestMethod -Uri $url -UserAgent $nwsUserAgent -TimeoutSec 4 -ErrorAction Stop

@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Max tools setup</title>
+<style>
+  :root {
+    --ink: #17212b;
+    --muted: #55636f;
+    --paper: #edf0f3;
+    --panel: #ffffff;
+    --line: #d2d9df;
+    --accent: #1f4fbf;
+    --accent-ink: #ffffff;
+    --good: #19703f;
+    --bad: #b3261e;
+    --scope: #19232c;
+    --scope-line: #2c3a46;
+    --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --mono: Consolas, "Cascadia Mono", "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #e6ebf0; --muted: #a0adb8; --paper: #11181e; --panel: #1a232b; --line: #30404c;
+      --accent: #7aa2ff; --accent-ink: #0b1220; --good: #5fcf8f; --bad: #ff8d84;
+      --scope: #0e151b; --scope-line: #243440;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--paper); }
+  body { margin: 0; font: 15px/1.5 var(--font); color: var(--ink); background: var(--paper); }
+  h1, h2, h3 { line-height: 1.2; margin: 0; letter-spacing: -0.005em; }
+  h1 { font-size: 19px; font-weight: 650; }
+  h2 { font-size: 24px; font-weight: 650; margin-bottom: 4px; }
+  h3 { font-size: 15px; font-weight: 650; }
+  p { margin: 0; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  .top { display: flex; align-items: baseline; gap: 14px; padding: 14px 24px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  .top .sub { color: var(--muted); font-size: 14px; }
+
+  .shell { display: grid; grid-template-columns: 210px minmax(0, 1fr) 300px; gap: 28px; max-width: 1280px; margin: 0 auto; padding: 24px; align-items: start; }
+  @media (max-width: 1100px) { .shell { grid-template-columns: 190px minmax(0, 1fr); } .package { grid-column: 1 / -1; position: static !important; } }
+  @media (max-width: 720px) { .shell { grid-template-columns: 1fr; padding: 14px; gap: 18px; } .top { padding: 12px 14px; flex-wrap: wrap; gap: 4px 12px; } }
+
+  /* tool list */
+  .rail { display: flex; flex-direction: column; gap: 4px; position: sticky; top: 16px; }
+  @media (max-width: 720px) { .rail { flex-direction: row; flex-wrap: wrap; position: static; } }
+  .rail button { all: unset; box-sizing: border-box; cursor: pointer; padding: 9px 12px; border-radius: 6px; border-left: 3px solid transparent; color: var(--muted); font-weight: 550; display: block; }
+  .rail button:hover { background: color-mix(in srgb, var(--panel) 70%, transparent); color: var(--ink); }
+  .rail button[aria-selected="true"] { background: var(--panel); color: var(--ink); border-left-color: var(--accent); box-shadow: 0 0 0 1px var(--line); }
+  .rail button[disabled] { cursor: default; opacity: 0.6; }
+  .rail button[disabled]:hover { background: none; color: var(--muted); }
+  .rail small { display: block; font-weight: 400; font-size: 12.5px; color: var(--muted); }
+  .rail button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  /* main */
+  main { min-width: 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 22px 24px; }
+  .lede { color: var(--muted); max-width: 62ch; margin-bottom: 18px; }
+  section[hidden] { display: none; }
+  .field { margin: 0 0 16px; max-width: 520px; }
+  label, .label { display: block; font-weight: 600; margin-bottom: 4px; }
+  input[type="text"], input[type="email"], select {
+    width: 100%; font: inherit; color: var(--ink); background: var(--panel); border: 1px solid #8e9ba6; border-radius: 6px; padding: 8px 10px; min-height: 38px;
+  }
+  @media (prefers-color-scheme: dark) { input[type="text"], input[type="email"], select { border-color: #5b6c79; } }
+  input.mono { font-family: var(--mono); font-size: 14px; }
+  input[aria-invalid="true"] { border-color: var(--bad); box-shadow: 0 0 0 1px var(--bad); }
+  .hint { color: var(--muted); font-size: 13.5px; margin-top: 4px; }
+  .err { color: var(--bad); font-size: 13.5px; margin-top: 4px; min-height: 0; }
+  .err:empty { display: none; }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 22px 0; }
+
+  /* scope preview: the one piece of drama on the page */
+  .scope { background: var(--scope); border-radius: 8px; padding: 16px 18px 14px; margin: 6px 0 22px; color: #dce4eb; border: 1px solid var(--scope-line); }
+  .scope-row { display: flex; flex-wrap: wrap; gap: 18px 26px; align-items: flex-end; }
+  .scope figure { margin: 0; text-align: center; }
+  .scope canvas.big { display: block; width: 88px; height: 88px; }
+  .scope figcaption { font-size: 12.5px; margin-top: 4px; color: #aebbc6; }
+  .scope .map { display: block; width: 100%; height: 118px; margin-top: 14px; border-radius: 4px; border: 1px solid var(--scope-line); }
+  .scope .cap { font-size: 12.5px; color: #9fb0bd; margin-top: 8px; }
+
+  .dots { display: grid; gap: 10px; margin-bottom: 14px; }
+  .dot-row { display: grid; grid-template-columns: minmax(150px, 1fr) auto auto; gap: 10px 14px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; }
+  @media (max-width: 560px) { .dot-row { grid-template-columns: 1fr; } }
+  .dot-row .name { font-weight: 600; }
+  .dot-row .note { font-size: 13px; color: var(--muted); font-weight: 400; }
+  .pair { display: flex; gap: 8px; align-items: center; }
+  input[type="color"] { width: 44px; height: 38px; padding: 2px; border: 1px solid #8e9ba6; border-radius: 6px; background: var(--panel); cursor: pointer; }
+  input.hex { width: 92px; font-family: var(--mono); font-size: 14px; }
+  .dot-row select { width: 130px; }
+  .checkrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 12px; }
+  .checkrow label { display: inline; margin: 0; font-weight: 600; }
+  input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+
+  .btn { font: inherit; font-weight: 600; cursor: pointer; border-radius: 6px; padding: 9px 14px; min-height: 38px; border: 1px solid #8e9ba6; background: var(--panel); color: var(--ink); }
+  .btn:hover { border-color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn[disabled] { opacity: 0.55; cursor: progress; }
+  .btnrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 6px; }
+  details { margin-top: 6px; }
+  summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
+  details .inner { padding-top: 12px; }
+  code, .mono { font-family: var(--mono); font-size: 13.5px; }
+
+  /* package panel */
+  .package { position: sticky; top: 16px; }
+  .package .card { padding: 18px 18px 16px; }
+  .package ul { list-style: none; margin: 12px 0 14px; padding: 0; }
+  .package li { display: flex; gap: 8px; align-items: baseline; padding: 4px 0; font-size: 14.5px; }
+  .tick { width: 1.2em; flex: none; text-align: center; font-weight: 700; }
+  .tick.ok { color: var(--good); }
+  .tick.no { color: var(--bad); }
+  .tick.later { color: var(--muted); }
+  .package .btn.primary { width: 100%; }
+  .status { margin-top: 10px; font-size: 14px; min-height: 1.5em; }
+  .status.bad { color: var(--bad); }
+  .status.good { color: var(--good); }
+  .inside { margin-top: 14px; font-size: 13.5px; color: var(--muted); }
+  .inside strong { color: var(--ink); font-weight: 600; }
+  .fine { font-size: 13px; color: var(--muted); margin-top: 12px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  input[type="file"] { display: none; }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Max tools setup</h1>
+  <p class="sub">Fill in your station, pick how it looks, download a package that installs itself.</p>
+</header>
+
+<div class="shell">
+  <nav class="rail" role="tablist" aria-label="Tools" aria-orientation="vertical">
+    <button role="tab" id="tab-btn-station" aria-controls="tab-station" aria-selected="true">Station settings<small>Used by every tool</small></button>
+    <button role="tab" id="tab-btn-dots" aria-controls="tab-dots" aria-selected="false" tabindex="-1">Record dots<small>Daily record temperatures</small></button>
+    <button role="tab" id="tab-btn-ffg" aria-selected="false" disabled>Flash flood guidance<small>Not built yet</small></button>
+  </nav>
+
+  <main>
+    <section id="tab-station" class="card" role="tabpanel" aria-labelledby="tab-btn-station">
+      <h2>Station settings</h2>
+      <p class="lede">Enter these once. Everything stays in this browser until you download a package.</p>
+
+      <div class="field">
+        <label for="f-name">Station name or call letters</label>
+        <input type="text" id="f-name" data-path="station.name" autocomplete="off" spellcheck="false" aria-describedby="h-name e-station.name">
+        <p class="hint" id="h-name">Identifies your requests to the National Weather Service, for example WBNS.</p>
+        <p class="err" id="e-station.name" data-err="station.name"></p>
+      </div>
+
+      <div class="field">
+        <label for="f-email">Contact email</label>
+        <input type="email" id="f-email" data-path="station.contactEmail" autocomplete="off" spellcheck="false" aria-describedby="h-email e-station.contactEmail">
+        <p class="hint" id="h-email">The National Weather Service asks automated tools to include a way to reach their owner. Use a shared newsroom or weather-team address.</p>
+        <p class="err" id="e-station.contactEmail" data-err="station.contactEmail"></p>
+      </div>
+
+      <div class="field">
+        <label for="f-machine">Name of the PC that will run the scripts <span class="hint" style="font-weight:400">(optional)</span></label>
+        <input type="text" id="f-machine" class="mono" data-path="station.maxMachine" autocomplete="off" spellcheck="false" aria-describedby="h-machine e-station.maxMachine">
+        <p class="hint" id="h-machine">For example WBNS-TVDC-2. Only used to write the network addresses in your setup notes.</p>
+        <p class="err" id="e-station.maxMachine" data-err="station.maxMachine"></p>
+      </div>
+    </section>
+
+    <section id="tab-dots" class="card" role="tabpanel" aria-labelledby="tab-btn-dots" hidden>
+      <h2>Record dots</h2>
+      <p class="lede">Pulls the National Weather Service lists of locations forecast to be at or near a daily record and turns them into dots for Max. The preview below shows your icons large, then at roughly on-air size.</p>
+
+      <div class="scope" aria-label="Preview of your four dot icons">
+        <div class="scope-row" id="scopeRow"></div>
+        <canvas class="map" id="scopeMap" role="img" aria-label="Your four icons scattered on a dark map at on-air size"></canvas>
+        <p class="cap">Bottom strip: the same icons at about 28 pixels, scattered the way a busy day looks.</p>
+      </div>
+
+      <div class="btnrow" role="group" aria-label="Starting looks">
+        <button type="button" class="btn" id="look-current">Current look</button>
+        <button type="button" class="btn" id="look-distinct">Distinct shapes</button>
+      </div>
+      <p class="hint" style="max-width:62ch">Current look matches the red, orange and blue dots in use today. Distinct shapes also gives each record type its own shape, which helps color-blind viewers.</p>
+
+      <h3 style="margin:16px 0 8px">Dots</h3>
+      <div class="dots" id="dotRows"></div>
+
+      <div class="checkrow">
+        <input type="checkbox" id="ring-on">
+        <label for="ring-on">Light ring around each dot</label>
+        <div class="pair"><input type="color" id="ring-color" aria-label="Ring color"><input type="text" class="hex" id="ring-hex" maxlength="7" spellcheck="false" aria-label="Ring color as hex"></div>
+      </div>
+      <p class="hint" style="max-width:62ch">The ring keeps dots readable on both light and dark maps. Without it, each dot gets a thin dark outline instead.</p>
+      <p class="err" data-err="recordDots.icons.ring"></p>
+      <p class="err" data-err="recordDots.icons.himax"></p>
+      <p class="err" data-err="recordDots.icons.lomax"></p>
+      <p class="err" data-err="recordDots.icons.himin"></p>
+      <p class="err" data-err="recordDots.icons.lomin"></p>
+
+      <hr>
+
+      <div class="field">
+        <label for="f-interval">How often to refresh</label>
+        <select id="f-interval" data-path="recordDots.intervalMinutes" data-number="1" aria-describedby="e-recordDots.intervalMinutes">
+          <option value="30">Every 30 minutes</option>
+          <option value="60">Every hour</option>
+          <option value="120">Every 2 hours</option>
+        </select>
+        <p class="hint">Each refresh downloads 28 small lists from the National Weather Service.</p>
+        <p class="err" id="e-recordDots.intervalMinutes" data-err="recordDots.intervalMinutes"></p>
+      </div>
+
+      <details id="advanced">
+        <summary>Advanced: folders and task name</summary>
+        <div class="inner">
+          <p class="hint" style="margin-bottom:14px;max-width:62ch">The defaults match the standard Max layout. Change them only if your PC is set up differently.</p>
+          <div class="field"><label for="f-install">Script folder</label>
+            <input type="text" id="f-install" class="mono" data-path="recordDots.installDir" spellcheck="false" aria-describedby="e-recordDots.installDir">
+            <p class="err" id="e-recordDots.installDir" data-err="recordDots.installDir"></p></div>
+          <div class="field"><label for="f-kml">Folder Max reads KMZ files from</label>
+            <input type="text" id="f-kml" class="mono" data-path="recordDots.kmlFolder" spellcheck="false" aria-describedby="e-recordDots.kmlFolder">
+            <p class="err" id="e-recordDots.kmlFolder" data-err="recordDots.kmlFolder"></p></div>
+          <div class="field"><label for="f-nav">Folder Max reads CSV files from</label>
+            <input type="text" id="f-nav" class="mono" data-path="recordDots.navDataFolder" spellcheck="false" aria-describedby="e-recordDots.navDataFolder">
+            <p class="err" id="e-recordDots.navDataFolder" data-err="recordDots.navDataFolder"></p></div>
+          <div class="field"><label for="f-task">Scheduled task name</label>
+            <input type="text" id="f-task" data-path="recordDots.taskName" spellcheck="false" aria-describedby="e-recordDots.taskName">
+            <p class="err" id="e-recordDots.taskName" data-err="recordDots.taskName"></p></div>
+          <div class="field"><label for="f-ref">Script version</label>
+            <input type="text" id="f-ref" class="mono" data-path="recordDots.scriptsRef" spellcheck="false" aria-describedby="h-ref e-recordDots.scriptsRef">
+            <p class="hint" id="h-ref">The GitHub branch or release the installer downloads the scripts from. Leave as main unless told otherwise.</p>
+            <p class="err" id="e-recordDots.scriptsRef" data-err="recordDots.scriptsRef"></p></div>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <aside class="package" aria-label="Your setup package">
+    <div class="card">
+      <h3>Your setup package</h3>
+      <ul id="checklist">
+        <li><span class="tick" id="tick-station" aria-hidden="true"></span><span id="txt-station">Station settings</span></li>
+        <li><span class="tick" id="tick-dots" aria-hidden="true"></span><span id="txt-dots">Record dots</span></li>
+        <li><span class="tick later" aria-hidden="true">&ndash;</span><span>Flash flood guidance (not built yet)</span></li>
+      </ul>
+      <button type="button" class="btn primary" id="download">Download setup package</button>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <p class="inside"><strong>Inside the zip:</strong> Install.bat, Uninstall.bat, SETUP.txt, your config.json, your four dot icons, and the installer scripts.</p>
+      <div class="btnrow" style="margin-top:14px">
+        <button type="button" class="btn" id="load-btn">Load earlier settings</button>
+        <button type="button" class="btn" id="reset-btn">Start over</button>
+      </div>
+      <input type="file" id="load-file" accept=".json,application/json">
+      <p class="fine">Load a config.json from an earlier package to pick up where you left off. Nothing you enter is uploaded; the package is built in this browser.</p>
+    </div>
+  </aside>
+</div>
+
+<script>
+/*LIB*/
+</script>
+<script>
+var PAYLOAD = /*PAYLOAD*/;
+</script>
+<script>
+/*APP*/
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+site/
+records/config.json
+records/run_log.txt
+records/exports/
+records/kml_error.log
+__pycache__/
+records/missing_log.txt
