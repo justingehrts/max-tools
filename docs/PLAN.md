@@ -51,11 +51,11 @@ with no software installed locally and an optional way to change how the layers 
 | Configurator page (`legacy/configurator-prototype/`) | Built for the **old local-installer approach**: Station settings + Record dots tabs, icon editor with live preview, zip download with Install.bat. Browser-tested. Needs rework per docs/GUI.md. Its icon drawing and validation code are reusable. |
 | Local Windows installer (`payload/install.ps1`) | Parses; **never run on Windows**. Now optional/legacy (only for a station that wants to run locally). |
 | FFG multi-market pipeline (`tools/build_ffg.py`) | **Run on GitHub (Nov 1, run 41313087865): green, 165/165 KMZs, 30.7 s on the runner (2.7 s data prep), live on Pages.** Not yet exercised on GitHub: custom ramps, a render failure, carry-over from a real failure. Local tests:  Local, real GRIB (IEM 2026-11-01 12Z): 165 KMZs (54 markets x 3 + legacy Ohio x 3) in **16 s on 4 cores** (1.5 s data prep, ~0.9 s slowest render). Legacy Ohio output is **pixel-identical** to the original script on the same GRIB. Per-market failure isolation and custom ramps unit-tested. |
-| One workflow, one deploy (`.github/workflows/build.yml`) | **Run on GitHub, green** (records + FFG + deploy in ~80 s). Replaces `records.yml`. Missing/failed files are restored from the live site (`tools/carry_over.py`) before deploy; the run then ends red. |
+| One workflow, one deploy (`.github/workflows/build.yml`) | **Run on GitHub, green** (records + FFG + deploy in ~2 min). **Failure handling verified on GitHub (Nov 1)** with the manual `simulate` input: one market's FFG failing (runs 41363015716: Columbus kept its previous files, others updated), all record dots failing (41363159022: 1,541 files kept), all FFG failing (41363304871: 166 files kept); each run deployed the last good copies and ended red. Failure **email** not yet confirmed by Justin. Replaces `records.yml`. Missing/failed files are restored from the live site (`tools/carry_over.py`) before deploy; the run then ends red. |
 | Registry + PHP endpoint | **Not built.** |
 
 ### Unverified (do not assume)
-- Any real GitHub Actions run (schedule, Pages deploy, the commit-back step for learned stations, `NWS_CONTACT` variable).
+- Failure emails from GitHub for red runs (scheduled runs notify whoever last edited the cron line; unconfirmed).
 - Whether the NWS API throttles GitHub's shared IPs (only ~3 station lookups per run happen).
 - Windows Task Scheduler / S4U registration in the legacy installer.
 - GitHub may delay cron runs and may pause schedules in repos with no activity for 60 days (from memory; confirm in docs).
@@ -118,6 +118,7 @@ with no software installed locally and an optional way to change how the layers 
   and the contact-sheet image (outline + kept/dropped pieces + box per market).
 
 ## Gotchas collected so far
+- Pages serves files with `cache-control: max-age=600`: a new deploy can take up to 10 minutes to show (also for carry-over's fetches).
 - GitHub's cron is unreliable: on Nov 1 `20 * * * *` fired 2 of ~9 times between 13:50 and 23:15 UTC, each ~30 min late.
 - A Pages deploy replaces the whole site, so all pipelines share one workflow/deploy; `tools/expected.py` lists every file that must exist.
 - Windows PowerShell 5.1: non-ASCII in BOM-less scripts is misread; use ASCII, CRLF and a BOM. `Move-Item -Force` can fail
