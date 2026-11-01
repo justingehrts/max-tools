@@ -118,6 +118,8 @@ with no software installed locally and an optional way to change how the layers 
   and the contact-sheet image (outline + kept/dropped pieces + box per market).
 
 ## Gotchas collected so far
+- GitHub's cron cannot be relied on: the old `ffg` repo's hourly `15 * * * *` ran 40 times Oct 10-18 with a median gap of 4.9 h (max 10.6 h).
+  Decision (Nov 1): Bluehost cron triggers the build at :45 via `workflow_dispatch` (docs/BLUEHOST.md); GitHub's schedule is the backup.
 - Pages serves files with `cache-control: max-age=600`: a new deploy can take up to 10 minutes to show (also for carry-over's fetches).
 - GitHub's cron is unreliable: on Nov 1 `20 * * * *` fired 2 of ~9 times between 13:50 and 23:15 UTC, each ~30 min late.
 - A Pages deploy replaces the whole site, so all pipelines share one workflow/deploy; `tools/expected.py` lists every file that must exist.
