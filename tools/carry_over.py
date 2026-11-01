@@ -39,7 +39,6 @@ def main():
     a = ap.parse_args()
     site, base = Path(a.site), a.base.rstrip('/')
     want = [p for group in expected.expected(a.root).values() for p in group]
-    want += ['index.html']
     gaps = [p for p in dict.fromkeys(want) if not (site / p).is_file()]
 
     def one(p):
