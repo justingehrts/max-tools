@@ -1,9 +1,7 @@
 {
   "schemaVersion": 1,
-  "stations": [
+  "configs": [
     {
-      "id": "wbns",
-      "name": "WBNS",
       "market": "columbus-oh",
       "recordDots": {
         "icons": {

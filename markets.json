@@ -1,6 +1,721 @@
 {
-  "schemaVersion": 1,
-  "markets": [
-    { "id": "columbus-oh", "name": "Columbus, OH", "bounds": [-86.04, 38.55, -79.43, 41.40] }
-  ]
+ "schemaVersion": 1,
+ "markets": [
+  {
+   "id": "huntsville-al",
+   "name": "Huntsville, AL",
+   "stations": [
+    "WZDX"
+   ],
+   "bounds": [
+    -89.23,
+    33.7,
+    -84.48,
+    35.89
+   ]
+  },
+  {
+   "id": "flagstaff-az",
+   "name": "Flagstaff, AZ",
+   "stations": [
+    "KNAZ-TV"
+   ],
+   "bounds": [
+    -114.15,
+    34.05,
+    -109.15,
+    36.35
+   ]
+  },
+  {
+   "id": "phoenix-az",
+   "name": "Phoenix, AZ",
+   "stations": [
+    "KPNX"
+   ],
+   "bounds": [
+    -117.84,
+    31.97,
+    -105.97,
+    37.46
+   ]
+  },
+  {
+   "id": "tucson-az",
+   "name": "Tucson, AZ",
+   "stations": [
+    "KMSB",
+    "KTTU"
+   ],
+   "bounds": [
+    -113.76,
+    30.7,
+    -108.62,
+    33.15
+   ]
+  },
+  {
+   "id": "fort-smith-fayetteville-ar",
+   "name": "Fort Smith–Fayetteville, AR",
+   "stations": [
+    "KFSM-TV"
+   ],
+   "bounds": [
+    -97.25,
+    34.11,
+    -91.15,
+    36.9
+   ]
+  },
+  {
+   "id": "little-rock-ar",
+   "name": "Little Rock, AR",
+   "stations": [
+    "KTHV"
+   ],
+   "bounds": [
+    -96.74,
+    32.76,
+    -88.59,
+    36.53
+   ]
+  },
+  {
+   "id": "sacramento-ca",
+   "name": "Sacramento, CA",
+   "stations": [
+    "KXTV"
+   ],
+   "bounds": [
+    -125.68,
+    36.73,
+    -116.3,
+    40.85
+   ]
+  },
+  {
+   "id": "san-diego-ca",
+   "name": "San Diego, CA",
+   "stations": [
+    "KFMB-TV"
+   ],
+   "bounds": [
+    -118.72,
+    32.13,
+    -114.96,
+    33.9
+   ]
+  },
+  {
+   "id": "denver-co",
+   "name": "Denver, CO",
+   "stations": [
+    "KUSA",
+    "KTVD"
+   ],
+   "bounds": [
+    -116.46,
+    36.19,
+    -93.84,
+    45.8
+   ]
+  },
+  {
+   "id": "hartford-new-haven-ct",
+   "name": "Hartford–New Haven, CT",
+   "stations": [
+    "WTIC-TV",
+    "WCCT-TV"
+   ],
+   "bounds": [
+    -74.65,
+    40.78,
+    -70.67,
+    42.45
+   ]
+  },
+  {
+   "id": "washington-dc",
+   "name": "Washington, DC",
+   "stations": [
+    "WUSA"
+   ],
+   "bounds": [
+    -81.48,
+    37.57,
+    -74.33,
+    40.69
+   ]
+  },
+  {
+   "id": "jacksonville-fl",
+   "name": "Jacksonville, FL",
+   "stations": [
+    "WJXX",
+    "WTLV"
+   ],
+   "bounds": [
+    -85.11,
+    28.92,
+    -78.91,
+    31.93
+   ]
+  },
+  {
+   "id": "tampa-fl",
+   "name": "Tampa–St. Petersburg, FL",
+   "stations": [
+    "WTSP"
+   ],
+   "bounds": [
+    -84.83,
+    26.54,
+    -78.97,
+    29.45
+   ]
+  },
+  {
+   "id": "atlanta-ga",
+   "name": "Atlanta, GA",
+   "stations": [
+    "WXIA-TV",
+    "WATL"
+   ],
+   "bounds": [
+    -87.84,
+    32.29,
+    -80.83,
+    35.56
+   ]
+  },
+  {
+   "id": "macon-ga",
+   "name": "Macon, GA",
+   "stations": [
+    "WMAZ-TV"
+   ],
+   "bounds": [
+    -85.95,
+    31.38,
+    -80.69,
+    33.87
+   ]
+  },
+  {
+   "id": "boise-id",
+   "name": "Boise, ID",
+   "stations": [
+    "KTVB"
+   ],
+   "bounds": [
+    -122.02,
+    41.6,
+    -112.02,
+    45.67
+   ]
+  },
+  {
+   "id": "twin-falls-id",
+   "name": "Twin Falls, ID",
+   "stations": [
+    "KTFT-LD"
+   ],
+   "bounds": [
+    -117.44,
+    41.6,
+    -110.65,
+    44.39
+   ]
+  },
+  {
+   "id": "indianapolis-in",
+   "name": "Indianapolis, IN",
+   "stations": [
+    "WTHR",
+    "WALV-CD"
+   ],
+   "bounds": [
+    -89.77,
+    38.29,
+    -82.56,
+    41.4
+   ]
+  },
+  {
+   "id": "davenport-ia",
+   "name": "Davenport (Quad Cities), IA",
+   "stations": [
+    "WQAD-TV"
+   ],
+   "bounds": [
+    -93.63,
+    40.23,
+    -87.26,
+    42.91
+   ]
+  },
+  {
+   "id": "des-moines-ia",
+   "name": "Des Moines, IA",
+   "stations": [
+    "WOI-DT",
+    "KCWI-TV"
+   ],
+   "bounds": [
+    -98.51,
+    39.86,
+    -88.87,
+    43.9
+   ]
+  },
+  {
+   "id": "louisville-ky",
+   "name": "Louisville, KY",
+   "stations": [
+    "WHAS-TV"
+   ],
+   "bounds": [
+    -89.04,
+    36.71,
+    -82.51,
+    39.6
+   ]
+  },
+  {
+   "id": "new-orleans-la",
+   "name": "New Orleans, LA",
+   "stations": [
+    "WWL-TV",
+    "WUPL"
+   ],
+   "bounds": [
+    -93.05,
+    28.53,
+    -87.15,
+    31.41
+   ]
+  },
+  {
+   "id": "portland-me",
+   "name": "Portland, ME",
+   "stations": [
+    "WCSH"
+   ],
+   "bounds": [
+    -74.41,
+    42.66,
+    -65.95,
+    46.07
+   ]
+  },
+  {
+   "id": "bangor-me",
+   "name": "Bangor, ME",
+   "stations": [
+    "WLBZ"
+   ],
+   "bounds": [
+    -72.9,
+    43.7,
+    -64.61,
+    46.97
+   ]
+  },
+  {
+   "id": "grand-rapids-mi",
+   "name": "Grand Rapids, MI",
+   "stations": [
+    "WZZM"
+   ],
+   "bounds": [
+    -89.09,
+    41.36,
+    -82.16,
+    44.22
+   ]
+  },
+  {
+   "id": "minneapolis-mn",
+   "name": "Minneapolis–Saint Paul, MN",
+   "stations": [
+    "KARE"
+   ],
+   "bounds": [
+    -101.94,
+    43.0,
+    -86.45,
+    49.04
+   ]
+  },
+  {
+   "id": "st-louis-mo",
+   "name": "St. Louis, MO",
+   "stations": [
+    "KSDK"
+   ],
+   "bounds": [
+    -93.72,
+    36.87,
+    -86.62,
+    40.0
+   ]
+  },
+  {
+   "id": "buffalo-ny",
+   "name": "Buffalo, NY",
+   "stations": [
+    "WGRZ"
+   ],
+   "bounds": [
+    -81.93,
+    41.07,
+    -75.43,
+    43.77
+   ]
+  },
+  {
+   "id": "charlotte-nc",
+   "name": "Charlotte, NC",
+   "stations": [
+    "WCNC-TV"
+   ],
+   "bounds": [
+    -84.07,
+    33.97,
+    -77.47,
+    36.99
+   ]
+  },
+  {
+   "id": "greensboro-nc",
+   "name": "Greensboro, NC",
+   "stations": [
+    "WFMY-TV"
+   ],
+   "bounds": [
+    -83.16,
+    34.74,
+    -77.66,
+    37.25
+   ]
+  },
+  {
+   "id": "cleveland-oh",
+   "name": "Cleveland, OH",
+   "stations": [
+    "WKYC"
+   ],
+   "bounds": [
+    -84.73,
+    39.81,
+    -78.69,
+    42.38
+   ]
+  },
+  {
+   "id": "columbus-oh",
+   "name": "Columbus, OH",
+   "stations": [
+    "WBNS-TV"
+   ],
+   "bounds": [
+    -86.04,
+    38.55,
+    -79.43,
+    41.4
+   ]
+  },
+  {
+   "id": "toledo-oh",
+   "name": "Toledo, OH",
+   "stations": [
+    "WTOL",
+    "WUPW"
+   ],
+   "bounds": [
+    -86.36,
+    40.29,
+    -81.16,
+    42.48
+   ]
+  },
+  {
+   "id": "portland-or",
+   "name": "Portland, OR",
+   "stations": [
+    "KGW"
+   ],
+   "bounds": [
+    -126.99,
+    41.55,
+    -113.91,
+    46.83
+   ]
+  },
+  {
+   "id": "scranton-wilkes-barre-pa",
+   "name": "Scranton–Wilkes-Barre, PA",
+   "stations": [
+    "WNEP-TV"
+   ],
+   "bounds": [
+    -79.25,
+    40.1,
+    -73.8,
+    42.4
+   ]
+  },
+  {
+   "id": "harrisburg-pa",
+   "name": "Harrisburg, PA",
+   "stations": [
+    "WPMT"
+   ],
+   "bounds": [
+    -79.13,
+    39.32,
+    -74.63,
+    41.25
+   ]
+  },
+  {
+   "id": "columbia-sc",
+   "name": "Columbia, SC",
+   "stations": [
+    "WLTX"
+   ],
+   "bounds": [
+    -83.31,
+    32.78,
+    -78.51,
+    35.02
+   ]
+  },
+  {
+   "id": "knoxville-tn",
+   "name": "Knoxville, TN",
+   "stations": [
+    "WBIR-TV"
+   ],
+   "bounds": [
+    -86.92,
+    34.8,
+    -81.16,
+    37.42
+   ]
+  },
+  {
+   "id": "memphis-tn",
+   "name": "Memphis, TN",
+   "stations": [
+    "WATN-TV",
+    "WLMT"
+   ],
+   "bounds": [
+    -93.26,
+    33.59,
+    -86.26,
+    36.8
+   ]
+  },
+  {
+   "id": "abilene-tx",
+   "name": "Abilene, TX",
+   "stations": [
+    "KXVA"
+   ],
+   "bounds": [
+    -102.76,
+    31.01,
+    -96.89,
+    33.8
+   ]
+  },
+  {
+   "id": "austin-tx",
+   "name": "Austin, TX",
+   "stations": [
+    "KVUE"
+   ],
+   "bounds": [
+    -100.3,
+    29.23,
+    -95.75,
+    31.44
+   ]
+  },
+  {
+   "id": "beaumont-tx",
+   "name": "Beaumont, TX",
+   "stations": [
+    "KBMT"
+   ],
+   "bounds": [
+    -96.63,
+    29.16,
+    -91.64,
+    31.58
+   ]
+  },
+  {
+   "id": "bryan-college-station-tx",
+   "name": "Bryan–College Station, TX",
+   "stations": [
+    "KAGS-LD"
+   ],
+   "bounds": [
+    -98.73,
+    29.5,
+    -93.97,
+    31.8
+   ]
+  },
+  {
+   "id": "corpus-christi-tx",
+   "name": "Corpus Christi, TX",
+   "stations": [
+    "KIII"
+   ],
+   "bounds": [
+    -100.86,
+    26.2,
+    -94.86,
+    29.19
+   ]
+  },
+  {
+   "id": "dallas-fort-worth-tx",
+   "name": "Dallas–Fort Worth, TX",
+   "stations": [
+    "WFAA",
+    "KFAA-TV"
+   ],
+   "bounds": [
+    -100.67,
+    31.01,
+    -93.53,
+    34.39
+   ]
+  },
+  {
+   "id": "houston-tx",
+   "name": "Houston, TX",
+   "stations": [
+    "KHOU",
+    "KTBU"
+   ],
+   "bounds": [
+    -99.61,
+    27.66,
+    -91.67,
+    31.55
+   ]
+  },
+  {
+   "id": "odessa-midland-tx",
+   "name": "Odessa–Midland, TX",
+   "stations": [
+    "KWES-TV"
+   ],
+   "bounds": [
+    -107.65,
+    28.57,
+    -98.5,
+    32.99
+   ]
+  },
+  {
+   "id": "san-angelo-tx",
+   "name": "San Angelo, TX",
+   "stations": [
+    "KIDY"
+   ],
+   "bounds": [
+    -103.44,
+    29.89,
+    -98.04,
+    32.49
+   ]
+  },
+  {
+   "id": "san-antonio-tx",
+   "name": "San Antonio, TX",
+   "stations": [
+    "KENS"
+   ],
+   "bounds": [
+    -102.49,
+    27.63,
+    -95.83,
+    30.9
+   ]
+  },
+  {
+   "id": "tyler-tx",
+   "name": "Tyler, TX",
+   "stations": [
+    "KYTX"
+   ],
+   "bounds": [
+    -98.41,
+    30.42,
+    -91.35,
+    33.79
+   ]
+  },
+  {
+   "id": "waco-tx",
+   "name": "Waco, TX",
+   "stations": [
+    "KCEN-TV"
+   ],
+   "bounds": [
+    -99.81,
+    29.9,
+    -94.9,
+    32.26
+   ]
+  },
+  {
+   "id": "norfolk-va",
+   "name": "Norfolk, VA",
+   "stations": [
+    "WVEC"
+   ],
+   "bounds": [
+    -80.4,
+    34.79,
+    -72.34,
+    38.43
+   ]
+  },
+  {
+   "id": "seattle-wa",
+   "name": "Seattle–Tacoma, WA",
+   "stations": [
+    "KING-TV",
+    "KONG"
+   ],
+   "bounds": [
+    -126.54,
+    45.84,
+    -117.15,
+    49.4
+   ]
+  },
+  {
+   "id": "spokane-wa",
+   "name": "Spokane, WA",
+   "stations": [
+    "KREM",
+    "KSKN"
+   ],
+   "bounds": [
+    -123.76,
+    44.68,
+    -111.44,
+    49.4
+   ]
+  }
+ ]
 }

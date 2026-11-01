@@ -1,18 +1,18 @@
 # Max tools (working title)
 
-Tools for a TV station group (51 markets) that use WSI Max graphics. They turn public NOAA/NWS data into KMZ map layers
-that Max loads **by URL**, plus a private configurator web page where each station picks its market/call letters and tweaks
+Tools for a TV station group (54 markets) that use WSI Max graphics. They turn public NOAA/NWS data into KMZ map layers
+that Max loads **by URL**, plus a private configurator web page where each market picks its look (one config per market, shared by all its stations) and tweaks
 how its layers look. Owner: Justin (broadcast meteorologist; comfortable with PowerShell, Python and GitHub).
 
 Read `docs/PLAN.md` first (decisions, status, work order; the repo layout is yours to decide, see "Decided since the first draft") and `docs/GUI.md` for the configurator spec.
 
 ## The three pieces
 1. **FFG (flash flood guidance)**: Python (pygrib, scipy, matplotlib) on GitHub Actions, published to GitHub Pages.
-   Exists today for Ohio only (repo `justingehrts/ffg`). Plan: one standard set per TV market (51) + optional per-station color ramps.
+   Exists today for Ohio only (repo `justingehrts/ffg`). Plan: one standard set per TV market (54) + optional per-market color ramps.
 2. **Record dots**: PowerShell script (repo `justingehrts/daily-record-dots`). Plan: run it in GitHub Actions under `pwsh`,
-   publish a default KMZ set + a styled (icon) copy per station. See `prototype-records/`.
+   publish a default KMZ set + a styled (icon) copy per market. Now lives in `records/`.
 3. **Configurator**: static HTML page on Bluehost behind basic auth, plus a small PHP endpoint (not built) that validates a
-   station's choices and commits them to a registry file in GitHub. See `prototype-configurator/` (needs rework, see PLAN).
+   station's choices and commits them to a registry file in GitHub. See `legacy/configurator-prototype/` (needs rework, see PLAN).
 
 ## Ground rules
 - Everything typed into the page is untrusted. Validate on the page **and** again in the endpoint and in the build scripts.

@@ -12,7 +12,7 @@ Max points at a URL, the same way it already does for the FFG KMZs.
 
 ## URLs (replace USER/REPO with the repo's Pages address)
     https://USER.github.io/REPO/records/default/D1_HIMAX.kmz        standard icons, everyone can use these
-    https://USER.github.io/REPO/records/<station-id>/D1_HIMAX.kmz   that station's own icons
+    https://USER.github.io/REPO/records/<market-id>/D1_HIMAX.kmz   that market's own icons
 Day is D1..D7, type is HIMAX, LOMAX, HIMIN or LOMIN (28 files per set). Names never change.
 `records/status.json` shows when the last build ran and what the script reported.
 

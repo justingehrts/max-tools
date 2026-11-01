@@ -10,7 +10,7 @@ on:
       - 'records/**'
       - 'tools/**'
       - 'schema/**'
-      - 'stations.json'
+      - 'configs.json'
       - 'markets.json'
       - '.github/workflows/records.yml'
 

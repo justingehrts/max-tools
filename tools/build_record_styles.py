@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Turn the default record-dot KMZs into one styled copy per station, and write the site index.
+"""Turn the default record-dot KMZs into one styled copy per market, and write the site index.
 
 Input : site/records/default/D1_HIMAX.kmz ... D7_LOMIN.kmz  (28 files, made by FetchDailyRecords.ps1)
-        stations.json                                        (registry; stations with recordDots.icons get a styled set)
+        configs.json                                         (registry; markets with recordDots.icons get a styled set)
 Output: site/records/<style-id>/<same 28 file names>, site/records/status.json, site/index.html
 
 A KMZ here is doc.kml plus one icon (icons/<type>.png). A styled copy is the same doc.kml with that
@@ -65,7 +65,7 @@ def restyle(default_kmz: Path, out_path: Path, icons: dict):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--site', default='site')
-    ap.add_argument('--root', default=str(registry.ROOT), help='folder holding markets.json, stations.json, schema/')
+    ap.add_argument('--root', default=str(registry.ROOT), help='folder holding markets.json, configs.json, schema/')
     ap.add_argument('--run-log', default='records/run_log.txt')
     args = ap.parse_args()
     site = Path(args.site); default_dir = site / 'records' / 'default'
@@ -78,12 +78,12 @@ def main():
         return 2
 
     markets, market_problems = registry.load_markets(args.root)
-    stations, station_problems = registry.load_stations(args.root, markets)
+    configs, config_problems = registry.load_configs(args.root, markets)
     results = []
-    for who, msg in market_problems + station_problems:
+    for who, msg in market_problems + config_problems:
         print(f'::warning::Registry problem with {who or "the file"}: {msg}')
         results.append({'id': who, 'status': 'skipped', 'message': msg})
-    styles = [s for s in stations if s.get('recordDots')]
+    styles = [dict(c, id=c['market']) for c in configs if c.get('recordDots')]
 
     for s in styles:
         ic = s['recordDots']['icons']

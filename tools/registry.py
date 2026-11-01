@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Load and validate markets.json / stations.json against schema/*.schema.json.
+"""Load and validate markets.json / configs.json against schema/*.schema.json.
 
 Shared by the builders (and, later, mirrored by the PHP endpoint). The rule: a bad entry is
 skipped with a warning and never stops the others. Only an unreadable *file* is fatal.
@@ -63,26 +63,26 @@ def load_markets(root=ROOT):
     return markets, problems
 
 
-def load_stations(root=ROOT, markets=None):
-    """Return (valid_stations, problems). Checks schema, unique ids, and that the market exists."""
+def load_configs(root=ROOT, markets=None):
+    """Return (valid_configs, problems). One entry per market; checks schema, duplicates, and that the market exists."""
     root = Path(root)
     if markets is None: markets, _ = load_markets(root)
-    doc, err = _load_file(root / 'stations.json')
+    doc, err = _load_file(root / 'configs.json')
     if err: return [], [(None, err)]
-    schema = _schema(root, 'stations.schema.json')
-    problems = _top_problems(schema, 'stations', doc)
+    schema = _schema(root, 'configs.schema.json')
+    problems = _top_problems(schema, 'configs', doc)
     if problems: return [], problems
-    item = Draft202012Validator({'$ref': '#/$defs/station', '$defs': schema['$defs']})
+    item = Draft202012Validator({'$ref': '#/$defs/config', '$defs': schema['$defs']})
     ok, seen = [], set()
-    for s in doc['stations']:
-        sid = s.get('id') if isinstance(s, dict) else None
-        errs = _errors(item, s)
-        if not errs and s['market'] not in markets: errs = [f"market {s['market']!r} is not in markets.json"]
-        if not errs and sid in seen: errs = [f'duplicate station id {sid!r}']
+    for c in doc['configs']:
+        mid = c.get('market') if isinstance(c, dict) else None
+        errs = _errors(item, c)
+        if not errs and mid not in markets: errs = [f'market {mid!r} is not in markets.json']
+        if not errs and mid in seen: errs = [f'duplicate config for market {mid!r}']
         if errs:
-            problems.append((sid, '; '.join(errs)))
+            problems.append((mid, '; '.join(errs)))
         else:
-            seen.add(sid); ok.append(s)
+            seen.add(mid); ok.append(c)
     return ok, problems
 
 
@@ -90,10 +90,10 @@ def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--root', default=str(ROOT))
     a = ap.parse_args()
     markets, mp = load_markets(a.root)
-    stations, sp = load_stations(a.root, markets)
+    configs, sp = load_configs(a.root, markets)
     for who, msg in mp + sp:
         print(f'::warning::{who or "registry"}: {msg}')
-    print(f'{len(markets)} markets, {len(stations)} valid stations, {len(mp) + len(sp)} problems.')
+    print(f'{len(markets)} markets, {len(configs)} valid configs, {len(mp) + len(sp)} problems.')
     return 1 if (mp or sp) else 0
 
 
