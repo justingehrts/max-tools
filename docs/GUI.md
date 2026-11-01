@@ -75,7 +75,7 @@ serve the page and endpoint over HTTPS; a request can only change the one market
 confirm before replacing an existing custom look; each save is a git commit (revert from history); rate-limit; builders skip
 invalid entries; change the shared password when people leave. Per-station edit codes are deferred, not rejected.
 
-## Reuse from `prototype-configurator/`
+## Reuse from `legacy/configurator-prototype/`
 `src/lib.js` (defaults, validation, `drawIcon`, tests), `src/app.js` patterns (binding, touched/attempted error display,
 tab keyboard handling), `src/template.html` CSS tokens and scope panel. **Drop** the Install.bat/zip download from the main flow
 (keep `payload/` only if a station insists on running locally).

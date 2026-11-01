@@ -12,7 +12,10 @@ with no software installed locally and an optional way to change how the layers 
   the 7 ramp colors (thresholds stay fixed so the product means the same everywhere).
 - **One config per market** (Justin, Nov 1): several stations in a city share one look and one URL set, keyed by market id
   (`records/<market-id>/`, `markets/<market-id>/`). There is no per-station layer. Call signs are listed in `markets.json` for display only.
-  (This replaces the earlier per-station design; the `wbns` record-dot set published in the first test run is gone.)
+  (This replaces the earlier per-station design.) Every market always has both URL sets, customized or not (Nov 1).
+- **Ohio legacy FFG URLs** (Justin, Nov 1): re-enable the old `justingehrts/ffg` workflow now (Justin), migrate Ohio stations to
+  max-tools URLs, then retire the old repo. max-tools publishes the identical Ohio box at its site root.
+- **Site front page** lists every market's URLs (public; no password). The configurator is only needed to change looks.
 - **Market list** (Justin, Nov 1): 54 markets from the TEGNA station list, none in AK/HI/PR. Flagstaff, Bryan-College Station and Twin Falls
   are kept as separate markets even though Nielsen folds the first two into Phoenix and Waco. They have no DMA outline, so their boxes
   (Flagstaff, Bryan-CS) are hand-sized drafts around the city.
@@ -43,9 +46,9 @@ with no software installed locally and an optional way to change how the layers 
 
 | Piece | State |
 |---|---|
-| Record dots cloud pipeline (`records/`, `tools/`) | **Run on GitHub (Nov 1, run 2): green.** 28/28 NOAA downloads, 28 default KMZs + 1 styled set deployed to Pages, learned-station commit-back worked, Pages CORS `*` seen. Cron not yet observed. Earlier local notes: Built. Run locally exactly as CI would: pwsh script -> 28 default KMZs (19 s), `build_styles.py` -> 51 styled sets, 1,456 KMZs, 3.2 s, 7.6 MB. Invalid styles skipped with warnings. **Not yet run on GitHub.** |
+| Record dots cloud pipeline (`records/`, `tools/`) | **Run on GitHub, green** (since Nov 1). 28/28 NOAA downloads; every market always gets `records/<market-id>/` (custom icons or an exact copy of the default) so its URLs never change; learned-station commit-back works; Pages CORS `*` seen. |
 | `FetchDailyRecords.ps1` config patch | Done. Reads optional `config.json` (folders, NWS User-Agent). Without it, behaves as before. Verified under PowerShell 7 with live NOAA data (28/28 downloads). Needed by the cloud workflow. |
-| Configurator page (`prototype-configurator/`) | Built for the **old local-installer approach**: Station settings + Record dots tabs, icon editor with live preview, zip download with Install.bat. Browser-tested. Needs rework per docs/GUI.md. Its icon drawing and validation code are reusable. |
+| Configurator page (`legacy/configurator-prototype/`) | Built for the **old local-installer approach**: Station settings + Record dots tabs, icon editor with live preview, zip download with Install.bat. Browser-tested. Needs rework per docs/GUI.md. Its icon drawing and validation code are reusable. |
 | Local Windows installer (`payload/install.ps1`) | Parses; **never run on Windows**. Now optional/legacy (only for a station that wants to run locally). |
 | FFG multi-market pipeline (`tools/build_ffg.py`) | **Run on GitHub (Nov 1, run 41313087865): green, 165/165 KMZs, 30.7 s on the runner (2.7 s data prep), live on Pages.** Not yet exercised on GitHub: custom ramps, a render failure, carry-over from a real failure. Local tests:  Local, real GRIB (IEM 2026-11-01 12Z): 165 KMZs (54 markets x 3 + legacy Ohio x 3) in **16 s on 4 cores** (1.5 s data prep, ~0.9 s slowest render). Legacy Ohio output is **pixel-identical** to the original script on the same GRIB. Per-market failure isolation and custom ramps unit-tested. |
 | One workflow, one deploy (`.github/workflows/build.yml`) | **Run on GitHub, green** (records + FFG + deploy in ~80 s). Replaces `records.yml`. Missing/failed files are restored from the live site (`tools/carry_over.py`) before deploy; the run then ends red. |
@@ -65,7 +68,7 @@ with no software installed locally and an optional way to change how the layers 
 1. **New repo skeleton + registry.** `markets.json` (id, name, bounds [W,S,E,N]) and `configs.json`
    (market, optional `ffg.colors` (7 hex), optional `recordDots.icons`, server-set `updatedUtc`). JSON Schema files + a validator used by
    the builders and the endpoint. Reserved ids: `default`.
-2. **Record dots pipeline into the new repo.** Move `prototype-records/` over, switch the styles source to `configs.json`,
+2. **Record dots pipeline into the new repo.** *Done.* Moved into `records/` + `tools/`, styles from `configs.json`,
    run it on GitHub, fix whatever the real run finds. Add failure alerting (red run = email) and keep `status.json`.
 3. **FFG multi-market pipeline** (spec below). *Built; awaiting the first GitHub run.* Boxes from step 4 accepted as drafts (Nov 1). Keep the Ohio legacy files at the old root URLs until Justin moves Max.
 4. **Market boxes.** Run `reference/dmabox.py` logic over Justin's 54 markets (draft boxes already generated by `reference/make_markets.py`), produce a contact sheet (outline + box per market),

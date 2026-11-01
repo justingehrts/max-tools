@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'tools'))
 import registry
 
-ICONS = json.loads((ROOT / 'configs.json').read_text())['configs'][0]['recordDots']['icons']
+ICONS = [s for s in json.loads((ROOT / 'tests' / 'styles.example.json').read_text())['styles'] if s['id'] == 'distinct'][0]['icons']
 
 
 def make_root(configs, markets=None):

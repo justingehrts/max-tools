@@ -7,7 +7,13 @@ name: Build and publish site
 on:
   schedule:
     - cron: '45 * * * *'   # WPC posts the hourly FFG mosaic at ~:38
-  workflow_dispatch:       # lets you (and later the configurator endpoint) run it by hand
+  workflow_dispatch:       # Actions tab > "Build and publish site" > Run workflow
+    inputs:
+      simulate:
+        description: 'Test the failure handling (the live site must stay intact and the run must end red)'
+        type: choice
+        default: none
+        options: [none, records-fail, ffg-fail, one-market-fail]
   push:
     branches: [main]
     paths:
@@ -30,19 +36,27 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20    # a normal run takes ~2 minutes; never let a hung download block later runs for hours
     environment:
       name: github-pages
     env:
-      NWS_CONTACT: ${{ vars.NWS_CONTACT }}
+      SIMULATE: ${{ inputs.simulate || 'none' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Check the National Weather Service contact address is set
+        env:
+          NWS_CONTACT: ${{ secrets.NWS_CONTACT || vars.NWS_CONTACT }}
+          FROM_SECRET: ${{ secrets.NWS_CONTACT != '' }}
         run: |
+          echo "::add-mask::$NWS_CONTACT"   # hide it in every later log line, even while it is still a variable
           if [ -z "$NWS_CONTACT" ]; then
-            echo "::error::Add a repository variable named NWS_CONTACT (Settings > Secrets and variables > Actions > Variables) with a shared weather-team email address. NWS asks automated tools to identify an owner."
+            echo "::error::Add a repository secret named NWS_CONTACT (Settings > Secrets and variables > Actions > Secrets) with a shared weather-team email address. NWS asks automated tools to identify an owner."
             exit 1
+          fi
+          if [ "$FROM_SECRET" != "true" ]; then
+            echo "::warning::NWS_CONTACT is a variable, so it can appear in these public logs. Create it as a secret instead and delete the variable."
           fi
 
       - name: Set up Python
@@ -58,6 +72,8 @@ jobs:
 
       # ---------- record dots ----------
       - name: Write config for the record dots script
+        env:
+          NWS_CONTACT: ${{ secrets.NWS_CONTACT || vars.NWS_CONTACT }}
         run: |
           mkdir -p site/records/default /tmp/navdata
           jq -n --arg email "$NWS_CONTACT" --arg kml "$PWD/site/records/default" \
@@ -68,9 +84,11 @@ jobs:
         continue-on-error: true
         shell: pwsh
         working-directory: records
-        run: ./FetchDailyRecords.ps1
+        run: |
+          if ($env:SIMULATE -eq 'records-fail') { Write-Host "::error::Simulated record dots failure (test run)"; exit 1 }
+          ./FetchDailyRecords.ps1
 
-      - name: Build each market's styled record dots
+      - name: Build each market's record dots
         id: records_styles
         continue-on-error: true
         run: python tools/build_record_styles.py --site site --run-log records/run_log.txt
@@ -79,12 +97,18 @@ jobs:
       - name: Build flash flood guidance for every market
         id: ffg
         continue-on-error: true
-        run: python tools/build_ffg.py --site site
+        run: |
+          if [ "$SIMULATE" = "ffg-fail" ]; then echo "::error::Simulated FFG failure (test run)"; exit 1; fi
+          if [ "$SIMULATE" = "one-market-fail" ]; then export MAXTOOLS_SIMULATE_FAIL_MARKET=columbus-oh; fi
+          python tools/build_ffg.py --site site
 
       # ---------- publish ----------
       - name: Keep the last published copy of anything that was not rebuilt
         run: |
           python tools/carry_over.py --site site --base "https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}" --report carry_report.json
+
+      - name: Write the URL index page
+        run: python tools/build_index.py --site site --base "https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -98,6 +122,7 @@ jobs:
         uses: actions/deploy-pages@v4
 
       - name: Save newly learned NOAA stations
+        if: env.SIMULATE == 'none'
         run: |
           if ! git diff --quiet -- records/stations.csv; then
             git config user.name "github-actions[bot]"
@@ -114,12 +139,13 @@ jobs:
           # This step only makes sure somebody notices.
           bad=0
           if [ "${{ steps.records_fetch.outcome }}" != "success" ]; then echo "::error::Record dots download step failed."; bad=1; fi
-          if [ "${{ steps.records_styles.outcome }}" != "success" ]; then echo "::error::Record dots styling step failed."; bad=1; fi
+          if [ "${{ steps.records_styles.outcome }}" != "success" ]; then echo "::error::Record dots market step failed."; bad=1; fi
           if [ "${{ steps.ffg.outcome }}" != "success" ]; then echo "::error::Flash flood guidance step failed."; bad=1; fi
           carried=$(jq '.carried | length' carry_report.json)
           if [ "$carried" -gt 0 ]; then echo "::error::$carried file(s) were not rebuilt this run and show the last published copy."; bad=1; fi
-          skipped=$(jq '[.styles[]? | select(.status=="skipped")] | length' site/records/status.json 2>/dev/null || echo 0)
-          if [ "$skipped" -gt 0 ]; then echo "::error::$skipped registry entr(y/ies) skipped for record dots."; bad=1; fi
-          failed=$(jq '(.failed | length) + (.registryProblems | length)' site/ffg/status.json 2>/dev/null || echo 0)
-          if [ "$failed" -gt 0 ]; then echo "::error::$failed flash flood guidance problem(s); see status.json."; bad=1; fi
+          rec=$(jq '([.markets[]? | select(.status!="ok")] | length) + (.registryProblems | length)' site/records/status.json 2>/dev/null || echo 0)
+          if [ "$rec" -gt 0 ]; then echo "::error::$rec record dots problem(s); see records/status.json."; bad=1; fi
+          ffg=$(jq '(.failed | length) + (.registryProblems | length)' site/ffg/status.json 2>/dev/null || echo 0)
+          if [ "$ffg" -gt 0 ]; then echo "::error::$ffg flash flood guidance problem(s); see ffg/status.json."; bad=1; fi
+          if [ "$SIMULATE" != "none" ]; then echo "::notice::This was a simulated-failure test ($SIMULATE). A red result here is expected."; fi
           exit $bad

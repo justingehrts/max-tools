@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Turn the default record-dot KMZs into one styled copy per market, and write the site index.
+"""Give every market its own record-dot set: a restyled copy of the defaults (custom icons) or a plain copy.
 
 Input : site/records/default/D1_HIMAX.kmz ... D7_LOMIN.kmz  (28 files, made by FetchDailyRecords.ps1)
         configs.json                                         (registry; markets with recordDots.icons get a styled set)
-Output: site/records/<style-id>/<same 28 file names>, site/records/status.json, site/index.html
+Output: site/records/<market-id>/<same 28 file names> for every market, site/records/status.json
 
 A KMZ here is doc.kml plus one icon (icons/<type>.png). A styled copy is the same doc.kml with that
 icon replaced, so styling never touches the NOAA data work.
 """
-import argparse, datetime, html, io, json, math, sys, zipfile
+import argparse, datetime, io, json, math, shutil, sys, zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -76,24 +76,41 @@ def main():
         # Keep the set consistent: drop the partial copy so carry_over restores the last complete one.
         print(f'::error::Only {len(have)} of 28 default KMZs were produced (missing: {", ".join(missing[:6])}...). '
               'Keeping the last published record dots instead.')
-        import shutil; shutil.rmtree(site / 'records', ignore_errors=True)
+        shutil.rmtree(site / 'records', ignore_errors=True)
         return 0
 
     markets, market_problems = registry.load_markets(args.root)
     configs, config_problems = registry.load_configs(args.root, markets)
-    results = []
-    for who, msg in market_problems + config_problems:
-        print(f'::warning::Registry problem with {who or "the file"}: {msg}')
-        results.append({'id': who, 'status': 'skipped', 'message': msg})
-    styles = [dict(c, id=c['market']) for c in configs if c.get('recordDots')]
+    problems = [{'id': who, 'message': msg} for who, msg in market_problems + config_problems]
+    for p in problems:
+        print(f'::warning::Registry problem with {p["id"] or "the file"}: {p["message"]}')
+    if not markets or any(p['id'] is None for p in problems):
+        # A whole registry file is unreadable: do not guess. Build only the default set; carry_over keeps every
+        # market's last published set (with its last good look), and the run ends red.
+        print('::error::A registry file is unreadable; market record-dot sets were not rebuilt (last published copies are kept).')
+        market_ids, custom = [], {}
+    else:
+        market_ids = list(markets)
+        custom = {c['market']: c['recordDots']['icons'] for c in configs if c.get('recordDots')}
 
-    for s in styles:
-        ic = s['recordDots']['icons']
-        icons = {t: render_icon(ic[t]['shape'], ic[t]['color'], ic['ring']['enabled'], ic['ring']['color']) for t in TYPES}
-        out = site / 'records' / s['id']; out.mkdir(parents=True, exist_ok=True)
-        for name in EXPECTED:
-            restyle(default_dir / name, out / name, icons)
-        results.append({'id': s['id'], 'status': 'ok', 'message': ''})
+    # Every market always gets its own set, so its URLs never change: its custom icons, or a copy of the default.
+    results = []
+    for mid in market_ids:
+        out = site / 'records' / mid; out.mkdir(parents=True, exist_ok=True)
+        try:
+            if mid in custom:
+                ic = custom[mid]
+                icons = {t: render_icon(ic[t]['shape'], ic[t]['color'], ic['ring']['enabled'], ic['ring']['color']) for t in TYPES}
+                for name in EXPECTED:
+                    restyle(default_dir / name, out / name, icons)
+            else:
+                for name in EXPECTED:
+                    shutil.copyfile(default_dir / name, out / name)
+            results.append({'id': mid, 'look': 'custom' if mid in custom else 'standard', 'status': 'ok'})
+        except Exception as ex:
+            shutil.rmtree(out, ignore_errors=True)        # never publish a half-written set; carry_over keeps the old one
+            print(f'::error::Record dots for {mid} failed: {ex}')
+            results.append({'id': mid, 'look': 'custom' if mid in custom else 'standard', 'status': 'failed', 'message': str(ex)})
 
     summary = ''
     rl = Path(args.run_log)
@@ -101,23 +118,12 @@ def main():
         done = [l for l in rl.read_text(encoding='utf-8', errors='replace').splitlines() if 'Done.' in l]
         summary = done[-1][21:].strip() if done else ''
     now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
-    status = {'generatedUtc': now, 'defaultKmz': len(have), 'styles': results, 'scriptSummary': summary}
+    status = {'generatedUtc': now, 'defaultKmz': len(have), 'markets': results, 'registryProblems': problems,
+              'scriptSummary': summary}
     (site / 'records' / 'status.json').write_text(json.dumps(status, indent=2), encoding='utf-8')
-
-    ids = ['default'] + [s['id'] for s in styles]
-    rows = []
-    for sid in ids:
-        links = ''.join(
-            f'<tr><th>Day {d}</th>' + ''.join(
-                f'<td><a href="records/{html.escape(sid)}/D{d}_{t.upper()}.kmz">{t.upper()}</a></td>' for t in TYPES) + '</tr>'
-            for d in range(1, DAYS + 1))
-        rows.append(f'<details><summary>{html.escape(sid)}</summary><table>{links}</table></details>')
-    page = ('<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex,nofollow">'
-            '<title>Record dots</title><style>body{font:15px/1.5 system-ui,sans-serif;max-width:46rem;margin:2rem auto;padding:0 1rem}'
-            'td,th{padding:2px 12px 2px 0;text-align:left}summary{cursor:pointer;font-weight:600}</style>'
-            f'<h1>Record dots</h1><p>Updated {now}. <a href="records/status.json">status.json</a></p>' + ''.join(rows))
-    (site / 'index.html').write_text(page, encoding='utf-8')
-    print(f'Built default + {len(styles)} styled sets ({len(EXPECTED)} KMZs each); skipped {sum(r["status"]=="skipped" for r in results)}.')
+    n_custom = sum(r['look'] == 'custom' and r['status'] == 'ok' for r in results)
+    n_failed = sum(r['status'] == 'failed' for r in results)
+    print(f'Built default + {len(results) - n_failed} market sets ({n_custom} custom); {n_failed} failed; {len(problems)} registry problems.')
     return 0
 
 

@@ -164,6 +164,9 @@ def render(job):
     rel, hours, box, colors, stamp, site = job
     t0 = time.time()
     try:
+        sim = os.environ.get('MAXTOOLS_SIMULATE_FAIL_MARKET')      # test hook for the "simulate failure" run
+        if sim and rel.startswith(f'markets/{sim}/'):
+            raise RuntimeError('simulated failure (workflow test)')
         import matplotlib
         matplotlib.use('Agg')
         import matplotlib.pyplot as plt
@@ -208,6 +211,11 @@ def make_jobs(root, site, stamp, only=None):
     configs, cp = registry.load_configs(root, markets)
     custom = {c['market']: c['ffg']['colors'] for c in configs if c.get('ffg')}
     problems = [{'id': who, 'message': msg} for who, msg in mp + cp]
+    if not markets or any(p['id'] is None for p in problems):
+        # A whole registry file is unreadable: build only the legacy box; carry_over keeps every market's
+        # last published files (with their last good colors) and the run ends red.
+        print('::error::A registry file is unreadable; market FFG files were not rebuilt (last published copies are kept).')
+        markets = {}
     jobs = []
     for h in HOURS:
         if not only:

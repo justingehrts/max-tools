@@ -18,7 +18,7 @@ FFG_FILES = [f'Custom_FFG_{h}hr.kmz' for h in FFG_HOURS]
 
 
 def records_files(markets, configs):
-    ids = ['default'] + [c['market'] for c in configs if c.get('recordDots')]
+    ids = ['default'] + list(markets)          # every market always has its own set
     return [f'records/{i}/{f}' for i in ids for f in RECORD_FILES] + ['records/status.json']
 
 
