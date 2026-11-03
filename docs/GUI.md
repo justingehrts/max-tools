@@ -29,10 +29,10 @@ per market, shared by every station in it. Remember the choice in localStorage a
   The last-saved time comes from the registry entry's `updatedUtc`.
 
 **Record dots tab**
-- URL block: show the pattern and a 7-day x 4-type table of links with Copy each, and `Copy all 28 links` as a text list.
-- Icon editor + preview: reuse the prototype (shape, color, optional ring, "scope" preview at large and ~28 px on a dark map,
-  presets "Current look" and "Distinct shapes").
-- Buttons: `Save my icons`, `Use the standard icons`.
+- URL block: the same 28 URLs for every station (`records/default/`). Show the pattern and a 7-day x 4-type table of links with
+  Copy each, and `Copy all 28 links` as a text list. Nothing to save on this tab.
+- Help: "Changing how the dots look in Max" (Justin's text + screenshot; placement still to be decided, see PLAN).
+- (Parked Nov 3: the per-market icon editor. Stations restyle the dots in Max instead. See `parked/record-dot-icons/`.)
 
 **Status strip (all pages):** "Last build: FFG 12:15 PM, Record dots 12:21 PM" read from each pipeline's `status.json`.
 Turns red if older than 3 hours or if the fetch fails ("Can't reach the status page").
@@ -52,25 +52,22 @@ a polite live region for status, no horizontal scroll at 390 px, respects reduce
 { "schemaVersion": 1,
   "configs": [
     { "market": "columbus-oh", "updatedUtc": "2026-10-31T16:30:00Z",
-      "ffg": { "colors": ["#67000d","#a50f15","#cb181d","#ef3b2c","#fc9272","#fff5f0","#d9d9d9"] },
-      "recordDots": { "icons": { "ring": {"enabled": true, "color": "#e2e2e2"},
-                                 "himax": {"shape": "circle", "color": "#e30404"}, "lomax": {...}, "himin": {...}, "lomin": {...} } } } ] }
+      "ffg": { "colors": ["#67000d","#a50f15","#cb181d","#ef3b2c","#fc9272","#fff5f0","#d9d9d9"] } } ] }
 ```
 `POST /api/save` (same origin, JSON, body <= 4 KB, header `X-Requested-With: configurator`):
 ```json
-{ "market": "columbus-oh", "ffg": { "colors": [ ...7 ] } | null,
-  "recordDots": { "icons": { ... } } | null }
+{ "market": "columbus-oh", "ffg": { "colors": [ ...7 ] } | null }
 ```
 `null` = use the standard (delete the override). Responses: `200 {ok:true, urls:{...}, goesLive:"about 3 minutes"}`,
 `400 {ok:false, errors:{"ffg.colors[3]":"..."}}`, `401/403`, `429`, `502` (GitHub failed: "Try again in a minute").
 
 Server rules (identical to the build scripts' validation; put the rules in one JSON Schema used by all three):
-market id `^[a-z0-9][a-z0-9-]{0,39}$`, not `default`, and must exist in `markets.json`; exactly 7 FFG colors `#rrggbb`; icon shapes in {circle, square, diamond, triangle}; ring.enabled boolean.
+market id `^[a-z0-9][a-z0-9-]{0,39}$`, not `default`, and must exist in `markets.json`; exactly 7 FFG colors `#rrggbb`.
 Commit via the GitHub contents API using the file's `sha` (retry once on conflict), message `Update <market> (<tool>) via configurator`,
 then `workflow_dispatch` both pipelines. The token lives only on the server (fine-grained, this repo only, contents + actions write).
 Rate-limit per IP, log without personal data, no CORS (page and endpoint share an origin).
 
-Security reality: the shared password means anyone with it can change any market's colors/icons. Safeguards (decided):
+Security reality: the shared password means anyone with it can change any market's FFG colors. Safeguards (decided):
 serve the page and endpoint over HTTPS; a request can only change the one market it names, never markets or boxes;
 confirm before replacing an existing custom look; each save is a git commit (revert from history); rate-limit; builders skip
 invalid entries; change the shared password when people leave. Per-station edit codes are deferred, not rejected.

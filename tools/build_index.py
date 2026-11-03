@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write site/index.html: every market's URLs (FFG + record dots), plus the last build times.
+"""Write site/index.html: the shared record-dot URLs, every market's FFG URLs, and the last build times.
 
     python tools/build_index.py --site site --base https://justingehrts.github.io/max-tools
 
@@ -20,7 +20,7 @@ main{max-width:60rem;margin:0 auto;padding:1.5rem 16px 4rem}h1{font-size:1.4rem;
 input{width:100%;padding:.55rem .7rem;font:inherit;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);margin:1rem 0}
 details{background:var(--panel);border:1px solid var(--line);border-radius:8px;margin:.5rem 0;padding:.6rem .9rem}
 summary{cursor:pointer;font-weight:600}summary span{font-weight:400;color:var(--muted)}
-h3{font-size:.95rem;margin:1rem 0 .3rem}table{border-collapse:collapse;width:100%}td,th{padding:2px 8px 2px 0;text-align:left;vertical-align:top}th{white-space:nowrap}
+h2{font-size:1.1rem;margin:2rem 0 .25rem}section{margin-top:1rem}table{border-collapse:collapse;width:100%}td,th{padding:2px 8px 2px 0;text-align:left;vertical-align:top}th{white-space:nowrap}
 a{color:var(--accent)}
 '''
 
@@ -42,19 +42,20 @@ def main():
     for mid, m in markets.items():
         ffg = ''.join(f'<tr><th>{h} h</th><td class="url"><a href="{base}/markets/{mid}/Custom_FFG_{h}hr.kmz">{base}/markets/{mid}/Custom_FFG_{h}hr.kmz</a></td></tr>'
                       for h in expected.FFG_HOURS)
-        rec = ''.join(f'<tr><th>Day {d}</th>' + ''.join(f'<td><a href="{base}/records/{mid}/D{d}_{t.upper()}.kmz">{t.upper()}</a></td>' for t in expected.TYPES) + '</tr>'
-                      for d in expected.DAYS)
         rows.append(f'<details data-q="{e((m["name"] + " " + " ".join(m.get("stations", []))).lower())}"><summary>{e(m["name"])} '
-                    f'<span>{e(", ".join(m.get("stations", [])))}</span></summary>'
-                    f'<h3>Flash flood guidance</h3><table>{ffg}</table>'
-                    f'<h3>Record dots</h3><p class="url">{base}/records/{mid}/D&lt;day&gt;_&lt;TYPE&gt;.kmz</p><table>{rec}</table></details>')
+                    f'<span>{e(", ".join(m.get("stations", [])))}</span></summary><table>{ffg}</table></details>')
+    rec = ''.join(f'<tr><th>Day {d}</th>' + ''.join(f'<td><a href="{base}/records/default/D{d}_{t.upper()}.kmz">{t.upper()}</a></td>' for t in expected.TYPES) + '</tr>'
+                  for d in expected.DAYS)
+    records = (f'<section><h2>Record dots</h2><p class="muted">The same 28 files for every station. Day 1 is today.</p>'
+               f'<p class="url">{base}/records/default/D&lt;day&gt;_&lt;TYPE&gt;.kmz</p><table>{rec}</table></section>')
     page = (f'<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<meta name="robots" content="noindex,nofollow"><title>Max layer URLs</title><style>{CSS}</style><main>'
-            f'<h1>Max layer URLs</h1><p class="muted">Pick your market, then add these URLs in Max as KML layers. URLs never change.<br>'
+            f'<h1>Max layer URLs</h1><p class="muted">Add these URLs in Max as KML layers. URLs never change.<br>'
             f'Last build: FFG {e(stamp("ffg/status.json"))} (<a href="ffg/status.json">status</a>), '
             f'record dots {e(stamp("records/status.json"))} (<a href="records/status.json">status</a>).</p>'
+            + records + '<section><h2>Flash flood guidance</h2><p class="muted">Each market has its own map box.</p>'
             f'<input id="q" type="search" placeholder="Filter by market or call letters" aria-label="Filter markets">'
-            + ''.join(rows) +
+            + ''.join(rows) + '</section>' +
             '</main><script>document.getElementById("q").addEventListener("input",function(){var v=this.value.toLowerCase();'
             'document.querySelectorAll("details").forEach(function(d){d.hidden=v&&d.dataset.q.indexOf(v)<0})})</script></html>')
     (site / 'index.html').write_text(page, encoding='utf-8')

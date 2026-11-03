@@ -1,0 +1,74 @@
+{
+  "description": "Parked Nov 3, 2026. Put this back under $defs.config.properties.recordDots in schema/configs.schema.json, and $defs.icon back into $defs.",
+  "recordDots": {
+    "type": "object",
+    "required": [
+      "icons"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "icons": {
+        "type": "object",
+        "required": [
+          "ring",
+          "himax",
+          "lomax",
+          "himin",
+          "lomin"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "ring": {
+            "type": "object",
+            "required": [
+              "enabled",
+              "color"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "color": {
+                "$ref": "#/$defs/hex"
+              }
+            }
+          },
+          "himax": {
+            "$ref": "#/$defs/icon"
+          },
+          "lomax": {
+            "$ref": "#/$defs/icon"
+          },
+          "himin": {
+            "$ref": "#/$defs/icon"
+          },
+          "lomin": {
+            "$ref": "#/$defs/icon"
+          }
+        }
+      }
+    }
+  },
+  "icon": {
+    "type": "object",
+    "required": [
+      "shape",
+      "color"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "shape": {
+        "enum": [
+          "circle",
+          "square",
+          "diamond",
+          "triangle"
+        ]
+      },
+      "color": {
+        "$ref": "#/$defs/hex"
+      }
+    }
+  }
+}

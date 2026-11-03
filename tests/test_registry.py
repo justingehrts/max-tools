@@ -6,7 +6,6 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'tools'))
 import registry
 
-ICONS = [s for s in json.loads((ROOT / 'tests' / 'styles.example.json').read_text())['styles'] if s['id'] == 'distinct'][0]['icons']
 
 
 def make_root(configs, markets=None):
@@ -34,9 +33,8 @@ class T(unittest.TestCase):
         self.assertEqual(len(m), 54)
 
     def test_bad_entry_does_not_stop_others(self):
-        bad_icons = copy.deepcopy(ICONS); bad_icons['himax']['shape'] = 'star'
         self.check([cf(), cf('nowhere'), cf('Bad_ID'), cf('default'), cf(extra=1),
-                    cf(recordDots={'icons': bad_icons}), cf(ffg={'colors': ['#000000'] * 6}),
+                    cf(recordDots={'icons': {}}), cf(ffg={'colors': ['#000000'] * 6}),
                     cf(ffg={'colors': ['#00000g'] + ['#000000'] * 6}), cf(ffg={'colors': ['#123456'] * 7}, market='seattle-wa')],
                    ['columbus-oh', 'seattle-wa'],
                    ['nowhere', 'Bad_ID', 'default', 'columbus-oh', 'columbus-oh', 'columbus-oh', 'columbus-oh'])

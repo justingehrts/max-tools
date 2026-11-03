@@ -11,15 +11,18 @@ with no software installed locally and an optional way to change how the layers 
 - **FFG**: pre-build every market (54) hourly instead of taking requests. Default = standard ramp. Stations may customize
   the 7 ramp colors (thresholds stay fixed so the product means the same everywhere).
 - **One config per market** (Justin, Nov 1): several stations in a city share one look and one URL set, keyed by market id
-  (`records/<market-id>/`, `markets/<market-id>/`). There is no per-station layer. Call signs are listed in `markets.json` for display only.
-  (This replaces the earlier per-station design.) Every market always has both URL sets, customized or not (Nov 1).
+  (`markets/<market-id>/`). There is no per-station layer. Call signs are listed in `markets.json` for display only.
+  (This replaces the earlier per-station design.) Every market always has its FFG URL set, customized or not.
 - **Ohio legacy FFG URLs** (Justin, Nov 1): re-enable the old `justingehrts/ffg` workflow now (Justin), migrate Ohio stations to
   max-tools URLs, then retire the old repo. max-tools publishes the identical Ohio box at its site root.
 - **Site front page** lists every market's URLs (public; no password). The configurator is only needed to change looks.
 - **Market list** (Justin, Nov 1): 54 markets from the TEGNA station list, none in AK/HI/PR. Flagstaff, Bryan-College Station and Twin Falls
   are kept as separate markets even though Nielsen folds the first two into Phoenix and Waco. They have no DMA outline, so their boxes
   (Flagstaff, Bryan-CS) are hand-sized drafts around the city.
-- **Customizations go live automatically** (colors/icons only, strictly validated). No approval step.
+- **Customizations go live automatically** (FFG colors only, strictly validated). No approval step.
+- **Record dots: one shared set** (Justin, Nov 3). Stations restyle the dots inside Max, so everyone uses `records/default/`. The per-market
+  icon pipeline is parked in `parked/record-dot-icons/` (README says how to restore). The `records/<market-id>/` URLs (live Nov 1-3, never
+  announced) are gone. Justin will write "how to change the dots in Max" with a screenshot; where it appears is still open.
 - **Intake**: configurator page -> small PHP endpoint on Bluehost (token kept server-side) -> commits the registry in GitHub.
   Page and endpoint sit behind the group's shared basic-auth password.
 - **Map boxes**: from Nielsen DMA outlines + buffer, 16:9; Justin reviews a contact sheet and the final numbers are stored
@@ -46,7 +49,7 @@ with no software installed locally and an optional way to change how the layers 
 
 | Piece | State |
 |---|---|
-| Record dots cloud pipeline (`records/`, `tools/`) | **Run on GitHub, green** (since Nov 1). 28/28 NOAA downloads; every market always gets `records/<market-id>/` (custom icons or an exact copy of the default) so its URLs never change; learned-station commit-back works; Pages CORS `*` seen. |
+| Record dots cloud pipeline (`records/`, `tools/`) | **Run on GitHub, green** (since Nov 1). 28/28 NOAA downloads, one shared set at `records/default/`; learned-station commit-back works; Pages CORS `*` seen. |
 | `FetchDailyRecords.ps1` config patch | Done. Reads optional `config.json` (folders, NWS User-Agent). Without it, behaves as before. Verified under PowerShell 7 with live NOAA data (28/28 downloads). Needed by the cloud workflow. |
 | Configurator page (`legacy/configurator-prototype/`) | Built for the **old local-installer approach**: Station settings + Record dots tabs, icon editor with live preview, zip download with Install.bat. Browser-tested. Needs rework per docs/GUI.md. Its icon drawing and validation code are reusable. |
 | Local Windows installer (`payload/install.ps1`) | Parses; **never run on Windows**. Now optional/legacy (only for a station that wants to run locally). |
@@ -66,7 +69,7 @@ with no software installed locally and an optional way to change how the layers 
 
 ## Work order
 1. **New repo skeleton + registry.** `markets.json` (id, name, bounds [W,S,E,N]) and `configs.json`
-   (market, optional `ffg.colors` (7 hex), optional `recordDots.icons`, server-set `updatedUtc`). JSON Schema files + a validator used by
+   (market, optional `ffg.colors` (7 hex), server-set `updatedUtc`; `recordDots.icons` parked Nov 3). JSON Schema files + a validator used by
    the builders and the endpoint. Reserved ids: `default`.
 2. **Record dots pipeline into the new repo.** *Done.* Moved into `records/` + `tools/`, styles from `configs.json`,
    run it on GitHub, fix whatever the real run finds. Add failure alerting (red run = email) and keep `status.json`.

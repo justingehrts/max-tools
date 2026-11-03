@@ -88,10 +88,10 @@ jobs:
           if ($env:SIMULATE -eq 'records-fail') { Write-Host "::error::Simulated record dots failure (test run)"; exit 1 }
           ./FetchDailyRecords.ps1
 
-      - name: Build each market's record dots
-        id: records_styles
+      - name: Check the record dot set and write its status
+        id: records_check
         continue-on-error: true
-        run: python tools/build_record_styles.py --site site --run-log records/run_log.txt
+        run: python tools/records_status.py --site site --run-log records/run_log.txt
 
       # ---------- flash flood guidance ----------
       - name: Build flash flood guidance for every market
@@ -139,12 +139,10 @@ jobs:
           # This step only makes sure somebody notices.
           bad=0
           if [ "${{ steps.records_fetch.outcome }}" != "success" ]; then echo "::error::Record dots download step failed."; bad=1; fi
-          if [ "${{ steps.records_styles.outcome }}" != "success" ]; then echo "::error::Record dots market step failed."; bad=1; fi
+          if [ "${{ steps.records_check.outcome }}" != "success" ]; then echo "::error::Record dots check step failed."; bad=1; fi
           if [ "${{ steps.ffg.outcome }}" != "success" ]; then echo "::error::Flash flood guidance step failed."; bad=1; fi
           carried=$(jq '.carried | length' carry_report.json)
           if [ "$carried" -gt 0 ]; then echo "::error::$carried file(s) were not rebuilt this run and show the last published copy."; bad=1; fi
-          rec=$(jq '([.markets[]? | select(.status!="ok")] | length) + (.registryProblems | length)' site/records/status.json 2>/dev/null || echo 0)
-          if [ "$rec" -gt 0 ]; then echo "::error::$rec record dots problem(s); see records/status.json."; bad=1; fi
           ffg=$(jq '(.failed | length) + (.registryProblems | length)' site/ffg/status.json 2>/dev/null || echo 0)
           if [ "$ffg" -gt 0 ]; then echo "::error::$ffg flash flood guidance problem(s); see ffg/status.json."; bad=1; fi
           if [ "$SIMULATE" != "none" ]; then echo "::notice::This was a simulated-failure test ($SIMULATE). A red result here is expected."; fi

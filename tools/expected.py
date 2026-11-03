@@ -17,9 +17,9 @@ RECORD_FILES = [f'D{d}_{t.upper()}.kmz' for d in DAYS for t in TYPES]
 FFG_FILES = [f'Custom_FFG_{h}hr.kmz' for h in FFG_HOURS]
 
 
-def records_files(markets, configs):
-    ids = ['default'] + list(markets)          # every market always has its own set
-    return [f'records/{i}/{f}' for i in ids for f in RECORD_FILES] + ['records/status.json']
+def records_files():
+    """One shared set for everyone (stations restyle the dots in Max)."""
+    return [f'records/default/{f}' for f in RECORD_FILES] + ['records/status.json']
 
 
 def ffg_files(markets):
@@ -30,8 +30,7 @@ def ffg_files(markets):
 
 def expected(root=registry.ROOT):
     markets, _ = registry.load_markets(root)
-    configs, _ = registry.load_configs(root, markets)
-    return {'records': records_files(markets, configs), 'ffg': ffg_files(markets)}
+    return {'records': records_files(), 'ffg': ffg_files(markets)}
 
 
 if __name__ == '__main__':
