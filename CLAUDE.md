@@ -12,7 +12,7 @@ Read `docs/PLAN.md` first (decisions, status, work order; the repo layout is you
 2. **Record dots**: PowerShell script (repo `justingehrts/daily-record-dots`). Plan: run it in GitHub Actions under `pwsh`,
    publish one shared KMZ set for everyone (stations restyle the dots in Max). Lives in `records/`;
    per-market icon styling is parked in `parked/record-dot-icons/`.
-3. **Configurator**: static HTML page on Bluehost behind basic auth, plus a small PHP endpoint (not built) that validates a
+3. **Configurator**: static HTML page on HostGator behind basic auth, plus a small PHP endpoint (not built) that validates a
    station's choices and commits them to a registry file in GitHub. See `legacy/configurator-prototype/` (needs rework, see PLAN).
 
 ## Ground rules

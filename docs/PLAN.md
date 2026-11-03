@@ -26,7 +26,7 @@ with no software installed locally and an optional way to change how the layers 
   shows on the public URL page (Record dots tab) and later in the configurator (Nov 3).
 - **Public URL page** (Nov 3): one tab per feature (Flash flood guidance, Record dots), FFG list shows market names only (call
   letters still work in the search box). Deep links: `#ffg`, `#record-dots`.
-- **Intake**: configurator page -> small PHP endpoint on Bluehost (token kept server-side) -> commits the registry in GitHub.
+- **Intake**: configurator page -> small PHP endpoint on HostGator (token kept server-side) -> commits the registry in GitHub.
   Page and endpoint sit behind the group's shared basic-auth password.
 - **Map boxes**: from Nielsen DMA outlines + buffer, 16:9; Justin reviews a contact sheet and the final numbers are stored
   as plain numbers per market so they can be hand-edited. Public repo is fine (public data, station names not secret).
@@ -125,7 +125,7 @@ with no software installed locally and an optional way to change how the layers 
 
 ## Gotchas collected so far
 - GitHub's cron cannot be relied on: the old `ffg` repo's hourly `15 * * * *` ran 40 times Oct 10-18 with a median gap of 4.9 h (max 10.6 h).
-  Decision (Nov 1): Bluehost cron triggers the build at :45 via `workflow_dispatch` (docs/BLUEHOST.md); GitHub's schedule is the backup.
+  Decision (Nov 1): HostGator cron triggers the build at :45 via `workflow_dispatch` (docs/HOSTGATOR.md); GitHub's schedule is the backup.
 - Pages serves files with `cache-control: max-age=600`: a new deploy can take up to 10 minutes to show (also for carry-over's fetches).
 - GitHub's cron is unreliable: on Nov 1 `20 * * * *` fired 2 of ~9 times between 13:50 and 23:15 UTC, each ~30 min late.
 - A Pages deploy replaces the whole site, so all pipelines share one workflow/deploy; `tools/expected.py` lists every file that must exist.
