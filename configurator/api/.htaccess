@@ -1,0 +1,4 @@
+# Only save.php is meant to be called from the web.
+<Files "lib.php">
+  Require all denied
+</Files>

@@ -39,6 +39,13 @@ class T(unittest.TestCase):
                    ['columbus-oh', 'seattle-wa'],
                    ['nowhere', 'Bad_ID', 'default', 'columbus-oh', 'columbus-oh', 'columbus-oh', 'columbus-oh'])
 
+    def test_shared_vectors(self):
+        """Same cases as the PHP endpoint's tests (schema/config-test-vectors.json)."""
+        cases = json.loads((ROOT / 'schema' / 'config-test-vectors.json').read_text())['cases']
+        for i, c in enumerate(cases):
+            ok, _ = registry.load_configs(make_root([c['entry']]))
+            self.assertEqual(len(ok) == 1, c['valid'], f'case {i}: {c}')
+
     def test_non_object_entry(self):
         self.check([cf(), 'oops', 5], ['columbus-oh'], ['None', 'None'])
 

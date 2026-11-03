@@ -20,5 +20,9 @@ jobs:
       - run: pip install matplotlib jsonschema numpy scipy requests markdown
       - name: Registry is valid
         run: python tools/registry.py
-      - name: Unit tests
+      - name: PHP version
+        run: php -v
+      - name: PHP endpoint library tests
+        run: php tests/php/test_lib.php
+      - name: Unit tests (includes the endpoint end-to-end test under php -S)
         run: python -m unittest discover -v tests

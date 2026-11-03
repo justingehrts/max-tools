@@ -18,8 +18,20 @@ def _schema(root, name):
     return json.loads((Path(root) / 'schema' / name).read_text(encoding='utf-8'))
 
 
+def _control_chars(x, path=''):
+    """JSON Schema patterns use JavaScript regex rules, where '$' never matches before a trailing newline; Python's does.
+    So '#000000\n' would pass the hex pattern here. Rejecting control characters in every string closes that gap."""
+    if isinstance(x, str):
+        return [f'{path or "(entry)"}: contains a control character'] if any(ord(ch) < 32 or ord(ch) == 127 for ch in x) else []
+    if isinstance(x, dict):
+        return [e for k, v in x.items() for e in _control_chars(k, path) + _control_chars(v, f'{path}.{k}' if path else str(k))]
+    if isinstance(x, list):
+        return [e for i, v in enumerate(x) for e in _control_chars(v, f'{path}[{i}]')]
+    return []
+
+
 def _errors(validator, instance):
-    out = []
+    out = _control_chars(instance)
     for e in sorted(validator.iter_errors(instance), key=lambda e: list(e.absolute_path)):
         path = '.'.join(str(p) for p in e.absolute_path) or '(entry)'
         out.append(f'{path}: {e.message}')

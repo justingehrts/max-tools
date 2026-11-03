@@ -24,7 +24,7 @@ per market, shared by every station in it. Remember the choice in localStorage a
 - Ramp editor: 7 rows. The range label is fixed ("Under 0.50 in", "0.50 to 0.75 in" ... "3.00 in and up") with a color swatch +
   hex field. Thresholds are not editable (explain: so the product means the same thing at every station). Ramp bar preview.
 - Buttons: `Save my colors`, `Use the standard colors`. Save is disabled until something differs from what's saved.
-- States: unchanged, unsaved changes, saving, saved ("Live in about 3 minutes", link to build status), error (field-level where possible).
+- States: unchanged, unsaved changes, saving, saved (show the response's `goesLive`, e.g. "usually within 5 minutes", link to build status), error (field-level where possible).
 - Saving over an existing custom look asks first: "Columbus already has custom colors, saved Oct 12. Replace them?" (Replace / Keep mine).
   The last-saved time comes from the registry entry's `updatedUtc`.
 
@@ -57,17 +57,25 @@ a polite live region for status, no horizontal scroll at 390 px, respects reduce
     { "market": "columbus-oh", "updatedUtc": "2026-10-31T16:30:00Z",
       "ffg": { "colors": ["#67000d","#a50f15","#cb181d","#ef3b2c","#fc9272","#fff5f0","#d9d9d9"] } } ] }
 ```
-`POST /api/save` (same origin, JSON, body <= 4 KB, header `X-Requested-With: configurator`):
-```json
-{ "market": "columbus-oh", "ffg": { "colors": [ ...7 ] } | null }
-```
-`null` = use the standard (delete the override). Responses: `200 {ok:true, urls:{...}, goesLive:"about 3 minutes"}`,
-`400 {ok:false, errors:{"ffg.colors[3]":"..."}}`, `401/403`, `429`, `502` (GitHub failed: "Try again in a minute").
+Endpoint: `api/save.php` next to the page (built: `configurator/api/`). Same origin, behind the same basic-auth password.
 
-Server rules (identical to the build scripts' validation; put the rules in one JSON Schema used by all three):
+`GET api/save.php?market=columbus-oh` -> `200 {ok:true, market, ffg: {colors:[...7]} | null, updatedUtc | null}` (fresh from GitHub;
+the page uses it for the "already has custom colors, saved Oct 12" prompt).
+
+`POST api/save.php` (JSON, body <= 4 KB, header `X-Requested-With: configurator`):
+```json
+{ "market": "columbus-oh", "ffg": { "colors": [ ...7 ] } | null, "expectUpdatedUtc": "<updatedUtc the page loaded>" | null }
+```
+`null` ffg = use the standard (delete the override). Colors are stored lowercase. Responses:
+`200 {ok:true, changed, updatedUtc, urls:{"1h","3h","6h"}, goesLive}` (`changed:false` = same as saved, nothing committed),
+`400 {ok:false, errors:{"ffg.colors[3]":"..."}}`, `403` (missing header / other origin), `409` (someone saved this market after the
+page loaded it: reload), `415`, `429` (10 saves per 10 min per IP), `502` (GitHub failed: "Try again in a minute"), `500` (not set up).
+
+Server rules (identical to the build scripts' validation; both are tested against `schema/config-test-vectors.json`):
 market id `^[a-z0-9][a-z0-9-]{0,39}$`, not `default`, and must exist in `markets.json`; exactly 7 FFG colors `#rrggbb`.
 Commit via the GitHub contents API using the file's `sha` (retry once on conflict), message `Update <market> (<tool>) via configurator`,
-then `workflow_dispatch` both pipelines. The token lives only on the server (fine-grained, this repo only, contents + actions write).
+which starts the build by itself (push trigger on `configs.json`). The token lives only on the server (fine-grained, this repo only,
+Contents + Actions write; Actions is for the hourly cron).
 Rate-limit per IP, log without personal data, no CORS (page and endpoint share an origin).
 
 Security reality: the shared password means anyone with it can change any market's FFG colors. Safeguards (decided):

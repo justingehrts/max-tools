@@ -36,5 +36,37 @@ curl -fsS -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Be
 After the next :45, the Actions tab shows a run with event `workflow_dispatch` started by you, at about :45.
 Filter: https://github.com/justingehrts/max-tools/actions/workflows/build.yml?query=event%3Aworkflow_dispatch
 
-## 2. Configurator page + save endpoint
-Not built yet (work order steps 5-6).
+## 2. Save endpoint (built, tested locally; not yet installed)
+
+The configurator page (step 6, not built yet) saves a market's FFG colors through `configurator/api/save.php`, which commits
+`configs.json` to GitHub. That commit starts a rebuild by itself. The token stays on the server.
+
+### a. Give the token one more permission
+GitHub > Settings > Developer settings > Fine-grained tokens > `max-tools hostgator` > Edit > Repository permissions >
+**Contents: Read and write** (keep Actions: Read and write) > Update. The token value does not change, so the cron keeps working.
+
+### b. PHP version
+cPanel > **MultiPHP Manager**: the domain that will host the page should use **PHP 8.1 or newer** (needs the curl extension,
+which HostGator includes).
+
+### c. Files
+Folder names below are suggestions; `<home>` is the folder that contains `public_html` (File Manager shows it, e.g. `/home2/yourname`).
+
+    <home>/.maxtools_token                      already there (cron)
+    <home>/maxtools-private/config.php          copy of configurator/private/config.example.php, paths filled in
+    <home>/maxtools-private/data/               created automatically (rate-limit counters, short save log, no IPs)
+    <home>/public_html/max/index.html           the configurator page (step 6)
+    <home>/public_html/max/api/save.php         from configurator/api/
+    <home>/public_html/max/api/lib.php          from configurator/api/
+    <home>/public_html/max/api/.htaccess        from configurator/api/ (blocks direct access to lib.php)
+
+`save.php` finds `config.php` three folders up from `api/` (`<home>/maxtools-private/config.php`). If you use a different depth,
+tell me and I will change that one line.
+
+### d. Password
+cPanel > **Directory Privacy** > `public_html/max` > "Password protect this directory" > name it "Max tools" > Save, then create
+the shared user name and password. This protects the page and the endpoint together. Change the password when people leave.
+
+### e. Check
+Logged in through the password prompt, open `https://<your domain>/max/api/save.php?market=columbus-oh`. Expected:
+`{"ok":true,"market":"columbus-oh","ffg":null,"updatedUtc":null}`. A 500 message names what is missing.
