@@ -18,8 +18,13 @@ function reply(int $status, array $body): void { http_response_code($status); ec
 $configFile = getenv('MAXTOOLS_CONFIG') ?: dirname(__DIR__, 3) . '/maxtools-private/config.php';
 $cfg = is_file($configFile) ? require $configFile : null;
 if (!is_array($cfg)) reply(500, ['ok' => false, 'error' => 'The save service is not set up yet (config file missing).']);
-$token = is_file($cfg['token_file'] ?? '') ? trim((string)file_get_contents($cfg['token_file'])) : '';
-if ($token === '') reply(500, ['ok' => false, 'error' => 'The save service is not set up yet (token missing).']);
+// Say exactly which check failed (the page is behind the password, so naming the server path is fine; the token never is).
+$tf = (string)($cfg['token_file'] ?? '');
+if ($tf === '') reply(500, ['ok' => false, 'error' => 'The save service is not set up yet: token_file is not set in config.php.']);
+if (!@is_file($tf)) reply(500, ['ok' => false, 'error' => "The save service is not set up yet: no token file at $tf (check the path in config.php)."]);
+if (!@is_readable($tf)) reply(500, ['ok' => false, 'error' => "The save service is not set up yet: $tf exists but PHP cannot read it (permissions)."]);
+$token = trim((string)@file_get_contents($tf));
+if ($token === '') reply(500, ['ok' => false, 'error' => "The save service is not set up yet: $tf is empty."]);
 $cfg['token'] = $token;
 $dataDir = $cfg['data_dir'];
 $ip = $_SERVER['REMOTE_ADDR'] ?? '?';

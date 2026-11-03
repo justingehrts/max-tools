@@ -53,7 +53,7 @@ which HostGator includes).
 Folder names below are suggestions; `<home>` is the folder that contains `public_html` (File Manager shows it, e.g. `/home2/yourname`).
 
     <home>/.maxtools_token                      already there (cron)
-    <home>/maxtools-private/config.php          copy of configurator/private/config.example.php, paths filled in
+    <home>/maxtools-private/config.php          copy of configurator/private/config.example.php (finds <home> by itself)
     <home>/maxtools-private/data/               created automatically (rate-limit counters, short save log, no IPs)
     <home>/public_html/max/index.html           the configurator page (step 6)
     <home>/public_html/max/api/save.php         from configurator/api/
