@@ -58,7 +58,7 @@ with no software installed locally and an optional way to change how the layers 
 | Local Windows installer (`payload/install.ps1`) | Parses; **never run on Windows**. Now optional/legacy (only for a station that wants to run locally). |
 | FFG multi-market pipeline (`tools/build_ffg.py`) | **Run on GitHub (Nov 1, run 41313087865): green, 165/165 KMZs, 30.7 s on the runner (2.7 s data prep), live on Pages.** Not yet exercised on GitHub: custom ramps, a render failure, carry-over from a real failure. Local tests:  Local, real GRIB (IEM 2026-11-01 12Z): 165 KMZs (54 markets x 3 + legacy Ohio x 3) in **16 s on 4 cores** (1.5 s data prep, ~0.9 s slowest render). Legacy Ohio output is **pixel-identical** to the original script on the same GRIB. Per-market failure isolation and custom ramps unit-tested. |
 | One workflow, one deploy (`.github/workflows/build.yml`) | **Run on GitHub, green** (records + FFG + deploy in ~2 min). **Failure handling verified on GitHub (Nov 1)** with the manual `simulate` input: one market's FFG failing (runs 41363015716: Columbus kept its previous files, others updated), all record dots failing (41363159022: 1,541 files kept), all FFG failing (41363304871: 166 files kept); each run deployed the last good copies and ended red. Failure **email** not yet confirmed by Justin. Replaces `records.yml`. Missing/failed files are restored from the live site (`tools/carry_over.py`) before deploy; the run then ends red. |
-| Registry + PHP endpoint | Registry live. Endpoint built; tested with PHP 8.3 against a fake GitHub API (7 end-to-end tests + shared validation cases). **Not yet run on HostGator or against real GitHub.** |
+| Registry + PHP endpoint | Registry live. Endpoint built; tested with PHP 8.3 against a fake GitHub API (7 end-to-end tests + shared validation cases). **Installed on HostGator (Nov 3)** at `www.justingehrts.com/max/api/save.php` behind basic auth; **GET verified against real GitHub.** A real save (POST -> commit) not yet done. |
 
 ### Unverified (do not assume)
 - Failure emails from GitHub for red runs (scheduled runs notify whoever last edited the cron line; unconfirmed).
@@ -125,6 +125,9 @@ with no software installed locally and an optional way to change how the layers 
   and the contact-sheet image (outline + kept/dropped pieces + box per market).
 
 ## Gotchas collected so far
+- WordPress on the same domain turns the basic-auth 401 into its own 404 page (no password prompt). Fix: `ErrorDocument 401 default`
+  as the first line of `public_html/max/.htaccess` (docs/HOSTGATOR.md).
+- HostGator answers non-browser clients with a cookie challenge (`humans_*`, HTTP 409). Browsers pass it automatically.
 - GitHub's cron cannot be relied on: the old `ffg` repo's hourly `15 * * * *` ran 40 times Oct 10-18 with a median gap of 4.9 h (max 10.6 h).
   Decision (Nov 1): HostGator cron triggers the build at :45 via `workflow_dispatch` (docs/HOSTGATOR.md); GitHub's schedule is the backup.
 - Pages serves files with `cache-control: max-age=600`: a new deploy can take up to 10 minutes to show (also for carry-over's fetches).
