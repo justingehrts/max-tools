@@ -67,6 +67,15 @@ tell me and I will change that one line.
 cPanel > **Directory Privacy** > `public_html/max` > "Password protect this directory" > name it "Max tools" > Save, then create
 the shared user name and password. This protects the page and the endpoint together. Change the password when people leave.
 
+**WordPress on the same domain (justingehrts.com has it):** without the next step the browser shows WordPress's "Page not found"
+instead of a password prompt. Apache answers the password challenge with its 401 error page, that page does not exist, so the
+request falls through to WordPress, which turns it into a 404. Fix: File Manager > `public_html/max/` > enable "Show Hidden Files"
+(Settings, top right) > edit `.htaccess` (Directory Privacy created it) and add this as the **first** line:
+
+    ErrorDocument 401 default
+
+Use the URL without a trailing slash after `save.php`.
+
 ### e. Check
 Logged in through the password prompt, open `https://<your domain>/max/api/save.php?market=columbus-oh`. Expected:
 `{"ok":true,"market":"columbus-oh","ffg":null,"updatedUtc":null}`. A 500 message names what is missing.
