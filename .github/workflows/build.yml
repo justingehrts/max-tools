@@ -22,6 +22,7 @@ on:
       - 'schema/**'
       - 'configs.json'
       - 'markets.json'
+      - 'content/**'
       - '.github/workflows/build.yml'
 
 permissions:
@@ -65,7 +66,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install Python packages
-        run: pip install matplotlib jsonschema numpy scipy pygrib requests
+        run: pip install matplotlib jsonschema numpy scipy pygrib requests markdown
 
       - name: Check the registry
         run: python tools/registry.py || echo "::warning::Registry problems found; bad entries are skipped. See above."

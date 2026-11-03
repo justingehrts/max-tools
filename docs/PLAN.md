@@ -22,7 +22,10 @@ with no software installed locally and an optional way to change how the layers 
 - **Customizations go live automatically** (FFG colors only, strictly validated). No approval step.
 - **Record dots: one shared set** (Justin, Nov 3). Stations restyle the dots inside Max, so everyone uses `records/default/`. The per-market
   icon pipeline is parked in `parked/record-dot-icons/` (README says how to restore). The `records/<market-id>/` URLs (live Nov 1-3, never
-  announced) are gone. Justin will write "how to change the dots in Max" with a screenshot; where it appears is still open.
+  announced) are gone. Justin writes "how to change the dots in Max" with a screenshot in `content/record-dots-in-max.md` + `content/images/`; it
+  shows on the public URL page (Record dots tab) and later in the configurator (Nov 3).
+- **Public URL page** (Nov 3): one tab per feature (Flash flood guidance, Record dots), FFG list shows market names only (call
+  letters still work in the search box). Deep links: `#ffg`, `#record-dots`.
 - **Intake**: configurator page -> small PHP endpoint on Bluehost (token kept server-side) -> commits the registry in GitHub.
   Page and endpoint sit behind the group's shared basic-auth password.
 - **Map boxes**: from Nielsen DMA outlines + buffer, 16:9; Justin reviews a contact sheet and the final numbers are stored

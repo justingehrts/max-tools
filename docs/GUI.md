@@ -31,7 +31,10 @@ per market, shared by every station in it. Remember the choice in localStorage a
 **Record dots tab**
 - URL block: the same 28 URLs for every station (`records/default/`). Show the pattern and a 7-day x 4-type table of links with
   Copy each, and `Copy all 28 links` as a text list. Nothing to save on this tab.
-- Help: "Changing how the dots look in Max" (Justin's text + screenshot; placement still to be decided, see PLAN).
+- Help panel: "Changing how the dots look in Max". Same content as the public URL page: written once in
+  `content/record-dots-in-max.md` (+ `content/images/`), published by the build as `help/record-dots-in-max.html`. The page fetches
+  that fragment (and its images) from the Pages site (allowed external request; Pages sends CORS `*`) and inserts it as trusted HTML
+  (it comes from the repo, not from users). If the fetch fails, show "Help is on the public URL page" with a link.
 - (Parked Nov 3: the per-market icon editor. Stations restyle the dots in Max instead. See `parked/record-dot-icons/`.)
 
 **Status strip (all pages):** "Last build: FFG 12:15 PM, Record dots 12:21 PM" read from each pipeline's `status.json`.
