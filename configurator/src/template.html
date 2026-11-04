@@ -83,6 +83,14 @@
   .seg input:checked + span { font-weight: 700; color: #fff; }
   .seg label:has(input:checked) { background: #2f4a63; }
   .seg label:has(input:focus-visible) { outline: 3px solid #7aa2ff; outline-offset: -3px; }
+  .scope-ctl { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .lines-toggle { font-size: 13.5px; display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
+  .presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; margin-bottom: 4px; }
+  .presets button { text-align: left; padding: 6px 8px; min-height: 0; }
+  .presets button[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  .presets .mini { display: flex; height: 10px; border-radius: 2px; overflow: hidden; margin-bottom: 4px; border: 1px solid #0003; }
+  .presets .mini span { flex: 1; }
+  .presets b { font-size: 13.5px; font-weight: 600; }
   canvas#pv { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 4px; background: #24313c; }
   .pv-note { font-size: 12.5px; color: #9fb0bf; margin: 6px 0 0; }
   .legend { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 0; margin: 8px 0 0; font-size: 12.5px; }
@@ -144,7 +152,8 @@
         <div class="scope" aria-labelledby="pv-h">
           <div class="scope-head">
             <h3 id="pv-h" style="margin:0;color:#fff">Preview: current guidance</h3>
-            <div class="seg" role="radiogroup" aria-label="Duration" id="dur"></div>
+            <div class="scope-ctl"><label class="lines-toggle"><input type="checkbox" id="lines" checked> County lines</label>
+            <div class="seg" role="radiogroup" aria-label="Duration" id="dur"></div></div>
           </div>
           <canvas id="pv" width="960" height="540" role="img" aria-label="Preview of the current flash flood guidance with your colors"></canvas>
           <p class="pv-note" id="pv-note">Loading the preview...</p>
@@ -152,6 +161,9 @@
         </div>
 
         <div>
+          <h3 id="presets-h">Start from a preset</h3>
+          <div class="presets" id="presets" role="group" aria-labelledby="presets-h"></div>
+          <p class="muted" style="font-size:13px" id="preset-note"></p>
           <h3>Colors</h3>
           <p class="muted" style="font-size:13.5px">The inch ranges are fixed so the map means the same thing at every station. Only the colors change.</p>
           <ol class="rows" id="rows"></ol>

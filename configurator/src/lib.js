@@ -8,6 +8,26 @@ var LIB = (function () {
   var TYPES = ['HIMAX', 'LOMAX', 'HIMIN', 'LOMIN'];
   var DAYS = [1, 2, 3, 4, 5, 6, 7];
   var STALE_HOURS = 3;
+  // Ramp presets, most dangerous band first. Checked by tools/check_ramps.py (lightness changes in one direction; every
+  // neighbouring pair stays distinguishable for normal, protan, deutan and tritan vision; Rosen et al. 2026, JOM 14(13)).
+  // "legacy": true = shown for continuity but does not pass those checks.
+  var PRESETS = /*PRESETS*/[
+    {"id": "standard", "name": "Standard", "legacy": true,
+     "note": "Today's look. The two lightest bands are hard to tell apart for some color-blind viewers.",
+     "colors": ["#67000d", "#a50f15", "#cb181d", "#ef3b2c", "#fc9272", "#fff5f0", "#d9d9d9"]},
+    {"id": "standard-refined", "name": "Standard, refined",
+     "note": "Nearly the same look, with even lightness steps so every band stays distinct for color-blind viewers.",
+     "colors": ["#6d001a", "#a20015", "#cf2920", "#ef5b3d", "#ee977e", "#ecc8c3", "#f3f3f3"]},
+    {"id": "reds", "name": "Reds",
+     "note": "One hue from dark red to near white. Best on light or satellite maps.",
+     "colors": ["#790010", "#aa1017", "#d53222", "#f35f40", "#ff9171", "#ffc1ab", "#ffede5"]},
+    {"id": "blues", "name": "Blues",
+     "note": "One hue from navy to near white. Reads as water.",
+     "colors": ["#003577", "#0053a3", "#0075c5", "#0095d9", "#62b6e9", "#a5d5f4", "#e2f3fe"]},
+    {"id": "dark-maps", "name": "For dark maps",
+     "note": "The most urgent band is the brightest (yellow), fading to deep purple, so it stands out on dark basemaps.",
+     "colors": ["#fffb81", "#ffc81e", "#fc932c", "#e26341", "#ba3b49", "#8a1d45", "#4d1249"]}
+  ]/*END PRESETS*/;
 
   function bandLabel(i) {
     var f = function (x) { return x.toFixed(2); };
@@ -93,7 +113,10 @@ var LIB = (function () {
     return markets.filter(function (m) { return (m.name + ' ' + (m.stations || []).join(' ')).toLowerCase().indexOf(q) >= 0; });
   }
 
-  return { STANDARD: STANDARD, BOUNDS: BOUNDS, HOURS: HOURS, TYPES: TYPES, DAYS: DAYS, STALE_HOURS: STALE_HOURS,
+  /** The preset whose colors equal these, or null. */
+  function matchPreset(colors) { for (var i = 0; i < PRESETS.length; i++) if (sameColors(colors, PRESETS[i].colors)) return PRESETS[i]; return null; }
+
+  return { STANDARD: STANDARD, PRESETS: PRESETS, matchPreset: matchPreset, BOUNDS: BOUNDS, HOURS: HOURS, TYPES: TYPES, DAYS: DAYS, STALE_HOURS: STALE_HOURS,
            bandLabel: bandLabel, normHex: normHex, sameColors: sameColors, isStandard: isStandard, savePayload: savePayload,
            colorErrors: colorErrors, serverErrors: serverErrors, ffgUrls: ffgUrls, recordUrl: recordUrl,
            allRecordUrls: allRecordUrls, hoursOld: hoursOld, isStale: isStale, recolor: recolor, filterMarkets: filterMarkets };

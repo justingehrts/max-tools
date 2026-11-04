@@ -96,6 +96,9 @@ def main():
     rec = ''.join(f'<tr><th>Day {d}</th>' + ''.join(f'<td><a href="{base}/records/default/D{d}_{t.upper()}.kmz">{t.upper()}</a></td>'
                                                    for t in expected.TYPES) + '</tr>' for d in expected.DAYS)
     help_html = render_help(a.root, site, base).get('record-dots-in-max', '')
+    static = Path(a.root) / 'static'          # files kept in the repo and published as-is (e.g. lines/ for the preview)
+    if static.is_dir():
+        shutil.copytree(static, site, dirs_exist_ok=True)
 
     ffg_panel = (f'<div role="tabpanel" id="panel-ffg" aria-labelledby="tab-ffg">'
                  f'<h2>Flash flood guidance</h2><p class="muted">Each market has its own map box. 1, 3 and 6 hour guidance. '

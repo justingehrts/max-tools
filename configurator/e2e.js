@@ -36,6 +36,23 @@ const step = (s) => { steps.push(s); console.log('  - ' + s); };
   assert.ok((await pvColors()).includes('#fc9272'), 'standard band 4 visible in preview');
   assert.strictEqual(await p.isDisabled('#save'), true);
   assert.strictEqual(await p.textContent('#ffg-title'), 'Standard colors for Columbus, OH');
+  // county lines: drawn by default, and the toggle changes the picture
+  await p.waitForFunction(() => document.getElementById('pv').getContext('2d') && true);
+  await p.waitForTimeout(500);
+  const grab = () => p.evaluate(() => { const c = document.getElementById('pv'); return Array.from(c.getContext('2d').getImageData(0, 0, c.width, c.height).data); });
+  const withLines = await grab(); await p.uncheck('#lines'); const without = await grab(); await p.check('#lines');
+  let changed = 0; for (let i = 0; i < withLines.length; i += 4) if (withLines[i] !== without[i] || withLines[i + 1] !== without[i + 1]) changed++;
+  assert.ok(changed > 5000, 'county lines drawn (' + changed + ' pixels change with the toggle)');
+  assert.strictEqual(await p.getAttribute('[data-preset="standard"]', 'aria-pressed'), 'true');
+  step('county lines on the preview, with a toggle; Standard preset marked');
+  await p.click('[data-preset="blues"]');
+  assert.strictEqual(await p.inputValue('#h-0'), '#003577');
+  assert.match(await p.textContent('#preset-note'), /^Blues:/);
+  assert.ok((await pvColors()).includes('#62b6e9') || (await pvColors()).includes('#a5d5f4'), 'preview shows the preset');
+  await p.screenshot({ path: SHOTS + '/0-preset-blues.png', fullPage: true });
+  await p.click('#discard');
+  assert.strictEqual(await p.inputValue('#h-0'), '#67000d');
+  step('a preset fills the editor and preview; Discard returns to saved');
   await p.screenshot({ path: SHOTS + '/1-ffg-standard.png', fullPage: true });
 
   // edit: invalid then valid

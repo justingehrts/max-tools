@@ -83,6 +83,14 @@
   .seg input:checked + span { font-weight: 700; color: #fff; }
   .seg label:has(input:checked) { background: #2f4a63; }
   .seg label:has(input:focus-visible) { outline: 3px solid #7aa2ff; outline-offset: -3px; }
+  .scope-ctl { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .lines-toggle { font-size: 13.5px; display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
+  .presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; margin-bottom: 4px; }
+  .presets button { text-align: left; padding: 6px 8px; min-height: 0; }
+  .presets button[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  .presets .mini { display: flex; height: 10px; border-radius: 2px; overflow: hidden; margin-bottom: 4px; border: 1px solid #0003; }
+  .presets .mini span { flex: 1; }
+  .presets b { font-size: 13.5px; font-weight: 600; }
   canvas#pv { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 4px; background: #24313c; }
   .pv-note { font-size: 12.5px; color: #9fb0bf; margin: 6px 0 0; }
   .legend { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 0; margin: 8px 0 0; font-size: 12.5px; }
@@ -144,7 +152,8 @@
         <div class="scope" aria-labelledby="pv-h">
           <div class="scope-head">
             <h3 id="pv-h" style="margin:0;color:#fff">Preview: current guidance</h3>
-            <div class="seg" role="radiogroup" aria-label="Duration" id="dur"></div>
+            <div class="scope-ctl"><label class="lines-toggle"><input type="checkbox" id="lines" checked> County lines</label>
+            <div class="seg" role="radiogroup" aria-label="Duration" id="dur"></div></div>
           </div>
           <canvas id="pv" width="960" height="540" role="img" aria-label="Preview of the current flash flood guidance with your colors"></canvas>
           <p class="pv-note" id="pv-note">Loading the preview...</p>
@@ -152,6 +161,9 @@
         </div>
 
         <div>
+          <h3 id="presets-h">Start from a preset</h3>
+          <div class="presets" id="presets" role="group" aria-labelledby="presets-h"></div>
+          <p class="muted" style="font-size:13px" id="preset-note"></p>
           <h3>Colors</h3>
           <p class="muted" style="font-size:13.5px">The inch ranges are fixed so the map means the same thing at every station. Only the colors change.</p>
           <ol class="rows" id="rows"></ol>
@@ -200,6 +212,26 @@ var LIB = (function () {
   var TYPES = ['HIMAX', 'LOMAX', 'HIMIN', 'LOMIN'];
   var DAYS = [1, 2, 3, 4, 5, 6, 7];
   var STALE_HOURS = 3;
+  // Ramp presets, most dangerous band first. Checked by tools/check_ramps.py (lightness changes in one direction; every
+  // neighbouring pair stays distinguishable for normal, protan, deutan and tritan vision; Rosen et al. 2026, JOM 14(13)).
+  // "legacy": true = shown for continuity but does not pass those checks.
+  var PRESETS = /*PRESETS*/[
+    {"id": "standard", "name": "Standard", "legacy": true,
+     "note": "Today's look. The two lightest bands are hard to tell apart for some color-blind viewers.",
+     "colors": ["#67000d", "#a50f15", "#cb181d", "#ef3b2c", "#fc9272", "#fff5f0", "#d9d9d9"]},
+    {"id": "standard-refined", "name": "Standard, refined",
+     "note": "Nearly the same look, with even lightness steps so every band stays distinct for color-blind viewers.",
+     "colors": ["#6d001a", "#a20015", "#cf2920", "#ef5b3d", "#ee977e", "#ecc8c3", "#f3f3f3"]},
+    {"id": "reds", "name": "Reds",
+     "note": "One hue from dark red to near white. Best on light or satellite maps.",
+     "colors": ["#790010", "#aa1017", "#d53222", "#f35f40", "#ff9171", "#ffc1ab", "#ffede5"]},
+    {"id": "blues", "name": "Blues",
+     "note": "One hue from navy to near white. Reads as water.",
+     "colors": ["#003577", "#0053a3", "#0075c5", "#0095d9", "#62b6e9", "#a5d5f4", "#e2f3fe"]},
+    {"id": "dark-maps", "name": "For dark maps",
+     "note": "The most urgent band is the brightest (yellow), fading to deep purple, so it stands out on dark basemaps.",
+     "colors": ["#fffb81", "#ffc81e", "#fc932c", "#e26341", "#ba3b49", "#8a1d45", "#4d1249"]}
+  ]/*END PRESETS*/;
 
   function bandLabel(i) {
     var f = function (x) { return x.toFixed(2); };
@@ -285,7 +317,10 @@ var LIB = (function () {
     return markets.filter(function (m) { return (m.name + ' ' + (m.stations || []).join(' ')).toLowerCase().indexOf(q) >= 0; });
   }
 
-  return { STANDARD: STANDARD, BOUNDS: BOUNDS, HOURS: HOURS, TYPES: TYPES, DAYS: DAYS, STALE_HOURS: STALE_HOURS,
+  /** The preset whose colors equal these, or null. */
+  function matchPreset(colors) { for (var i = 0; i < PRESETS.length; i++) if (sameColors(colors, PRESETS[i].colors)) return PRESETS[i]; return null; }
+
+  return { STANDARD: STANDARD, PRESETS: PRESETS, matchPreset: matchPreset, BOUNDS: BOUNDS, HOURS: HOURS, TYPES: TYPES, DAYS: DAYS, STALE_HOURS: STALE_HOURS,
            bandLabel: bandLabel, normHex: normHex, sameColors: sameColors, isStandard: isStandard, savePayload: savePayload,
            colorErrors: colorErrors, serverErrors: serverErrors, ffgUrls: ffgUrls, recordUrl: recordUrl,
            allRecordUrls: allRecordUrls, hoursOld: hoursOld, isStale: isStale, recolor: recolor, filterMarkets: filterMarkets };
@@ -311,7 +346,8 @@ if (typeof module !== 'undefined') module.exports = LIB;
     hour: 1,
     saving: false,
     status: { ffg: null, records: null },
-    bins: {}              // hour -> ImageData of the bin map
+    bins: {},             // hour -> ImageData of the bin map
+    lines: null           // county/state lines for the preview ({w,h,county,state}) or 'error'
   };
 
   // ---------------------------------------------------------------- small utilities
@@ -405,7 +441,7 @@ if (typeof module !== 'undefined') module.exports = LIB;
     S.bins = {}; S.savedThisVisit = false;
     $('picker').hidden = true; $('tools').hidden = false; $('chip').hidden = false;
     $('chip-name').textContent = byId[id].name;
-    renderUrls(); loadSaved(); loadPreview();
+    S.lines = null; renderUrls(); loadSaved(); loadPreview(); loadLines();
     showTab(tabFromHash() || $('tab-ffg'));
   }
 
@@ -513,6 +549,9 @@ if (typeof module !== 'undefined') module.exports = LIB;
     $('legend').innerHTML = shown.map(function (c, i) { return '<li><i style="background:' + LIB.normHex(c) + '"><\/i>' + LIB.bandLabel(i) + '<\/li>'; }).join('');
     var name = S.market ? byId[S.market].name : '';
     $('ffg-title').textContent = S.saved ? 'Custom colors for ' + name : 'Standard colors for ' + name;
+    var pm = LIB.matchPreset(S.edit);
+    [].forEach.call(document.querySelectorAll('[data-preset]'), function (b) { b.setAttribute('aria-pressed', pm && pm.id === b.getAttribute('data-preset') ? 'true' : 'false'); });
+    $('preset-note').textContent = pm ? pm.name + ': ' + pm.note : 'Your own colors.';
     if (S.loaded && !S.saving && !S.blocked && $('ffg-state').className.indexOf('bad') < 0 && $('ffg-state').className.indexOf('good') < 0) {
       setState(dirty ? 'Unsaved changes.' + (LIB.isStandard(S.edit) ? ' Saving switches ' + name + ' back to the standard colors.' : '') :
                (S.saved ? 'These are your saved colors (saved ' + fmtDate(S.updatedUtc) + ').' : 'These are the standard colors.'), '');
@@ -607,16 +646,53 @@ if (typeof module !== 'undefined') module.exports = LIB;
     cx.strokeStyle = 'rgba(255,255,255,0.06)'; cx.lineWidth = 1;
     for (var x = 0; x <= cv.width; x += 60) { cx.beginPath(); cx.moveTo(x + .5, 0); cx.lineTo(x + .5, cv.height); cx.stroke(); }
     for (var y = 0; y <= cv.height; y += 60) { cx.beginPath(); cx.moveTo(0, y + .5); cx.lineTo(cv.width, y + .5); cx.stroke(); }
-    if (!b) return;
-    if (b === 'error') { $('pv-note').textContent = 'The preview is not available right now. The colors and URLs work as usual.'; return; }
+    if (!b) { drawLines(cx, cv); return; }
+    if (b === 'error') { drawLines(cx, cv); $('pv-note').textContent = 'The preview is not available right now. The colors and URLs work as usual.'; return; }
     var errs = LIB.colorErrors(S.edit), colors = Object.keys(errs).length ? savedColors() : S.edit;
     off.width = b.width; off.height = b.height;
     var oc = off.getContext('2d'), out = oc.createImageData(b.width, b.height);
     LIB.recolor(b.data, colors, out.data); oc.putImageData(out, 0, 0);
     cx.drawImage(off, 0, 0, cv.width, cv.height);
+    drawLines(cx, cv);
     var st = S.status.ffg;
     $('pv-note').textContent = byId[S.market].name + ', ' + S.hour + '-hour guidance' + (st ? ', built ' + fmtTime(st.generatedUtc) : '') +
       '. Same map box and shapes as the layer in Max; no basemap here.';
+  }
+
+  function loadLines() {
+    var m = S.market;
+    fetch(BASE + '/lines/' + m + '.json').then(function (r) { if (!r.ok) throw r; return r.json(); })
+      .then(function (d) { if (m === S.market) { S.lines = d; draw(); } }, function () { if (m === S.market) S.lines = 'error'; });
+  }
+  function drawLines(cx, cv) {
+    var L = S.lines;
+    if (!$('lines').checked || !L || L === 'error') return;
+    var k = cv.width / L.w;
+    function stroke(list, color, width) {
+      cx.strokeStyle = color; cx.lineWidth = width; cx.lineJoin = 'round';
+      list.forEach(function (p) {
+        cx.beginPath(); cx.moveTo(p[0] * k, p[1] * k);
+        for (var i = 2; i < p.length; i += 2) cx.lineTo(p[i] * k, p[i + 1] * k);
+        cx.stroke();
+      });
+    }
+    // a faint light halo under a dark line reads on both light and dark bands
+    stroke(L.county, 'rgba(255,255,255,0.35)', 2.2); stroke(L.county, 'rgba(20,24,28,0.55)', 0.9);
+    stroke(L.state, 'rgba(255,255,255,0.5)', 3.4); stroke(L.state, 'rgba(10,12,14,0.85)', 1.6);
+  }
+  $('lines').addEventListener('change', draw);
+
+  // ---------------------------------------------------------------- presets
+  function buildPresets() {
+    $('presets').innerHTML = LIB.PRESETS.map(function (p) {
+      return '<button type="button" data-preset="' + esc(p.id) + '" aria-pressed="false" title="' + esc(p.note) + '"><span class="mini" aria-hidden="true">' +
+        p.colors.map(function (c) { return '<span style="background:' + c + '"><\/span>'; }).join('') + '<\/span><b>' + esc(p.name) + '<\/b><\/button>';
+    }).join('');
+    $('presets').addEventListener('click', function (ev) {
+      var b = ev.target.closest('[data-preset]'); if (!b) return;
+      var p = LIB.PRESETS.filter(function (x) { return x.id === b.getAttribute('data-preset'); })[0];
+      clearMessages(); setEdit(p.colors.slice());
+    });
   }
 
   // ---------------------------------------------------------------- help text (written by Justin in content/*.md)
@@ -628,7 +704,7 @@ if (typeof module !== 'undefined') module.exports = LIB;
   }
 
   // ---------------------------------------------------------------- start
-  buildRows(); buildDurations();
+  buildRows(); buildDurations(); buildPresets();
   window.addEventListener('beforeunload', function (ev) { if (isDirty() && !S.saving) { ev.preventDefault(); ev.returnValue = ''; } });
   loadStatus(); setInterval(loadStatus, 5 * 60 * 1000);
   loadHelp('record-dots-in-max', 'rec-help', 'Changing how the dots look in Max');

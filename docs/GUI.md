@@ -23,6 +23,13 @@ per market, shared by every station in it. Remember the choice in localStorage a
   a published bin-map PNG (see PLAN.md) so ramp edits are accurate without a server round trip. No map tiles / external requests.
 - Ramp editor: 7 rows. The range label is fixed ("Under 0.50 in", "0.50 to 0.75 in" ... "3.00 in and up") with a color swatch +
   hex field. Thresholds are not editable (explain: so the product means the same thing at every station). Ramp bar preview.
+- Presets (Nov 4): "Start from a preset" fills the editor (still needs Save). Defined in `configurator/src/lib.js` (`PRESETS`), each
+  checked by `tools/check_ramps.py`: lightness changes in one direction and every neighbouring band stays distinguishable for normal,
+  protan, deutan and tritan vision (CIEDE2000 >= 8 after Machado 2009 simulation), following Rosen et al. 2026 (JOM 14(13): prefer
+  single-hue or one-direction multi-hue sequential ramps for deterministic data, 5-7 bins, colour-blind safe, mind dark backgrounds).
+  "Standard" (today's look) is kept but marked legacy: its two lightest bands invert lightness and are close for protan viewers.
+- Preview overlays county and state lines (toggle "County lines"): `static/lines/<market>.json`, cut from Census 2023 1:5M
+  boundaries by `tools/make_county_lines.py` in the same pixel frame as the KMZ (rerun when boxes change).
 - Buttons: `Save my colors`, `Use the standard colors`. Save is disabled until something differs from what's saved.
 - States: unchanged, unsaved changes, saving, saved (show the response's `goesLive`, e.g. "usually within 5 minutes", link to build status), error (field-level where possible).
 - Saving over an existing custom look asks first: "Columbus already has custom colors, saved Oct 12. Replace them?" (Replace / Keep mine).
@@ -44,7 +51,7 @@ Turns red if older than 3 hours or if the fetch fails ("Can't reach the status p
 
 **Built (Nov 4):** `configurator/src/` (template, `lib.js`, `app.js`), `configurator/build.py` -> `configurator/dist/index.html`
 (markets embedded; upload as `public_html/max/index.html`). Requests the page makes: `api/save.php` (same origin), and from the Pages
-site: `ffg/status.json`, `records/status.json`, `markets/<id>/bins_{1,3,6}hr.png` (preview bin maps, made by `tools/build_ffg.py`),
+site: `ffg/status.json`, `records/status.json`, `markets/<id>/bins_{1,3,6}hr.png` (preview bin maps, made by `tools/build_ffg.py`), `lines/<id>.json`,
 `help/*.html` and `help/images/*`. Tests: `node configurator/test_lib.js`, `tests/test_configurator_dist.py`, and a Chromium
 end-to-end test (`tests/test_configurator_browser.py`, local only: needs Playwright).
 

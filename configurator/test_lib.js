@@ -66,4 +66,11 @@ t('market filter matches names and call letters', function () {
   assert.strictEqual(L.filterMarkets(ms, 'sea').length, 1);
   assert.strictEqual(L.filterMarkets(ms, '').length, 2);
 });
+t('presets', function () {
+  assert.ok(L.PRESETS.length >= 4);
+  L.PRESETS.forEach(function (p) { assert.strictEqual(p.colors.length, 7); p.colors.forEach(function (c) { assert.strictEqual(L.normHex(c), c); }); });
+  assert.deepStrictEqual(L.PRESETS[0].colors, L.STANDARD);
+  assert.strictEqual(L.matchPreset(L.STANDARD.map(function (c) { return c.toUpperCase(); })).id, 'standard');
+  assert.strictEqual(L.matchPreset(['#000000', '#000000', '#000000', '#000000', '#000000', '#000000', '#000000']), null);
+});
 console.log('configurator lib tests OK (' + n + ')');

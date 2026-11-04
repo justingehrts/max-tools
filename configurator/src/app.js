@@ -17,7 +17,8 @@
     hour: 1,
     saving: false,
     status: { ffg: null, records: null },
-    bins: {}              // hour -> ImageData of the bin map
+    bins: {},             // hour -> ImageData of the bin map
+    lines: null           // county/state lines for the preview ({w,h,county,state}) or 'error'
   };
 
   // ---------------------------------------------------------------- small utilities
@@ -111,7 +112,7 @@
     S.bins = {}; S.savedThisVisit = false;
     $('picker').hidden = true; $('tools').hidden = false; $('chip').hidden = false;
     $('chip-name').textContent = byId[id].name;
-    renderUrls(); loadSaved(); loadPreview();
+    S.lines = null; renderUrls(); loadSaved(); loadPreview(); loadLines();
     showTab(tabFromHash() || $('tab-ffg'));
   }
 
@@ -219,6 +220,9 @@
     $('legend').innerHTML = shown.map(function (c, i) { return '<li><i style="background:' + LIB.normHex(c) + '"></i>' + LIB.bandLabel(i) + '</li>'; }).join('');
     var name = S.market ? byId[S.market].name : '';
     $('ffg-title').textContent = S.saved ? 'Custom colors for ' + name : 'Standard colors for ' + name;
+    var pm = LIB.matchPreset(S.edit);
+    [].forEach.call(document.querySelectorAll('[data-preset]'), function (b) { b.setAttribute('aria-pressed', pm && pm.id === b.getAttribute('data-preset') ? 'true' : 'false'); });
+    $('preset-note').textContent = pm ? pm.name + ': ' + pm.note : 'Your own colors.';
     if (S.loaded && !S.saving && !S.blocked && $('ffg-state').className.indexOf('bad') < 0 && $('ffg-state').className.indexOf('good') < 0) {
       setState(dirty ? 'Unsaved changes.' + (LIB.isStandard(S.edit) ? ' Saving switches ' + name + ' back to the standard colors.' : '') :
                (S.saved ? 'These are your saved colors (saved ' + fmtDate(S.updatedUtc) + ').' : 'These are the standard colors.'), '');
@@ -313,16 +317,53 @@
     cx.strokeStyle = 'rgba(255,255,255,0.06)'; cx.lineWidth = 1;
     for (var x = 0; x <= cv.width; x += 60) { cx.beginPath(); cx.moveTo(x + .5, 0); cx.lineTo(x + .5, cv.height); cx.stroke(); }
     for (var y = 0; y <= cv.height; y += 60) { cx.beginPath(); cx.moveTo(0, y + .5); cx.lineTo(cv.width, y + .5); cx.stroke(); }
-    if (!b) return;
-    if (b === 'error') { $('pv-note').textContent = 'The preview is not available right now. The colors and URLs work as usual.'; return; }
+    if (!b) { drawLines(cx, cv); return; }
+    if (b === 'error') { drawLines(cx, cv); $('pv-note').textContent = 'The preview is not available right now. The colors and URLs work as usual.'; return; }
     var errs = LIB.colorErrors(S.edit), colors = Object.keys(errs).length ? savedColors() : S.edit;
     off.width = b.width; off.height = b.height;
     var oc = off.getContext('2d'), out = oc.createImageData(b.width, b.height);
     LIB.recolor(b.data, colors, out.data); oc.putImageData(out, 0, 0);
     cx.drawImage(off, 0, 0, cv.width, cv.height);
+    drawLines(cx, cv);
     var st = S.status.ffg;
     $('pv-note').textContent = byId[S.market].name + ', ' + S.hour + '-hour guidance' + (st ? ', built ' + fmtTime(st.generatedUtc) : '') +
       '. Same map box and shapes as the layer in Max; no basemap here.';
+  }
+
+  function loadLines() {
+    var m = S.market;
+    fetch(BASE + '/lines/' + m + '.json').then(function (r) { if (!r.ok) throw r; return r.json(); })
+      .then(function (d) { if (m === S.market) { S.lines = d; draw(); } }, function () { if (m === S.market) S.lines = 'error'; });
+  }
+  function drawLines(cx, cv) {
+    var L = S.lines;
+    if (!$('lines').checked || !L || L === 'error') return;
+    var k = cv.width / L.w;
+    function stroke(list, color, width) {
+      cx.strokeStyle = color; cx.lineWidth = width; cx.lineJoin = 'round';
+      list.forEach(function (p) {
+        cx.beginPath(); cx.moveTo(p[0] * k, p[1] * k);
+        for (var i = 2; i < p.length; i += 2) cx.lineTo(p[i] * k, p[i + 1] * k);
+        cx.stroke();
+      });
+    }
+    // a faint light halo under a dark line reads on both light and dark bands
+    stroke(L.county, 'rgba(255,255,255,0.35)', 2.2); stroke(L.county, 'rgba(20,24,28,0.55)', 0.9);
+    stroke(L.state, 'rgba(255,255,255,0.5)', 3.4); stroke(L.state, 'rgba(10,12,14,0.85)', 1.6);
+  }
+  $('lines').addEventListener('change', draw);
+
+  // ---------------------------------------------------------------- presets
+  function buildPresets() {
+    $('presets').innerHTML = LIB.PRESETS.map(function (p) {
+      return '<button type="button" data-preset="' + esc(p.id) + '" aria-pressed="false" title="' + esc(p.note) + '"><span class="mini" aria-hidden="true">' +
+        p.colors.map(function (c) { return '<span style="background:' + c + '"></span>'; }).join('') + '</span><b>' + esc(p.name) + '</b></button>';
+    }).join('');
+    $('presets').addEventListener('click', function (ev) {
+      var b = ev.target.closest('[data-preset]'); if (!b) return;
+      var p = LIB.PRESETS.filter(function (x) { return x.id === b.getAttribute('data-preset'); })[0];
+      clearMessages(); setEdit(p.colors.slice());
+    });
   }
 
   // ---------------------------------------------------------------- help text (written by Justin in content/*.md)
@@ -334,7 +375,7 @@
   }
 
   // ---------------------------------------------------------------- start
-  buildRows(); buildDurations();
+  buildRows(); buildDurations(); buildPresets();
   window.addEventListener('beforeunload', function (ev) { if (isDirty() && !S.saving) { ev.preventDefault(); ev.returnValue = ''; } });
   loadStatus(); setInterval(loadStatus, 5 * 60 * 1000);
   loadHelp('record-dots-in-max', 'rec-help', 'Changing how the dots look in Max');

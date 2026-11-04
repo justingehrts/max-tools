@@ -54,7 +54,7 @@ with no software installed locally and an optional way to change how the layers 
 |---|---|
 | Record dots cloud pipeline (`records/`, `tools/`) | **Run on GitHub, green** (since Nov 1). 28/28 NOAA downloads, one shared set at `records/default/`; learned-station commit-back works; Pages CORS `*` seen. |
 | `FetchDailyRecords.ps1` config patch | Done. Reads optional `config.json` (folders, NWS User-Agent). Without it, behaves as before. Verified under PowerShell 7 with live NOAA data (28/28 downloads). Needed by the cloud workflow. |
-| Configurator page (`configurator/`) | **Built (Nov 4), not yet uploaded.** Market picker, FFG tab (URLs + copy, live preview recolored from published bin maps, 7-color editor, save with confirm/conflict handling), Record dots tab, Adding-layers tab, status strip. Verified in Chromium end to end against the real `save.php` and a fake GitHub (11 checks incl. 390 px and dark theme). Old prototype stays in `legacy/`. |
+| Configurator page (`configurator/`) | **Built (Nov 4), not yet uploaded.** Market picker, FFG tab (URLs + copy, live preview recolored from published bin maps with county/state lines, color presets, 7-color editor, save with confirm/conflict handling), Record dots tab, Adding-layers tab, status strip. Verified in Chromium end to end against the real `save.php` and a fake GitHub (11 checks incl. 390 px and dark theme). Old prototype stays in `legacy/`. |
 | Local Windows installer (`payload/install.ps1`) | Parses; **never run on Windows**. Now optional/legacy (only for a station that wants to run locally). |
 | FFG multi-market pipeline (`tools/build_ffg.py`) | **Run on GitHub (Nov 1, run 41313087865): green, 165/165 KMZs, 30.7 s on the runner (2.7 s data prep), live on Pages.** Not yet exercised on GitHub: custom ramps, a render failure, carry-over from a real failure. Local tests:  Local, real GRIB (IEM 2026-11-01 12Z): 165 KMZs (54 markets x 3 + legacy Ohio x 3) in **16 s on 4 cores** (1.5 s data prep, ~0.9 s slowest render). Legacy Ohio output is **pixel-identical** to the original script on the same GRIB. Per-market failure isolation and custom ramps unit-tested. |
 | One workflow, one deploy (`.github/workflows/build.yml`) | **Run on GitHub, green** (records + FFG + deploy in ~2 min). **Failure handling verified on GitHub (Nov 1)** with the manual `simulate` input: one market's FFG failing (runs 41363015716: Columbus kept its previous files, others updated), all record dots failing (41363159022: 1,541 files kept), all FFG failing (41363304871: 166 files kept); each run deployed the last good copies and ended red. Failure **email** not yet confirmed by Justin. Replaces `records.yml`. Missing/failed files are restored from the live site (`tools/carry_over.py`) before deploy; the run then ends red. |
@@ -125,6 +125,9 @@ with no software installed locally and an optional way to change how the layers 
   and the contact-sheet image (outline + kept/dropped pieces + box per market).
 
 ## Gotchas collected so far
+- The original standard FFG ramp is not monotonic in lightness (cream L*97 before grey L*87) and its two lightest bands are close for
+  protan viewers (CIEDE2000 5.9). Kept as "Standard" for continuity; "Standard, refined" fixes both (tools/check_ramps.py). Open
+  question for Justin: switch the default?
 - WordPress on the same domain turns the basic-auth 401 into its own 404 page (no password prompt). Fix: `ErrorDocument 401 default`
   as the first line of `public_html/max/.htaccess` (docs/HOSTGATOR.md).
 - HostGator answers non-browser clients with a cookie challenge (`humans_*`, HTTP 409). Browsers pass it automatically.
