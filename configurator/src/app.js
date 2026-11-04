@@ -18,7 +18,8 @@
     saving: false,
     status: { ffg: null, records: null },
     bins: {},             // hour -> ImageData of the bin map
-    lines: null           // county/state lines for the preview ({w,h,county,state}) or 'error'
+    lines: null,          // county/state lines for the preview ({w,h,county,state}) or 'error'
+    keep: []              // last color of each hidden band, restored when it is shown again
   };
 
   // ---------------------------------------------------------------- small utilities
@@ -186,6 +187,7 @@
     $('rows').innerHTML = LIB.STANDARD.map(function (_, i) {
       var lab = LIB.bandLabel(i);
       return '<li><span id="lab-' + i + '">' + lab + '</span>' +
+        '<label class="show"><input type="checkbox" id="v-' + i + '" checked aria-describedby="lab-' + i + '"> Show</label>' +
         '<input type="color" id="c-' + i + '" aria-labelledby="lab-' + i + '" title="Pick a color for ' + lab + '">' +
         '<input type="text" class="hex" id="h-' + i + '" maxlength="7" spellcheck="false" autocomplete="off" aria-label="' + lab + ' color code" aria-describedby="e-' + i + '">' +
         '<span class="err" id="e-' + i + '"></span></li>';
@@ -195,12 +197,25 @@
       $('h-' + i).addEventListener('input', function (ev) {
         S.edit[i] = ev.target.value; var v = LIB.normHex(ev.target.value); if (v) $('c-' + i).value = v; refresh();
       });
-      $('h-' + i).addEventListener('blur', function (ev) { var v = LIB.normHex(ev.target.value); if (v) { ev.target.value = v; S.edit[i] = v; } refresh(); });
+      $('h-' + i).addEventListener('blur', function (ev) { if (S.edit[i] === LIB.NONE) return; var v = LIB.normHex(ev.target.value); if (v) { ev.target.value = v; S.edit[i] = v; } refresh(); });
+      $('v-' + i).addEventListener('change', function (ev) {
+        if (ev.target.checked) { S.edit[i] = S.keep[i] || LIB.STANDARD[i]; }
+        else { S.keep[i] = LIB.normHex($('h-' + i).value) || LIB.STANDARD[i]; S.edit[i] = LIB.NONE; }
+        syncRow(i); refresh();
+      });
     });
+  }
+  // A hidden band keeps showing its last color (greyed out) so un-hiding brings it back.
+  function syncRow(i) {
+    var hidden = S.edit[i] === LIB.NONE, c = hidden ? (S.keep[i] || LIB.STANDARD[i]) : S.edit[i];
+    $('v-' + i).checked = !hidden;
+    $('h-' + i).value = c; $('c-' + i).value = LIB.normHex(c) || '#000000';
+    $('h-' + i).disabled = hidden; $('c-' + i).disabled = hidden;
+    $('h-' + i).closest('li').classList.toggle('hidden-band', hidden);
   }
   function setEdit(colors) {
     S.edit = colors.slice();
-    S.edit.forEach(function (c, i) { $('h-' + i).value = c; $('c-' + i).value = LIB.normHex(c) || '#000000'; $('e-' + i).textContent = ''; });
+    S.edit.forEach(function (c, i) { syncRow(i); $('e-' + i).textContent = ''; });
     refresh();
   }
   function setState(msg, kind) { var e = $('ffg-state'); e.textContent = msg; e.className = 'state' + (kind ? ' ' + kind : ''); }
@@ -211,13 +226,15 @@
       $('h-' + i).setAttribute('aria-invalid', errs[i] ? 'true' : 'false');
       if (errs[i] || $('e-' + i).getAttribute('data-server') !== 'y') $('e-' + i).textContent = errs[i] || '';
     });
+    $('rows-err').textContent = errs.all || '';
     var dirty = isDirty(), valid = Object.keys(errs).length === 0;
     $('save').disabled = !dirty || !valid || S.saving || !!S.blocked || !S.loaded;
     $('discard').hidden = !dirty || S.saving;
     $('standard').disabled = LIB.isStandard(S.edit) || S.saving;
     var shown = valid ? S.edit : savedColors();
-    $('ramp').innerHTML = shown.map(function (c) { return '<span style="background:' + LIB.normHex(c) + '"></span>'; }).join('');
-    $('legend').innerHTML = shown.map(function (c, i) { return '<li><i style="background:' + LIB.normHex(c) + '"></i>' + LIB.bandLabel(i) + '</li>'; }).join('');
+    function swatch(c) { return c === LIB.NONE ? ' class="hid"' : ' style="background:' + LIB.normHex(c) + '"'; }
+    $('ramp').innerHTML = shown.map(function (c) { return '<span' + swatch(c) + '></span>'; }).join('');
+    $('legend').innerHTML = shown.map(function (c, i) { return '<li><i' + swatch(c) + '></i>' + LIB.bandLabel(i) + (c === LIB.NONE ? ' (hidden)' : '') + '</li>'; }).join('');
     var name = S.market ? byId[S.market].name : '';
     $('ffg-title').textContent = S.saved ? 'Custom colors for ' + name : 'Standard colors for ' + name;
     var pm = LIB.matchPreset(S.edit);

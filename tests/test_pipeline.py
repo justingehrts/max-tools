@@ -37,12 +37,27 @@ class FFG(unittest.TestCase):
         self.assertEqual(sorted(names), ['doc.kml', 'ffg_overlay_1hr.png'])
         self.assertIn('stamp', zipfile.ZipFile(site / good[0]).read('doc.kml').decode())
 
+    def test_hidden_band_is_transparent_in_the_kmz(self):
+        import io
+        from PIL import Image
+        fake_grids(); site = Path(tempfile.mkdtemp())
+        colors = build_ffg.STANDARD[:6] + ['none']          # z runs 0.4 .. 3.4 in, so the top band (>= 3 in) exists
+        job = ('markets/h/Custom_FFG_1hr.kmz', 1, (-100, 25, -70, 50), colors, 'stamp', str(site))
+        self.assertIsNone(build_ffg.render(job)[1])
+        img = Image.open(io.BytesIO(zipfile.ZipFile(site / job[0]).read('ffg_overlay_1hr.png'))).convert('RGBA')
+        a = np.asarray(img)
+        right = a[100:-100, -300:-50]                        # east side: the highest values, the hidden band
+        left = a[100:-100, 300:600]
+        self.assertTrue((right[..., 3] == 0).mean() > 0.95, 'hidden band left clear')
+        self.assertTrue((left[..., 3] == 255).mean() > 0.95, 'other bands drawn')
+
     def test_jobs_cover_every_market_plus_legacy_and_use_custom_colors(self):
         jobs, problems, n = build_ffg.make_jobs(ROOT, 'site', 'x')
         markets, _ = registry.load_markets(ROOT)
         self.assertEqual(len(jobs), 3 * (len(markets) + 1)); self.assertEqual(problems, [])
         legacy = [j for j in jobs if j[0] == 'Custom_FFG_1hr.kmz'][0]
         self.assertEqual(legacy[2], (-85.0, 38.0, -80.0, 42.0))
+        self.assertEqual(legacy[3], build_ffg.ORIGINAL)                     # old Ohio look kept for the drop-in copy
         d = Path(tempfile.mkdtemp()); shutil.copytree(ROOT / 'schema', d / 'schema'); shutil.copy(ROOT / 'markets.json', d)
         mine = ['#000000'] * 6 + ['#ffffff']
         (d / 'configs.json').write_text(json.dumps({'schemaVersion': 1, 'configs': [

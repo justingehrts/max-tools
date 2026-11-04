@@ -2,7 +2,8 @@
 var LIB = (function () {
   'use strict';
   // Must match tools/build_ffg.py (STANDARD, BOUNDS) and the server's rules (configurator/api/lib.php).
-  var STANDARD = ['#67000d', '#a50f15', '#cb181d', '#ef3b2c', '#fc9272', '#fff5f0', '#d9d9d9'];
+  var STANDARD = ['#6d001a', '#a20015', '#cf2920', '#ef5b3d', '#ee977e', '#ecc8c3', '#f3f3f3'];   // default since Nov 4, 2026
+  var NONE = 'none';   // a hidden band (transparent in the KMZ)
   var BOUNDS = [0, 0.5, 0.75, 1, 1.5, 2, 3];
   var HOURS = [1, 3, 6];
   var TYPES = ['HIMAX', 'LOMAX', 'HIMIN', 'LOMIN'];
@@ -12,11 +13,8 @@ var LIB = (function () {
   // neighbouring pair stays distinguishable for normal, protan, deutan and tritan vision; Rosen et al. 2026, JOM 14(13)).
   // "legacy": true = shown for continuity but does not pass those checks.
   var PRESETS = /*PRESETS*/[
-    {"id": "standard", "name": "Standard", "legacy": true,
-     "note": "Today's look. The two lightest bands are hard to tell apart for some color-blind viewers.",
-     "colors": ["#67000d", "#a50f15", "#cb181d", "#ef3b2c", "#fc9272", "#fff5f0", "#d9d9d9"]},
-    {"id": "standard-refined", "name": "Standard, refined",
-     "note": "Nearly the same look, with even lightness steps so every band stays distinct for color-blind viewers.",
+    {"id": "standard", "name": "Standard",
+     "note": "The default. Even lightness steps, and every band stays distinct for color-blind viewers.",
      "colors": ["#6d001a", "#a20015", "#cf2920", "#ef5b3d", "#ee977e", "#ecc8c3", "#f3f3f3"]},
     {"id": "reds", "name": "Reds",
      "note": "One hue from dark red to near white. Best on light or satellite maps.",
@@ -26,7 +24,10 @@ var LIB = (function () {
      "colors": ["#003577", "#0053a3", "#0075c5", "#0095d9", "#62b6e9", "#a5d5f4", "#e2f3fe"]},
     {"id": "dark-maps", "name": "For dark maps",
      "note": "The most urgent band is the brightest (yellow), fading to deep purple, so it stands out on dark basemaps.",
-     "colors": ["#fffb81", "#ffc81e", "#fc932c", "#e26341", "#ba3b49", "#8a1d45", "#4d1249"]}
+     "colors": ["#fffb81", "#ffc81e", "#fc932c", "#e26341", "#ba3b49", "#8a1d45", "#4d1249"]},
+    {"id": "original", "name": "Original", "legacy": true,
+     "note": "The look before Nov 2026. Its two lightest bands are hard to tell apart for some color-blind viewers.",
+     "colors": ["#67000d", "#a50f15", "#cb181d", "#ef3b2c", "#fc9272", "#fff5f0", "#d9d9d9"]}
   ]/*END PRESETS*/;
 
   function bandLabel(i) {
@@ -44,9 +45,12 @@ var LIB = (function () {
     return /^#[0-9a-fA-F]{6}$/.test(s) ? s.toLowerCase() : null;
   }
 
+  /** A band value: '#rrggbb' (normalised) or 'none' (hidden); anything else -> null. */
+  function normColor(v) { return v === NONE ? NONE : normHex(v); }
+
   function sameColors(a, b) {
     if (!a || !b || a.length !== b.length) return false;
-    for (var i = 0; i < a.length; i++) if (normHex(a[i]) !== normHex(b[i])) return false;
+    for (var i = 0; i < a.length; i++) if (normColor(a[i]) !== normColor(b[i])) return false;
     return true;
   }
 
@@ -54,14 +58,15 @@ var LIB = (function () {
 
   /** What to send: null when the colors are the standard ones (the server then removes the override). */
   function savePayload(market, colors, expectUpdatedUtc) {
-    var clean = colors.map(normHex);
+    var clean = colors.map(normColor);
     return { market: market, ffg: isStandard(clean) ? null : { colors: clean }, expectUpdatedUtc: expectUpdatedUtc || null };
   }
 
   /** Per-row errors for the editor: { index: message }. */
   function colorErrors(colors) {
     var err = {};
-    colors.forEach(function (c, i) { if (!normHex(c)) err[i] = 'Use a color like #a50f15.'; });
+    colors.forEach(function (c, i) { if (!normColor(c)) err[i] = 'Use a color like #a50f15.'; });
+    if (!Object.keys(err).length && colors.every(function (c) { return c === NONE; })) err.all = 'Show at least one band.';
     return err;
   }
 
@@ -70,7 +75,7 @@ var LIB = (function () {
     var out = { rows: {}, form: [] };
     Object.keys(errors || {}).forEach(function (k) {
       var m = /^ffg\.colors\[(\d)\]$/.exec(k);
-      if (m) out.rows[+m[1]] = errors[k]; else out.form.push(errors[k]);
+      if (m) out.rows[+m[1]] = errors[k]; else out.form.push(errors[k]);   // e.g. 'ffg.colors': all bands hidden
     });
     return out;
   }
@@ -96,11 +101,11 @@ var LIB = (function () {
    * Returns RGBA bytes: band colors fully opaque, everything else transparent. Same colors the KMZ would use.
    */
   function recolor(bins, colors, out) {
-    var rgb = colors.map(function (c) { var h = normHex(c) || '#000000'; return [parseInt(h.substr(1, 2), 16), parseInt(h.substr(3, 2), 16), parseInt(h.substr(5, 2), 16)]; });
+    var rgb = colors.map(function (c) { var h = normHex(c); return h ? [parseInt(h.substr(1, 2), 16), parseInt(h.substr(3, 2), 16), parseInt(h.substr(5, 2), 16)] : null; });
     out = out || new Uint8ClampedArray(bins.length);
     for (var i = 0; i < bins.length; i += 4) {
       var b = bins[i];
-      if (b < rgb.length && bins[i + 3] > 0) { out[i] = rgb[b][0]; out[i + 1] = rgb[b][1]; out[i + 2] = rgb[b][2]; out[i + 3] = 255; }
+      if (b < rgb.length && rgb[b] && bins[i + 3] > 0) { out[i] = rgb[b][0]; out[i + 1] = rgb[b][1]; out[i + 2] = rgb[b][2]; out[i + 3] = 255; }
       else { out[i] = out[i + 1] = out[i + 2] = out[i + 3] = 0; }
     }
     return out;
@@ -116,7 +121,7 @@ var LIB = (function () {
   /** The preset whose colors equal these, or null. */
   function matchPreset(colors) { for (var i = 0; i < PRESETS.length; i++) if (sameColors(colors, PRESETS[i].colors)) return PRESETS[i]; return null; }
 
-  return { STANDARD: STANDARD, PRESETS: PRESETS, matchPreset: matchPreset, BOUNDS: BOUNDS, HOURS: HOURS, TYPES: TYPES, DAYS: DAYS, STALE_HOURS: STALE_HOURS,
+  return { STANDARD: STANDARD, NONE: NONE, normColor: normColor, PRESETS: PRESETS, matchPreset: matchPreset, BOUNDS: BOUNDS, HOURS: HOURS, TYPES: TYPES, DAYS: DAYS, STALE_HOURS: STALE_HOURS,
            bandLabel: bandLabel, normHex: normHex, sameColors: sameColors, isStandard: isStandard, savePayload: savePayload,
            colorErrors: colorErrors, serverErrors: serverErrors, ffgUrls: ffgUrls, recordUrl: recordUrl,
            allRecordUrls: allRecordUrls, hoursOld: hoursOld, isStale: isStale, recolor: recolor, filterMarkets: filterMarkets };

@@ -1,24 +1,345 @@
 {
-  "description": "Shared cases for every validator of a configs.json entry (Python tools/registry.py and PHP configurator/api/lib.php). Markets refer to markets.json.",
-  "cases": [
-    {"valid": true,  "entry": {"market": "columbus-oh"}},
-    {"valid": true,  "entry": {"market": "columbus-oh", "ffg": {"colors": ["#67000d", "#a50f15", "#cb181d", "#ef3b2c", "#fc9272", "#fff5f0", "#d9d9d9"]}}},
-    {"valid": true,  "entry": {"market": "seattle-wa", "updatedUtc": "2026-11-03T12:00:00Z", "ffg": {"colors": ["#ABCDEF", "#000000", "#111111", "#222222", "#333333", "#444444", "#555555"]}}},
-    {"valid": false, "entry": {"market": "nowhere-zz"}},
-    {"valid": false, "entry": {"market": "default"}},
-    {"valid": false, "entry": {"market": "Columbus-OH"}},
-    {"valid": false, "entry": {"market": "columbus-oh", "extra": 1}},
-    {"valid": false, "entry": {"market": "columbus-oh", "ffg": {"colors": ["#000000", "#000000", "#000000", "#000000", "#000000", "#000000"]}}},
-    {"valid": false, "entry": {"market": "columbus-oh", "ffg": {"colors": ["#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000"]}}},
-    {"valid": false, "entry": {"market": "columbus-oh", "ffg": {"colors": ["#00000g", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000"]}}},
-    {"valid": false, "entry": {"market": "columbus-oh", "ffg": {"colors": ["red", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000"]}}},
-    {"valid": false, "entry": {"market": "columbus-oh", "ffg": {"colors": ["#000000\n", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000"]}}},
-    {"valid": false, "entry": {"market": "columbus-oh", "ffg": {"colors": [0, "#000000", "#000000", "#000000", "#000000", "#000000", "#000000"]}}},
-    {"valid": false, "entry": {"market": "columbus-oh", "ffg": {}}},
-    {"valid": false, "entry": {"market": "columbus-oh", "ffg": {"colors": ["#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000"], "x": 1}}},
-    {"valid": false, "entry": {"market": "columbus-oh", "recordDots": {"icons": {}}}},
-    {"valid": false, "entry": {"market": "columbus-oh", "updatedUtc": "yesterday"}},
-    {"valid": false, "entry": {"market": ["columbus-oh"]}},
-    {"valid": false, "entry": "columbus-oh"}
-  ]
+ "description": "Shared cases for every validator of a configs.json entry (Python tools/registry.py and PHP configurator/api/lib.php). Markets refer to markets.json.",
+ "cases": [
+  {
+   "valid": true,
+   "entry": {
+    "market": "columbus-oh"
+   }
+  },
+  {
+   "valid": true,
+   "entry": {
+    "market": "columbus-oh",
+    "ffg": {
+     "colors": [
+      "#67000d",
+      "#a50f15",
+      "#cb181d",
+      "#ef3b2c",
+      "#fc9272",
+      "#fff5f0",
+      "#d9d9d9"
+     ]
+    }
+   }
+  },
+  {
+   "valid": true,
+   "entry": {
+    "market": "seattle-wa",
+    "updatedUtc": "2026-11-03T12:00:00Z",
+    "ffg": {
+     "colors": [
+      "#ABCDEF",
+      "#000000",
+      "#111111",
+      "#222222",
+      "#333333",
+      "#444444",
+      "#555555"
+     ]
+    }
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "nowhere-zz"
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "default"
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "Columbus-OH"
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "columbus-oh",
+    "extra": 1
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "columbus-oh",
+    "ffg": {
+     "colors": [
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000"
+     ]
+    }
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "columbus-oh",
+    "ffg": {
+     "colors": [
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000"
+     ]
+    }
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "columbus-oh",
+    "ffg": {
+     "colors": [
+      "#00000g",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000"
+     ]
+    }
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "columbus-oh",
+    "ffg": {
+     "colors": [
+      "red",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000"
+     ]
+    }
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "columbus-oh",
+    "ffg": {
+     "colors": [
+      "#000000\n",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000"
+     ]
+    }
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "columbus-oh",
+    "ffg": {
+     "colors": [
+      0,
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000"
+     ]
+    }
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "columbus-oh",
+    "ffg": {}
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "columbus-oh",
+    "ffg": {
+     "colors": [
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000"
+     ],
+     "x": 1
+    }
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "columbus-oh",
+    "recordDots": {
+     "icons": {}
+    }
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "columbus-oh",
+    "updatedUtc": "yesterday"
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": [
+     "columbus-oh"
+    ]
+   }
+  },
+  {
+   "valid": false,
+   "entry": "columbus-oh"
+  },
+  {
+   "valid": true,
+   "entry": {
+    "market": "columbus-oh",
+    "ffg": {
+     "colors": [
+      "#6d001a",
+      "#a20015",
+      "#cf2920",
+      "none",
+      "none",
+      "none",
+      "none"
+     ]
+    }
+   }
+  },
+  {
+   "valid": true,
+   "entry": {
+    "market": "columbus-oh",
+    "ffg": {
+     "colors": [
+      "none",
+      "none",
+      "none",
+      "none",
+      "none",
+      "none",
+      "#f3f3f3"
+     ]
+    }
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "columbus-oh",
+    "ffg": {
+     "colors": [
+      "none",
+      "none",
+      "none",
+      "none",
+      "none",
+      "none",
+      "none"
+     ]
+    }
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "columbus-oh",
+    "ffg": {
+     "colors": [
+      "None",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000"
+     ]
+    }
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "columbus-oh",
+    "ffg": {
+     "colors": [
+      "",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000"
+     ]
+    }
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "columbus-oh",
+    "ffg": {
+     "colors": [
+      null,
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000"
+     ]
+    }
+   }
+  },
+  {
+   "valid": false,
+   "entry": {
+    "market": "columbus-oh",
+    "ffg": {
+     "colors": [
+      "none\n",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000",
+      "#000000"
+     ]
+    }
+   }
+  }
+ ]
 }

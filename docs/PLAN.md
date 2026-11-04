@@ -19,7 +19,7 @@ with no software installed locally and an optional way to change how the layers 
 - **Market list** (Justin, Nov 1): 54 markets from the TEGNA station list, none in AK/HI/PR. Flagstaff, Bryan-College Station and Twin Falls
   are kept as separate markets even though Nielsen folds the first two into Phoenix and Waco. They have no DMA outline, so their boxes
   (Flagstaff, Bryan-CS) are hand-sized drafts around the city.
-- **Customizations go live automatically** (FFG colors only, strictly validated). No approval step.
+- **Customizations go live automatically** (FFG colors only, strictly validated; a band may be hidden, Nov 4). No approval step.
 - **Record dots: one shared set** (Justin, Nov 3). Stations restyle the dots inside Max, so everyone uses `records/default/`. The per-market
   icon pipeline is parked in `parked/record-dot-icons/` (README says how to restore). The `records/<market-id>/` URLs (live Nov 1-3, never
   announced) are gone. Justin writes "how to change the dots in Max" with a screenshot in `content/record-dots-in-max.md` + `content/images/`; it
@@ -126,8 +126,8 @@ with no software installed locally and an optional way to change how the layers 
 
 ## Gotchas collected so far
 - The original standard FFG ramp is not monotonic in lightness (cream L*97 before grey L*87) and its two lightest bands are close for
-  protan viewers (CIEDE2000 5.9). Kept as "Standard" for continuity; "Standard, refined" fixes both (tools/check_ramps.py). Open
-  question for Justin: switch the default?
+  protan viewers (CIEDE2000 5.9). Decided Nov 4 (Justin): "Standard, refined" is the default for all markets; the old ramp is the
+  "Original" preset and still colors the legacy Ohio box at the max-tools site root (drop-in for the old ffg URLs).
 - WordPress on the same domain turns the basic-auth 401 into its own 404 page (no password prompt). Fix: `ErrorDocument 401 default`
   as the first line of `public_html/max/.htaccess` (docs/HOSTGATOR.md).
 - HostGator answers non-browser clients with a cookie challenge (`humans_*`, HTTP 409). Browsers pass it automatically.

@@ -22,7 +22,8 @@ import registry
 
 HOURS = (1, 3, 6)
 BOUNDS = [0.0, 0.50, 0.75, 1.00, 1.50, 2.00, 3.00, 10.0]          # inches, fixed everywhere
-STANDARD = ['#67000d', '#a50f15', '#cb181d', '#ef3b2c', '#fc9272', '#fff5f0', '#d9d9d9']
+STANDARD = ['#6d001a', '#a20015', '#cf2920', '#ef5b3d', '#ee977e', '#ecc8c3', '#f3f3f3']   # 'Standard, refined' (default since Nov 4, 2026; tools/check_ramps.py)
+ORIGINAL = ['#67000d', '#a50f15', '#cb181d', '#ef3b2c', '#fc9272', '#fff5f0', '#d9d9d9']   # the look before Nov 2026; kept for the legacy Ohio box
 LEGACY_BOX = (-85.0, 38.0, -80.0, 42.0)                              # the live Ohio files: never change
 SIGMA = 0.6
 MARGIN = 0.5                                                         # degrees of extra grid kept around a box
@@ -132,7 +133,10 @@ def load_grids(path):
 
 # ---------------------------------------------------------------- render
 def hex_rgb(c):
-    return tuple(int(c[i:i + 2], 16) / 255 for i in (1, 3, 5))
+    """RGBA for a band: a '#rrggbb' color, or 'none' = hidden (fully transparent)."""
+    if c == 'none':
+        return (0.0, 0.0, 0.0, 0.0)
+    return tuple(int(c[i:i + 2], 16) / 255 for i in (1, 3, 5)) + (1.0,)
 
 
 def kml_text(hours, box, stamp):
@@ -247,7 +251,7 @@ def make_jobs(root, site, stamp, only=None):
     jobs = []
     for h in HOURS:
         if not only:
-            jobs.append((f'Custom_FFG_{h}hr.kmz', h, LEGACY_BOX, STANDARD, stamp, str(site)))
+            jobs.append((f'Custom_FFG_{h}hr.kmz', h, LEGACY_BOX, ORIGINAL, stamp, str(site)))   # drop-in for the old Ohio URLs
         for mid, m in markets.items():
             if only and mid != only: continue
             jobs.append((f'markets/{mid}/Custom_FFG_{h}hr.kmz', h, tuple(m['bounds']), custom.get(mid, STANDARD), stamp, str(site)))

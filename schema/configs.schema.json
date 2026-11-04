@@ -51,12 +51,27 @@
               "minItems": 7,
               "maxItems": 7,
               "items": {
+                "$ref": "#/$defs/band"
+              },
+              "contains": {
                 "$ref": "#/$defs/hex"
-              }
+              },
+              "description": "7 bands, most dangerous first. At least one must be a color (not all hidden)."
             }
           }
         }
       }
+    },
+    "band": {
+      "description": "A band color, or \"none\" to hide that band (transparent in the KMZ).",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/hex"
+        },
+        {
+          "const": "none"
+        }
+      ]
     }
   }
 }

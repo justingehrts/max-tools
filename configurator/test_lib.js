@@ -24,13 +24,23 @@ t('hex normalisation follows the server rules (shared vectors)', function () {
   assert.strictEqual(L.normHex(' A50F15 '), '#a50f15');
   ['#00000g', 'red', '#000000\n0', '#0000000', '', null, 5].forEach(function (v) { assert.strictEqual(L.normHex(v), null, String(v)); });
   var cases = JSON.parse(fs.readFileSync(path.join(root, 'schema/config-test-vectors.json'), 'utf8')).cases;
+  // For entries that differ only in their colors, the page must agree with the shared verdict.
   cases.forEach(function (c) {
-    var cols = c.entry && c.entry.ffg && c.entry.ffg.colors;
-    if (!Array.isArray(cols) || cols.length !== 7) return;
-    var allOk = cols.every(function (x) { return typeof x === 'string' && /^#[0-9a-fA-F]{6}$/.test(x) && L.normHex(x) === x.toLowerCase(); });
+    var e = c.entry;
+    if (!e || typeof e !== 'object' || e.market !== 'columbus-oh' || !e.ffg || Object.keys(e).join() !== 'market,ffg') return;
+    var cols = e.ffg.colors;
+    if (Object.keys(e.ffg).join() !== 'colors' || !Array.isArray(cols) || cols.length !== 7) return;
     var pageOk = Object.keys(L.colorErrors(cols)).length === 0 && cols.every(function (x) { return typeof x === 'string' && x.trim() === x; });
-    assert.strictEqual(pageOk, allOk, JSON.stringify(cols));
+    assert.strictEqual(pageOk, c.valid, JSON.stringify(cols));
   });
+});
+t('hidden bands', function () {
+  assert.strictEqual(L.normColor('none'), 'none'); assert.strictEqual(L.normColor('None'), null);
+  var c = L.STANDARD.slice(0, 3).concat(['none', 'none', 'none', 'none']);
+  assert.deepStrictEqual(L.colorErrors(c), {});
+  assert.deepStrictEqual(L.savePayload('columbus-oh', c).ffg.colors, c);
+  assert.strictEqual(L.colorErrors(['none', 'none', 'none', 'none', 'none', 'none', 'none']).all, 'Show at least one band.');
+  assert.ok(!L.sameColors(c, L.STANDARD));
 });
 t('payload: standard colors are sent as null', function () {
   assert.strictEqual(L.savePayload('columbus-oh', L.STANDARD.map(function (c) { return c.toUpperCase(); })).ffg, null);
@@ -56,8 +66,10 @@ t('staleness', function () {
 t('recolor', function () {
   var bins = new Uint8ClampedArray([0, 0, 0, 255, 6, 6, 6, 255, 255, 255, 255, 255, 3, 3, 3, 0]);
   var out = L.recolor(bins, L.STANDARD);
-  assert.deepStrictEqual(Array.from(out.slice(0, 4)), [0x67, 0x00, 0x0d, 255]);
-  assert.deepStrictEqual(Array.from(out.slice(4, 8)), [0xd9, 0xd9, 0xd9, 255]);
+  assert.deepStrictEqual(Array.from(out.slice(0, 4)), [0x6d, 0x00, 0x1a, 255]);
+  assert.deepStrictEqual(Array.from(out.slice(4, 8)), [0xf3, 0xf3, 0xf3, 255]);
+  var hid = L.recolor(bins, L.STANDARD.slice(0, 6).concat(['none']));
+  assert.deepStrictEqual(Array.from(hid.slice(4, 8)), [0, 0, 0, 0], 'hidden band is transparent');
   assert.deepStrictEqual(Array.from(out.slice(8, 16)), [0, 0, 0, 0, 0, 0, 0, 0]);
 });
 t('market filter matches names and call letters', function () {
@@ -70,6 +82,7 @@ t('presets', function () {
   assert.ok(L.PRESETS.length >= 4);
   L.PRESETS.forEach(function (p) { assert.strictEqual(p.colors.length, 7); p.colors.forEach(function (c) { assert.strictEqual(L.normHex(c), c); }); });
   assert.deepStrictEqual(L.PRESETS[0].colors, L.STANDARD);
+  assert.ok(L.PRESETS.some(function (p) { return p.id === 'original' && p.legacy; }));
   assert.strictEqual(L.matchPreset(L.STANDARD.map(function (c) { return c.toUpperCase(); })).id, 'standard');
   assert.strictEqual(L.matchPreset(['#000000', '#000000', '#000000', '#000000', '#000000', '#000000', '#000000']), null);
 });

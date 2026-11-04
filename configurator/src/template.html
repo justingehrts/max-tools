@@ -98,11 +98,17 @@
 
   /* ramp editor */
   .rows { list-style: none; margin: 0; padding: 0; }
-  .rows li { display: grid; grid-template-columns: minmax(0, 1fr) 40px 104px; gap: 4px 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--line); }
+  .rows li { display: grid; grid-template-columns: minmax(0, 1fr) auto 40px 104px; gap: 4px 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--line); }
   .rows input[type=color] { width: 40px; height: 32px; padding: 0 2px; border: 1px solid var(--field); border-radius: 6px; background: var(--panel); cursor: pointer; }
   .rows input.hex { font-family: var(--mono); font-size: 13.5px; min-height: 32px; padding: 4px 8px; }
   .rows .err { grid-column: 1 / -1; color: var(--bad); font-size: 13px; }
   .rows .err:empty { display: none; }
+  .rows .show { font-size: 13px; display: inline-flex; gap: 4px; align-items: center; cursor: pointer; color: var(--muted); }
+  .rows .hidden-band > span:first-child { color: var(--muted); text-decoration: line-through; }
+  .rows input:disabled { opacity: .35; cursor: default; }
+  .err-line { color: var(--bad); font-weight: 600; font-size: 13.5px; margin: 6px 0 0; }
+  .err-line:empty { display: none; }
+  .hid { background: repeating-conic-gradient(#9aa6b1 0% 25%, transparent 0% 50%) 50% / 8px 8px !important; }
   .ramp { display: flex; height: 14px; border-radius: 4px; overflow: hidden; border: 1px solid var(--line); margin: 10px 0 4px; }
   .ramp span { flex: 1; }
   .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
@@ -165,8 +171,10 @@
           <div class="presets" id="presets" role="group" aria-labelledby="presets-h"></div>
           <p class="muted" style="font-size:13px" id="preset-note"></p>
           <h3>Colors</h3>
-          <p class="muted" style="font-size:13.5px">The inch ranges are fixed so the map means the same thing at every station. Only the colors change.</p>
+          <p class="muted" style="font-size:13.5px">The inch ranges are fixed so the map means the same thing at every station. Only the colors change.
+            Untick <b>Show</b> to hide a band (it is left clear in Max).</p>
           <ol class="rows" id="rows"></ol>
+          <p class="err-line" id="rows-err" role="alert"></p>
           <div class="ramp" id="ramp" aria-hidden="true"></div>
           <div class="actions">
             <button type="button" class="primary" id="save" disabled>Save my colors</button>

@@ -27,7 +27,10 @@ per market, shared by every station in it. Remember the choice in localStorage a
   checked by `tools/check_ramps.py`: lightness changes in one direction and every neighbouring band stays distinguishable for normal,
   protan, deutan and tritan vision (CIEDE2000 >= 8 after Machado 2009 simulation), following Rosen et al. 2026 (JOM 14(13): prefer
   single-hue or one-direction multi-hue sequential ramps for deterministic data, 5-7 bins, colour-blind safe, mind dark backgrounds).
-  "Standard" (today's look) is kept but marked legacy: its two lightest bands invert lightness and are close for protan viewers.
+  Default since Nov 4: "Standard" = the former "Standard, refined" ramp. The old ramp is the "Original" preset (legacy: its two
+  lightest bands invert lightness and are close for protan viewers).
+- Hide a band (Nov 4): each row has a **Show** checkbox. A hidden band is stored as `"none"` instead of a color and drawn fully
+  transparent in the KMZ; at least one band must stay visible (schema `contains`, PHP, page and Python all enforce it; shared vectors).
 - Preview overlays county and state lines (toggle "County lines"): `static/lines/<market>.json`, cut from Census 2023 1:5M
   boundaries by `tools/make_county_lines.py` in the same pixel frame as the KMZ (rerun when boxes change).
 - Buttons: `Save my colors`, `Use the standard colors`. Save is disabled until something differs from what's saved.
@@ -86,7 +89,7 @@ the page uses it for the "already has custom colors, saved Oct 12" prompt).
 page loaded it: reload), `415`, `429` (10 saves per 10 min per IP), `502` (GitHub failed: "Try again in a minute"), `500` (not set up).
 
 Server rules (identical to the build scripts' validation; both are tested against `schema/config-test-vectors.json`):
-market id `^[a-z0-9][a-z0-9-]{0,39}$`, not `default`, and must exist in `markets.json`; exactly 7 FFG colors `#rrggbb`.
+market id `^[a-z0-9][a-z0-9-]{0,39}$`, not `default`, and must exist in `markets.json`; exactly 7 FFG bands, each `#rrggbb` or `"none"` (hidden), at least one visible.
 Commit via the GitHub contents API using the file's `sha` (retry once on conflict), message `Update <market> (<tool>) via configurator`,
 which starts the build by itself (push trigger on `configs.json`). The token lives only on the server (fine-grained, this repo only,
 Contents + Actions write; Actions is for the hourly cron).

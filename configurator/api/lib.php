@@ -25,10 +25,13 @@ function ffg_errors($ffg): array {
     if (!is_obj($ffg) || array_keys($ffg) !== ['colors']) return ['ffg' => 'Expected {"colors": [...7 colors]} or null.'];
     $c = $ffg['colors'];
     if (!is_array($c) || is_obj($c) || count($c) !== FFG_COLORS) return ['ffg.colors' => 'Exactly 7 colors are needed.'];
-    $err = [];
+    $err = []; $visible = 0;
     foreach ($c as $i => $hex) {
-        if (!is_string($hex) || !preg_match(HEX_RE, $hex)) $err["ffg.colors[$i]"] = 'Use a color like #a50f15.';
+        if ($hex === 'none') continue;                                // hidden band
+        if (!is_string($hex) || !preg_match(HEX_RE, $hex)) $err["ffg.colors[$i]"] = 'Use a color like #a50f15, or hide the band.';
+        else $visible++;
     }
+    if (!$err && $visible === 0) $err['ffg.colors'] = 'Show at least one band.';
     return $err;
 }
 
@@ -55,7 +58,7 @@ function parse_save_request(string $raw, array $markets): array {
     $exp = $req['expectUpdatedUtc'] ?? null;
     if ($exp !== null && (!is_string($exp) || !preg_match(UTC_RE, $exp))) $err['expectUpdatedUtc'] = 'bad time';
     if ($err) return [null, $err];
-    if ($req['ffg'] !== null) $req['ffg'] = ['colors' => array_map('strtolower', $req['ffg']['colors'])];
+    if ($req['ffg'] !== null) $req['ffg'] = ['colors' => array_map('strtolower', $req['ffg']['colors'])];   // 'none' stays 'none'
     // checkExpected: the page always sends expectUpdatedUtc (null = "this market had no saved colors when I loaded it").
     return [['market' => $req['market'], 'ffg' => $req['ffg'], 'expectUpdatedUtc' => $exp,
              'checkExpected' => array_key_exists('expectUpdatedUtc', $req)], []];

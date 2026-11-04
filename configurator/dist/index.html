@@ -98,11 +98,17 @@
 
   /* ramp editor */
   .rows { list-style: none; margin: 0; padding: 0; }
-  .rows li { display: grid; grid-template-columns: minmax(0, 1fr) 40px 104px; gap: 4px 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--line); }
+  .rows li { display: grid; grid-template-columns: minmax(0, 1fr) auto 40px 104px; gap: 4px 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--line); }
   .rows input[type=color] { width: 40px; height: 32px; padding: 0 2px; border: 1px solid var(--field); border-radius: 6px; background: var(--panel); cursor: pointer; }
   .rows input.hex { font-family: var(--mono); font-size: 13.5px; min-height: 32px; padding: 4px 8px; }
   .rows .err { grid-column: 1 / -1; color: var(--bad); font-size: 13px; }
   .rows .err:empty { display: none; }
+  .rows .show { font-size: 13px; display: inline-flex; gap: 4px; align-items: center; cursor: pointer; color: var(--muted); }
+  .rows .hidden-band > span:first-child { color: var(--muted); text-decoration: line-through; }
+  .rows input:disabled { opacity: .35; cursor: default; }
+  .err-line { color: var(--bad); font-weight: 600; font-size: 13.5px; margin: 6px 0 0; }
+  .err-line:empty { display: none; }
+  .hid { background: repeating-conic-gradient(#9aa6b1 0% 25%, transparent 0% 50%) 50% / 8px 8px !important; }
   .ramp { display: flex; height: 14px; border-radius: 4px; overflow: hidden; border: 1px solid var(--line); margin: 10px 0 4px; }
   .ramp span { flex: 1; }
   .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
@@ -165,8 +171,10 @@
           <div class="presets" id="presets" role="group" aria-labelledby="presets-h"></div>
           <p class="muted" style="font-size:13px" id="preset-note"></p>
           <h3>Colors</h3>
-          <p class="muted" style="font-size:13.5px">The inch ranges are fixed so the map means the same thing at every station. Only the colors change.</p>
+          <p class="muted" style="font-size:13.5px">The inch ranges are fixed so the map means the same thing at every station. Only the colors change.
+            Untick <b>Show</b> to hide a band (it is left clear in Max).</p>
           <ol class="rows" id="rows"></ol>
+          <p class="err-line" id="rows-err" role="alert"></p>
           <div class="ramp" id="ramp" aria-hidden="true"></div>
           <div class="actions">
             <button type="button" class="primary" id="save" disabled>Save my colors</button>
@@ -206,7 +214,8 @@
 var LIB = (function () {
   'use strict';
   // Must match tools/build_ffg.py (STANDARD, BOUNDS) and the server's rules (configurator/api/lib.php).
-  var STANDARD = ['#67000d', '#a50f15', '#cb181d', '#ef3b2c', '#fc9272', '#fff5f0', '#d9d9d9'];
+  var STANDARD = ['#6d001a', '#a20015', '#cf2920', '#ef5b3d', '#ee977e', '#ecc8c3', '#f3f3f3'];   // default since Nov 4, 2026
+  var NONE = 'none';   // a hidden band (transparent in the KMZ)
   var BOUNDS = [0, 0.5, 0.75, 1, 1.5, 2, 3];
   var HOURS = [1, 3, 6];
   var TYPES = ['HIMAX', 'LOMAX', 'HIMIN', 'LOMIN'];
@@ -216,11 +225,8 @@ var LIB = (function () {
   // neighbouring pair stays distinguishable for normal, protan, deutan and tritan vision; Rosen et al. 2026, JOM 14(13)).
   // "legacy": true = shown for continuity but does not pass those checks.
   var PRESETS = /*PRESETS*/[
-    {"id": "standard", "name": "Standard", "legacy": true,
-     "note": "Today's look. The two lightest bands are hard to tell apart for some color-blind viewers.",
-     "colors": ["#67000d", "#a50f15", "#cb181d", "#ef3b2c", "#fc9272", "#fff5f0", "#d9d9d9"]},
-    {"id": "standard-refined", "name": "Standard, refined",
-     "note": "Nearly the same look, with even lightness steps so every band stays distinct for color-blind viewers.",
+    {"id": "standard", "name": "Standard",
+     "note": "The default. Even lightness steps, and every band stays distinct for color-blind viewers.",
      "colors": ["#6d001a", "#a20015", "#cf2920", "#ef5b3d", "#ee977e", "#ecc8c3", "#f3f3f3"]},
     {"id": "reds", "name": "Reds",
      "note": "One hue from dark red to near white. Best on light or satellite maps.",
@@ -230,7 +236,10 @@ var LIB = (function () {
      "colors": ["#003577", "#0053a3", "#0075c5", "#0095d9", "#62b6e9", "#a5d5f4", "#e2f3fe"]},
     {"id": "dark-maps", "name": "For dark maps",
      "note": "The most urgent band is the brightest (yellow), fading to deep purple, so it stands out on dark basemaps.",
-     "colors": ["#fffb81", "#ffc81e", "#fc932c", "#e26341", "#ba3b49", "#8a1d45", "#4d1249"]}
+     "colors": ["#fffb81", "#ffc81e", "#fc932c", "#e26341", "#ba3b49", "#8a1d45", "#4d1249"]},
+    {"id": "original", "name": "Original", "legacy": true,
+     "note": "The look before Nov 2026. Its two lightest bands are hard to tell apart for some color-blind viewers.",
+     "colors": ["#67000d", "#a50f15", "#cb181d", "#ef3b2c", "#fc9272", "#fff5f0", "#d9d9d9"]}
   ]/*END PRESETS*/;
 
   function bandLabel(i) {
@@ -248,9 +257,12 @@ var LIB = (function () {
     return /^#[0-9a-fA-F]{6}$/.test(s) ? s.toLowerCase() : null;
   }
 
+  /** A band value: '#rrggbb' (normalised) or 'none' (hidden); anything else -> null. */
+  function normColor(v) { return v === NONE ? NONE : normHex(v); }
+
   function sameColors(a, b) {
     if (!a || !b || a.length !== b.length) return false;
-    for (var i = 0; i < a.length; i++) if (normHex(a[i]) !== normHex(b[i])) return false;
+    for (var i = 0; i < a.length; i++) if (normColor(a[i]) !== normColor(b[i])) return false;
     return true;
   }
 
@@ -258,14 +270,15 @@ var LIB = (function () {
 
   /** What to send: null when the colors are the standard ones (the server then removes the override). */
   function savePayload(market, colors, expectUpdatedUtc) {
-    var clean = colors.map(normHex);
+    var clean = colors.map(normColor);
     return { market: market, ffg: isStandard(clean) ? null : { colors: clean }, expectUpdatedUtc: expectUpdatedUtc || null };
   }
 
   /** Per-row errors for the editor: { index: message }. */
   function colorErrors(colors) {
     var err = {};
-    colors.forEach(function (c, i) { if (!normHex(c)) err[i] = 'Use a color like #a50f15.'; });
+    colors.forEach(function (c, i) { if (!normColor(c)) err[i] = 'Use a color like #a50f15.'; });
+    if (!Object.keys(err).length && colors.every(function (c) { return c === NONE; })) err.all = 'Show at least one band.';
     return err;
   }
 
@@ -274,7 +287,7 @@ var LIB = (function () {
     var out = { rows: {}, form: [] };
     Object.keys(errors || {}).forEach(function (k) {
       var m = /^ffg\.colors\[(\d)\]$/.exec(k);
-      if (m) out.rows[+m[1]] = errors[k]; else out.form.push(errors[k]);
+      if (m) out.rows[+m[1]] = errors[k]; else out.form.push(errors[k]);   // e.g. 'ffg.colors': all bands hidden
     });
     return out;
   }
@@ -300,11 +313,11 @@ var LIB = (function () {
    * Returns RGBA bytes: band colors fully opaque, everything else transparent. Same colors the KMZ would use.
    */
   function recolor(bins, colors, out) {
-    var rgb = colors.map(function (c) { var h = normHex(c) || '#000000'; return [parseInt(h.substr(1, 2), 16), parseInt(h.substr(3, 2), 16), parseInt(h.substr(5, 2), 16)]; });
+    var rgb = colors.map(function (c) { var h = normHex(c); return h ? [parseInt(h.substr(1, 2), 16), parseInt(h.substr(3, 2), 16), parseInt(h.substr(5, 2), 16)] : null; });
     out = out || new Uint8ClampedArray(bins.length);
     for (var i = 0; i < bins.length; i += 4) {
       var b = bins[i];
-      if (b < rgb.length && bins[i + 3] > 0) { out[i] = rgb[b][0]; out[i + 1] = rgb[b][1]; out[i + 2] = rgb[b][2]; out[i + 3] = 255; }
+      if (b < rgb.length && rgb[b] && bins[i + 3] > 0) { out[i] = rgb[b][0]; out[i + 1] = rgb[b][1]; out[i + 2] = rgb[b][2]; out[i + 3] = 255; }
       else { out[i] = out[i + 1] = out[i + 2] = out[i + 3] = 0; }
     }
     return out;
@@ -320,7 +333,7 @@ var LIB = (function () {
   /** The preset whose colors equal these, or null. */
   function matchPreset(colors) { for (var i = 0; i < PRESETS.length; i++) if (sameColors(colors, PRESETS[i].colors)) return PRESETS[i]; return null; }
 
-  return { STANDARD: STANDARD, PRESETS: PRESETS, matchPreset: matchPreset, BOUNDS: BOUNDS, HOURS: HOURS, TYPES: TYPES, DAYS: DAYS, STALE_HOURS: STALE_HOURS,
+  return { STANDARD: STANDARD, NONE: NONE, normColor: normColor, PRESETS: PRESETS, matchPreset: matchPreset, BOUNDS: BOUNDS, HOURS: HOURS, TYPES: TYPES, DAYS: DAYS, STALE_HOURS: STALE_HOURS,
            bandLabel: bandLabel, normHex: normHex, sameColors: sameColors, isStandard: isStandard, savePayload: savePayload,
            colorErrors: colorErrors, serverErrors: serverErrors, ffgUrls: ffgUrls, recordUrl: recordUrl,
            allRecordUrls: allRecordUrls, hoursOld: hoursOld, isStale: isStale, recolor: recolor, filterMarkets: filterMarkets };
@@ -347,7 +360,8 @@ if (typeof module !== 'undefined') module.exports = LIB;
     saving: false,
     status: { ffg: null, records: null },
     bins: {},             // hour -> ImageData of the bin map
-    lines: null           // county/state lines for the preview ({w,h,county,state}) or 'error'
+    lines: null,          // county/state lines for the preview ({w,h,county,state}) or 'error'
+    keep: []              // last color of each hidden band, restored when it is shown again
   };
 
   // ---------------------------------------------------------------- small utilities
@@ -515,6 +529,7 @@ if (typeof module !== 'undefined') module.exports = LIB;
     $('rows').innerHTML = LIB.STANDARD.map(function (_, i) {
       var lab = LIB.bandLabel(i);
       return '<li><span id="lab-' + i + '">' + lab + '<\/span>' +
+        '<label class="show"><input type="checkbox" id="v-' + i + '" checked aria-describedby="lab-' + i + '"> Show<\/label>' +
         '<input type="color" id="c-' + i + '" aria-labelledby="lab-' + i + '" title="Pick a color for ' + lab + '">' +
         '<input type="text" class="hex" id="h-' + i + '" maxlength="7" spellcheck="false" autocomplete="off" aria-label="' + lab + ' color code" aria-describedby="e-' + i + '">' +
         '<span class="err" id="e-' + i + '"><\/span><\/li>';
@@ -524,12 +539,25 @@ if (typeof module !== 'undefined') module.exports = LIB;
       $('h-' + i).addEventListener('input', function (ev) {
         S.edit[i] = ev.target.value; var v = LIB.normHex(ev.target.value); if (v) $('c-' + i).value = v; refresh();
       });
-      $('h-' + i).addEventListener('blur', function (ev) { var v = LIB.normHex(ev.target.value); if (v) { ev.target.value = v; S.edit[i] = v; } refresh(); });
+      $('h-' + i).addEventListener('blur', function (ev) { if (S.edit[i] === LIB.NONE) return; var v = LIB.normHex(ev.target.value); if (v) { ev.target.value = v; S.edit[i] = v; } refresh(); });
+      $('v-' + i).addEventListener('change', function (ev) {
+        if (ev.target.checked) { S.edit[i] = S.keep[i] || LIB.STANDARD[i]; }
+        else { S.keep[i] = LIB.normHex($('h-' + i).value) || LIB.STANDARD[i]; S.edit[i] = LIB.NONE; }
+        syncRow(i); refresh();
+      });
     });
+  }
+  // A hidden band keeps showing its last color (greyed out) so un-hiding brings it back.
+  function syncRow(i) {
+    var hidden = S.edit[i] === LIB.NONE, c = hidden ? (S.keep[i] || LIB.STANDARD[i]) : S.edit[i];
+    $('v-' + i).checked = !hidden;
+    $('h-' + i).value = c; $('c-' + i).value = LIB.normHex(c) || '#000000';
+    $('h-' + i).disabled = hidden; $('c-' + i).disabled = hidden;
+    $('h-' + i).closest('li').classList.toggle('hidden-band', hidden);
   }
   function setEdit(colors) {
     S.edit = colors.slice();
-    S.edit.forEach(function (c, i) { $('h-' + i).value = c; $('c-' + i).value = LIB.normHex(c) || '#000000'; $('e-' + i).textContent = ''; });
+    S.edit.forEach(function (c, i) { syncRow(i); $('e-' + i).textContent = ''; });
     refresh();
   }
   function setState(msg, kind) { var e = $('ffg-state'); e.textContent = msg; e.className = 'state' + (kind ? ' ' + kind : ''); }
@@ -540,13 +568,15 @@ if (typeof module !== 'undefined') module.exports = LIB;
       $('h-' + i).setAttribute('aria-invalid', errs[i] ? 'true' : 'false');
       if (errs[i] || $('e-' + i).getAttribute('data-server') !== 'y') $('e-' + i).textContent = errs[i] || '';
     });
+    $('rows-err').textContent = errs.all || '';
     var dirty = isDirty(), valid = Object.keys(errs).length === 0;
     $('save').disabled = !dirty || !valid || S.saving || !!S.blocked || !S.loaded;
     $('discard').hidden = !dirty || S.saving;
     $('standard').disabled = LIB.isStandard(S.edit) || S.saving;
     var shown = valid ? S.edit : savedColors();
-    $('ramp').innerHTML = shown.map(function (c) { return '<span style="background:' + LIB.normHex(c) + '"><\/span>'; }).join('');
-    $('legend').innerHTML = shown.map(function (c, i) { return '<li><i style="background:' + LIB.normHex(c) + '"><\/i>' + LIB.bandLabel(i) + '<\/li>'; }).join('');
+    function swatch(c) { return c === LIB.NONE ? ' class="hid"' : ' style="background:' + LIB.normHex(c) + '"'; }
+    $('ramp').innerHTML = shown.map(function (c) { return '<span' + swatch(c) + '><\/span>'; }).join('');
+    $('legend').innerHTML = shown.map(function (c, i) { return '<li><i' + swatch(c) + '><\/i>' + LIB.bandLabel(i) + (c === LIB.NONE ? ' (hidden)' : '') + '<\/li>'; }).join('');
     var name = S.market ? byId[S.market].name : '';
     $('ffg-title').textContent = S.saved ? 'Custom colors for ' + name : 'Standard colors for ' + name;
     var pm = LIB.matchPreset(S.edit);
