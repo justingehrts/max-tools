@@ -11,7 +11,7 @@ tweaks), mostly on desktop, sometimes on a phone. Their job: **get my URLs** (de
 5. Preview before saving, and make the preview accurate (same drawing code as the build).
 
 ## Flow
-**First visit: "Which market are you in?"** Market dropdown (54, type to search; shows the market's call signs from `markets.json`). One config
+**First visit: "Which market are you in?"** Market dropdown (54, type to search; shows market names only, call signs from `markets.json` still match in the search). One config
 per market, shared by every station in it. Remember the choice in localStorage and show it as a header chip with a "Change" button.
 
 **Tabs after that:** `Flash flood guidance`, `Record dots`. New tools later get a tab.

@@ -18,7 +18,7 @@ const step = (s) => { steps.push(s); console.log('  - ' + s); };
   await p.goto(PAGE);
   await p.waitForSelector('#picker:not([hidden])');
   await p.fill('#mq', 'wbns');
-  assert.deepStrictEqual(await p.$$eval('#mlist button', bs => bs.map(b => b.firstChild.textContent)), ['Columbus, OH']);
+  assert.deepStrictEqual(await p.$$eval('#mlist button', bs => bs.map(b => b.textContent)), ['Columbus, OH']);   // no call letters shown
   step('picker finds Columbus by call letters');
   await p.click('#mlist button');
   await p.waitForSelector('#tools:not([hidden])');

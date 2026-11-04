@@ -421,7 +421,8 @@ if (typeof module !== 'undefined') module.exports = LIB;
   function renderPicker() {
     var list = LIB.filterMarkets(MARKETS, $('mq').value);
     $('mlist').innerHTML = list.map(function (m) {
-      return '<li><button type="button" data-id="' + esc(m.id) + '">' + esc(m.name) + '<small>' + esc((m.stations || []).join(', ')) + '<\/small><\/button><\/li>';
+      // market names only; call letters still match in the search box (LIB.filterMarkets)
+      return '<li><button type="button" data-id="' + esc(m.id) + '">' + esc(m.name) + '<\/button><\/li>';
     }).join('');
     $('mnone').hidden = list.length > 0;
   }
