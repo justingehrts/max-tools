@@ -25,6 +25,7 @@ def records_files():
 def ffg_files(markets):
     return (list(FFG_FILES)  # legacy Ohio box at the site root
             + [f'markets/{m}/{f}' for m in markets for f in FFG_FILES]
+            + [f'markets/{m}/bins_{h}hr.png' for m in markets for h in FFG_HOURS]   # configurator preview
             + ['ffg/status.json'])
 
 

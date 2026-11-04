@@ -200,9 +200,37 @@ def render(job):
             z_.writestr('doc.kml', kml_text(hours, box, stamp))
             z_.writestr(f'ffg_overlay_{hours}hr.png', buf.getvalue())
         os.replace(tmp, out)
+        if rel.startswith('markets/'):
+            write_bins(out.parent / f'bins_{hours}hr.png', lons[sl], lats[sl], z, box)
         return rel, None, time.time() - t0
     except Exception as ex:
         return rel, f'{type(ex).__name__}: {ex}', time.time() - t0
+
+
+def write_bins(path, lons, lats, z, box, size=(960, 540)):
+    """Bin map for the configurator preview: an 8-bit grayscale PNG the size of a 16:9 frame where each pixel is the
+    color band (0..6) the KMZ shows there, or 255 where it is transparent. Same contours as the KMZ (same contourf call,
+    same box), drawn without anti-aliasing so every pixel is exactly one band. The page recolors it in a canvas."""
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import BoundaryNorm, ListedColormap
+    from PIL import Image
+    w, s, e, n = box
+    cmap = ListedColormap([(i / 255, 0, 0) for i in range(len(STANDARD))])
+    fig, ax = plt.subplots(figsize=(size[0] / 100, size[1] / 100), dpi=100)
+    fig.patch.set_alpha(0); ax.patch.set_alpha(0); ax.set_axis_off()
+    if not np.isnan(z).all():
+        ax.contourf(lons, lats, z, levels=BOUNDS, cmap=cmap, norm=BoundaryNorm(BOUNDS, cmap.N), extend='max', antialiased=False)
+    ax.set_xlim(w, e); ax.set_ylim(s, n)
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    buf = io.BytesIO(); fig.savefig(buf, format='png', transparent=True, dpi=100); plt.close(fig)
+    rgba = np.asarray(Image.open(buf).convert('RGBA'))
+    bins = np.where(rgba[..., 3] >= 128, rgba[..., 0], 255).astype(np.uint8)
+    bad = (bins != 255) & (bins >= len(STANDARD))
+    if bad.any():
+        raise ValueError(f'bin map has {int(bad.sum())} blended pixels')
+    tmp = path.with_suffix('.tmp')
+    Image.fromarray(bins, 'L').save(tmp, format='PNG', optimize=True)
+    os.replace(tmp, path)
 
 
 # ---------------------------------------------------------------- main

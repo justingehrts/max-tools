@@ -54,7 +54,7 @@ with no software installed locally and an optional way to change how the layers 
 |---|---|
 | Record dots cloud pipeline (`records/`, `tools/`) | **Run on GitHub, green** (since Nov 1). 28/28 NOAA downloads, one shared set at `records/default/`; learned-station commit-back works; Pages CORS `*` seen. |
 | `FetchDailyRecords.ps1` config patch | Done. Reads optional `config.json` (folders, NWS User-Agent). Without it, behaves as before. Verified under PowerShell 7 with live NOAA data (28/28 downloads). Needed by the cloud workflow. |
-| Configurator page (`legacy/configurator-prototype/`) | Built for the **old local-installer approach**: Station settings + Record dots tabs, icon editor with live preview, zip download with Install.bat. Browser-tested. Needs rework per docs/GUI.md. Its icon drawing and validation code are reusable. |
+| Configurator page (`configurator/`) | **Built (Nov 4), not yet uploaded.** Market picker, FFG tab (URLs + copy, live preview recolored from published bin maps, 7-color editor, save with confirm/conflict handling), Record dots tab, Adding-layers tab, status strip. Verified in Chromium end to end against the real `save.php` and a fake GitHub (11 checks incl. 390 px and dark theme). Old prototype stays in `legacy/`. |
 | Local Windows installer (`payload/install.ps1`) | Parses; **never run on Windows**. Now optional/legacy (only for a station that wants to run locally). |
 | FFG multi-market pipeline (`tools/build_ffg.py`) | **Run on GitHub (Nov 1, run 41313087865): green, 165/165 KMZs, 30.7 s on the runner (2.7 s data prep), live on Pages.** Not yet exercised on GitHub: custom ramps, a render failure, carry-over from a real failure. Local tests:  Local, real GRIB (IEM 2026-11-01 12Z): 165 KMZs (54 markets x 3 + legacy Ohio x 3) in **16 s on 4 cores** (1.5 s data prep, ~0.9 s slowest render). Legacy Ohio output is **pixel-identical** to the original script on the same GRIB. Per-market failure isolation and custom ramps unit-tested. |
 | One workflow, one deploy (`.github/workflows/build.yml`) | **Run on GitHub, green** (records + FFG + deploy in ~2 min). **Failure handling verified on GitHub (Nov 1)** with the manual `simulate` input: one market's FFG failing (runs 41363015716: Columbus kept its previous files, others updated), all record dots failing (41363159022: 1,541 files kept), all FFG failing (41363304871: 166 files kept); each run deployed the last good copies and ended red. Failure **email** not yet confirmed by Justin. Replaces `records.yml`. Missing/failed files are restored from the live site (`tools/carry_over.py`) before deploy; the run then ends red. |
@@ -82,7 +82,7 @@ with no software installed locally and an optional way to change how the layers 
 5. **PHP endpoint.** *Built and tested locally (Nov 3), not yet installed on HostGator:* `configurator/api/save.php` (GET current colors,
    POST save), validation shared with Python via `schema/config-test-vectors.json`, commits `configs.json` via the contents API (the
    commit starts the build), retry once on conflict, 409 if someone saved first, rate limit, no IPs stored. Setup: docs/HOSTGATOR.md.
-6. **Configurator rework** per docs/GUI.md.
+6. **Configurator rework** per docs/GUI.md. *Built Nov 4; upload steps in docs/HOSTGATOR.md section 3.*
 7. **Hardening/docs.** Keepalive for the 60-day rule if real, monitoring page, Max setup instructions for stations.
 
 ## FFG pipeline spec (what the analysis found)

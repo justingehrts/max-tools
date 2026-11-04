@@ -109,6 +109,11 @@ class Endpoint(unittest.TestCase):
         s, r = self.call(body={'market': 'columbus-oh', 'ffg': None, 'expectUpdatedUtc': '2000-01-01T00:00:00Z'})
         self.assertEqual(s, 409); self.assertEqual(len(self.configs()['configs']), 1)
 
+    def test_someone_saved_while_page_showed_standard(self):
+        self.call(body={'market': 'columbus-oh', 'ffg': {'colors': SEVEN}})                    # someone else saves
+        s, r = self.call(body={'market': 'columbus-oh', 'ffg': None, 'expectUpdatedUtc': None})  # page loaded "no colors"
+        self.assertEqual(s, 409); self.assertEqual(len(self.configs()['configs']), 1)
+
     def test_other_markets_untouched(self):
         FakeGitHub.files['configs.json'] = (json.dumps({'schemaVersion': 1, 'configs': [
             {'market': 'seattle-wa', 'updatedUtc': '2026-01-01T00:00:00Z', 'ffg': {'colors': SEVEN}}]}), 'c1')

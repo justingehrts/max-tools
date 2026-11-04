@@ -63,7 +63,7 @@ try {
         [$doc, $sha] = gh_get_json($cfg, 'configs.json');
         $current = find_config($doc, $m);
         // Someone else saved this market after the page loaded it: do not overwrite silently.
-        if ($req['expectUpdatedUtc'] !== null && ($current['updatedUtc'] ?? null) !== $req['expectUpdatedUtc']) {
+        if ($req['checkExpected'] && ($current['updatedUtc'] ?? null) !== $req['expectUpdatedUtc']) {
             reply(409, ['ok' => false, 'error' => 'Someone saved this market after you opened the page. Reload to see their colors.',
                         'updatedUtc' => $current['updatedUtc'] ?? null]);
         }

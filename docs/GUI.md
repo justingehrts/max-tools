@@ -40,7 +40,13 @@ per market, shared by every station in it. Remember the choice in localStorage a
 **Status strip (all pages):** "Last build: FFG 12:15 PM, Record dots 12:21 PM" read from each pipeline's `status.json`.
 Turns red if older than 3 hours or if the fetch fails ("Can't reach the status page").
 
-**Help:** "Add this to Max" short steps for adding a KML layer by URL (write with Justin; he knows the exact Max menus).
+**Help:** third tab "Adding layers to Max", from `content/add-layer-in-max.md` (Justin writes it), fetched like the record-dots help.
+
+**Built (Nov 4):** `configurator/src/` (template, `lib.js`, `app.js`), `configurator/build.py` -> `configurator/dist/index.html`
+(markets embedded; upload as `public_html/max/index.html`). Requests the page makes: `api/save.php` (same origin), and from the Pages
+site: `ffg/status.json`, `records/status.json`, `markets/<id>/bins_{1,3,6}hr.png` (preview bin maps, made by `tools/build_ffg.py`),
+`help/*.html` and `help/images/*`. Tests: `node configurator/test_lib.js`, `tests/test_configurator_dist.py`, and a Chromium
+end-to-end test (`tests/test_configurator_browser.py`, local only: needs Playwright).
 
 ## Look and feel (carry over from the prototype)
 Utility tool, not marketing. System font stack (Segoe UI first; stations are Windows), Consolas for paths/URLs. Tokens:
@@ -66,6 +72,7 @@ the page uses it for the "already has custom colors, saved Oct 12" prompt).
 ```json
 { "market": "columbus-oh", "ffg": { "colors": [ ...7 ] } | null, "expectUpdatedUtc": "<updatedUtc the page loaded>" | null }
 ```
+(The page always sends `expectUpdatedUtc`; `null` means "no saved colors when I loaded". If it is omitted, no check is made.)
 `null` ffg = use the standard (delete the override). Colors are stored lowercase. Responses:
 `200 {ok:true, changed, updatedUtc, urls:{"1h","3h","6h"}, goesLive}` (`changed:false` = same as saved, nothing committed),
 `400 {ok:false, errors:{"ffg.colors[3]":"..."}}`, `403` (missing header / other origin), `409` (someone saved this market after the

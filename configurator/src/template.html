@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Max layers</title>
+<style>
+  :root {
+    --ink: #17212b; --muted: #55636f; --paper: #edf0f3; --panel: #ffffff; --line: #d2d9df;
+    --accent: #1f4fbf; --accent-ink: #ffffff; --good: #19703f; --bad: #b3261e; --warn-bg: #fdecea; --ok-bg: #e6f3ea;
+    --scope: #19232c; --scope-line: #2c3a46; --tab: #dde3e8; --field: #8e9ba6;
+    --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --mono: Consolas, "Cascadia Mono", "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #e6ebf0; --muted: #a0adb8; --paper: #11181e; --panel: #1a232b; --line: #30404c;
+      --accent: #7aa2ff; --accent-ink: #0b1220; --good: #5fcf8f; --bad: #ff8d84; --warn-bg: #3a1f1d; --ok-bg: #17301f;
+      --scope: #0e151b; --scope-line: #243440; --tab: #141c23; --field: #5b6c79;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--paper); }
+  body { margin: 0; font: 15px/1.5 var(--font); color: var(--ink); background: var(--paper); }
+  h1, h2, h3 { line-height: 1.25; margin: 0; }
+  h1 { font-size: 19px; font-weight: 650; }
+  h2 { font-size: 20px; font-weight: 650; margin-bottom: 4px; }
+  h3 { font-size: 15px; font-weight: 650; margin-bottom: 6px; }
+  p { margin: 0 0 8px; }
+  a { color: var(--accent); }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  [hidden] { display: none !important; }
+  .muted { color: var(--muted); }
+  .mono, .url { font-family: var(--mono); font-size: 13.5px; overflow-wrap: anywhere; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  .top h1 { flex: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 4px 3px 12px; font-weight: 600; }
+  .status { padding: 6px 20px; font-size: 13.5px; background: var(--ok-bg); border-bottom: 1px solid var(--line); }
+  .status.bad { background: var(--warn-bg); color: var(--bad); font-weight: 600; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 18px 20px 48px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; }
+  .lede { color: var(--muted); max-width: 64ch; }
+
+  button, .btn { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--field); border-radius: 6px; padding: 6px 12px; cursor: pointer; min-height: 34px; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button[disabled] { opacity: .5; cursor: default; }
+  button.small { min-height: 28px; padding: 2px 9px; font-size: 13px; }
+  button.link { border: none; background: none; color: var(--accent); text-decoration: underline; padding: 0 4px; min-height: 0; }
+  input[type="text"], input[type="search"] { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--field); border-radius: 6px; padding: 7px 10px; min-height: 36px; width: 100%; }
+  input[aria-invalid="true"] { border-color: var(--bad); box-shadow: 0 0 0 1px var(--bad); }
+
+  /* market picker */
+  .picker { max-width: 640px; }
+  .mlist { list-style: none; margin: 12px 0 0; padding: 0; max-height: 60vh; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+  .mlist li + li { border-top: 1px solid var(--line); }
+  .mlist button { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 9px 12px; cursor: pointer; }
+  .mlist button:hover, .mlist button:focus-visible { background: var(--paper); outline: none; box-shadow: inset 3px 0 0 var(--accent); }
+  .mlist small { color: var(--muted); margin-left: 6px; }
+
+  /* tabs */
+  [role=tablist] { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+  [role=tab] { background: var(--tab); border: 1px solid var(--line); border-bottom: none; border-radius: 8px 8px 0 0; padding: 8px 14px; margin-bottom: -1px; min-height: 0; }
+  [role=tab][aria-selected=true] { background: var(--panel); font-weight: 650; }
+  [role=tabpanel] { background: var(--panel); border: 1px solid var(--line); border-top: none; border-radius: 0 0 8px 8px; padding: 18px 20px; }
+
+  table.urls { border-collapse: collapse; width: 100%; }
+  table.urls th, table.urls td { padding: 4px 8px 4px 0; text-align: left; vertical-align: middle; }
+  table.urls th { white-space: nowrap; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 22px; margin-top: 18px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+  /* the scope: the one dark, memorable element */
+  .scope { background: var(--scope); border: 1px solid var(--scope-line); border-radius: 8px; padding: 12px 14px; color: #dce4eb; }
+  .scope-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .seg { display: inline-flex; border: 1px solid #50616f; border-radius: 6px; overflow: hidden; }
+  .seg label { padding: 3px 11px; cursor: pointer; font-size: 13.5px; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg input:checked + span { font-weight: 700; color: #fff; }
+  .seg label:has(input:checked) { background: #2f4a63; }
+  .seg label:has(input:focus-visible) { outline: 3px solid #7aa2ff; outline-offset: -3px; }
+  canvas#pv { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 4px; background: #24313c; }
+  .pv-note { font-size: 12.5px; color: #9fb0bf; margin: 6px 0 0; }
+  .legend { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 0; margin: 8px 0 0; font-size: 12.5px; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; border: 1px solid #0006; }
+
+  /* ramp editor */
+  .rows { list-style: none; margin: 0; padding: 0; }
+  .rows li { display: grid; grid-template-columns: minmax(0, 1fr) 40px 104px; gap: 4px 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--line); }
+  .rows input[type=color] { width: 40px; height: 32px; padding: 0 2px; border: 1px solid var(--field); border-radius: 6px; background: var(--panel); cursor: pointer; }
+  .rows input.hex { font-family: var(--mono); font-size: 13.5px; min-height: 32px; padding: 4px 8px; }
+  .rows .err { grid-column: 1 / -1; color: var(--bad); font-size: 13px; }
+  .rows .err:empty { display: none; }
+  .ramp { display: flex; height: 14px; border-radius: 4px; overflow: hidden; border: 1px solid var(--line); margin: 10px 0 4px; }
+  .ramp span { flex: 1; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+  .state { margin-top: 10px; font-size: 14px; min-height: 1.5em; }
+  .state.bad { color: var(--bad); font-weight: 600; }
+  .state.good { color: var(--good); font-weight: 600; }
+
+  .help { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .help img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  dialog { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--ink); max-width: 440px; padding: 20px; }
+  dialog::backdrop { background: #0008; }
+  .toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 6px 14px; border-radius: 6px; font-size: 14px; }
+  @media (max-width: 520px) { .wrap { padding: 12px 12px 40px; } [role=tabpanel] { padding: 14px 12px; } .top { padding: 10px 12px; } .status { padding: 6px 12px; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Max layers</h1>
+  <div class="chip" id="chip" hidden><span id="chip-name"></span><button class="small" id="change" type="button">Change market</button></div>
+</header>
+<div class="status" id="status" role="status">Checking when the layers were last built...</div>
+
+<div class="wrap">
+  <section class="card picker" id="picker" hidden aria-labelledby="picker-h">
+    <h2 id="picker-h">Which market are you in?</h2>
+    <p class="lede">Every station in a market shares the same layers, so pick your market once. You can change it any time.</p>
+    <label for="mq" class="sr">Find your market</label>
+    <input type="search" id="mq" placeholder="Type a city or call letters, e.g. Columbus or WBNS" autocomplete="off">
+    <ul class="mlist" id="mlist" aria-label="Markets"></ul>
+    <p class="muted" id="mnone" hidden>No market matches. Try a city name.</p>
+    <p><button type="button" class="link" id="pick-cancel" hidden>Back to my market</button></p>
+  </section>
+
+  <section id="tools" hidden>
+    <div role="tablist" aria-label="Layers">
+      <button role="tab" type="button" id="tab-ffg" data-hash="ffg" aria-controls="panel-ffg">Flash flood guidance</button>
+      <button role="tab" type="button" id="tab-records" data-hash="record-dots" aria-controls="panel-records">Record dots</button>
+      <button role="tab" type="button" id="tab-help" data-hash="add-to-max" aria-controls="panel-help">Adding layers to Max</button>
+    </div>
+
+    <div role="tabpanel" id="panel-ffg" aria-labelledby="tab-ffg">
+      <h2 id="ffg-title">Flash flood guidance</h2>
+      <p class="muted" id="ffg-sub">Add these three URLs in Max as KML layers. They never change, even when you change the colors.</p>
+      <table class="urls" id="ffg-urls"></table>
+
+      <div class="grid">
+        <div class="scope" aria-labelledby="pv-h">
+          <div class="scope-head">
+            <h3 id="pv-h" style="margin:0;color:#fff">Preview: current guidance</h3>
+            <div class="seg" role="radiogroup" aria-label="Duration" id="dur"></div>
+          </div>
+          <canvas id="pv" width="960" height="540" role="img" aria-label="Preview of the current flash flood guidance with your colors"></canvas>
+          <p class="pv-note" id="pv-note">Loading the preview...</p>
+          <ul class="legend" id="legend" aria-label="Legend"></ul>
+        </div>
+
+        <div>
+          <h3>Colors</h3>
+          <p class="muted" style="font-size:13.5px">The inch ranges are fixed so the map means the same thing at every station. Only the colors change.</p>
+          <ol class="rows" id="rows"></ol>
+          <div class="ramp" id="ramp" aria-hidden="true"></div>
+          <div class="actions">
+            <button type="button" class="primary" id="save" disabled>Save my colors</button>
+            <button type="button" id="standard">Use the standard colors</button>
+            <button type="button" class="link" id="discard" hidden>Discard changes</button>
+          </div>
+          <p class="state" id="ffg-state" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+
+    <div role="tabpanel" id="panel-records" aria-labelledby="tab-records" hidden>
+      <h2>Record dots</h2>
+      <p class="muted">The same 28 files for every station. Day 1 is today. Nothing to save here.</p>
+      <p class="url" id="rec-pattern"></p>
+      <table class="urls" id="rec-urls"></table>
+      <div class="actions"><button type="button" id="copy-all">Copy all 28 links</button></div>
+      <div class="help" id="rec-help"></div>
+    </div>
+
+    <div role="tabpanel" id="panel-help" aria-labelledby="tab-help" hidden>
+      <div id="add-help"></div>
+    </div>
+  </section>
+</div>
+
+<dialog id="confirm" aria-labelledby="confirm-h">
+  <h2 id="confirm-h">Replace the saved colors?</h2>
+  <p id="confirm-text"></p>
+  <div class="actions"><button type="button" class="primary" id="confirm-yes">Replace</button><button type="button" id="confirm-no">Keep mine</button></div>
+</dialog>
+<div class="toast" id="toast" hidden></div>
+<div class="sr" id="announce" aria-live="polite"></div>
+
+<script>var CFG = /*CONFIG*/;</script>
+<script>/*LIB*/</script>
+<script>/*APP*/</script>
+</body>
+</html>

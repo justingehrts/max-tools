@@ -30,6 +30,9 @@ class FFG(unittest.TestCase):
         r_good, r_off = build_ffg.render(good), build_ffg.render(off)
         self.assertIsNone(r_good[1]); self.assertIn('outside', r_off[1])
         self.assertTrue((site / good[0]).is_file()); self.assertFalse((site / off[0]).exists())
+        bins = __import__('PIL.Image', fromlist=['Image']).open(site / 'markets/ok/bins_1hr.png')
+        self.assertEqual((bins.mode, bins.size), ('L', (960, 540)))
+        self.assertTrue(set(np.unique(np.asarray(bins))) <= set(range(7)) | {255})
         names = zipfile.ZipFile(site / good[0]).namelist()
         self.assertEqual(sorted(names), ['doc.kml', 'ffg_overlay_1hr.png'])
         self.assertIn('stamp', zipfile.ZipFile(site / good[0]).read('doc.kml').decode())
@@ -51,7 +54,8 @@ class FFG(unittest.TestCase):
     def test_expected_matches_what_the_builders_make(self):
         e = expected.expected(ROOT)
         jobs, _, _ = build_ffg.make_jobs(ROOT, 'site', 'x')
-        self.assertEqual(sorted(e['ffg']), sorted([j[0] for j in jobs] + ['ffg/status.json']))
+        bins = [j[0].replace(f'Custom_FFG_{j[1]}hr.kmz', f'bins_{j[1]}hr.png') for j in jobs if j[0].startswith('markets/')]
+        self.assertEqual(sorted(e['ffg']), sorted([j[0] for j in jobs] + bins + ['ffg/status.json']))
 
 
 GOOD = b'GRIB' + b'x' * 200_000 + b'7777'

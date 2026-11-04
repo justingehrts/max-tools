@@ -79,3 +79,13 @@ Use the URL without a trailing slash after `save.php`.
 ### e. Check
 Logged in through the password prompt, open `https://<your domain>/max/api/save.php?market=columbus-oh`. Expected:
 `{"ok":true,"market":"columbus-oh","ffg":null,"updatedUtc":null}`. A 500 message names what is missing.
+
+## 3. Configurator page
+
+1. Download `configurator/dist/index.html` from the repo (open it on GitHub > "Download raw file").
+2. Upload it as `public_html/max/index.html` (same folder as `api/`).
+3. Also re-upload `configurator/api/save.php` and `configurator/api/lib.php` whenever they change (they changed on Nov 4).
+4. Open `https://www.justingehrts.com/max/`, sign in, pick a market.
+
+The page has the market list built in: when `markets.json` changes, rebuild (`python3 configurator/build.py`, or ask Claude) and
+upload `index.html` again. Help text comes from the Pages site, so editing `content/*.md` needs no upload.

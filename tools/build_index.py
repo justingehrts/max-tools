@@ -5,7 +5,7 @@
 
 Outputs:
   site/index.html                         tabs: Flash flood guidance (per market), Record dots (shared set + help)
-  site/help/record-dots-in-max.html       the help rendered from content/record-dots-in-max.md (the configurator shows it too)
+  site/help/<name>.html                   every content/<name>.md rendered (the configurator shows them too)
   site/help/images/...                    copied from content/images/
 
 Public on purpose (the data is public); the configurator is where FFG colors are changed. No external requests.
@@ -56,20 +56,22 @@ JS = '''
 
 
 def render_help(root, site, base):
-    """Render content/record-dots-in-max.md to site/help/; return the HTML ('' if there is no help file)."""
-    src = Path(root) / 'content' / 'record-dots-in-max.md'
-    if not src.is_file():
-        return ''
+    """Render every content/*.md to site/help/<name>.html (images copied to site/help/images/).
+    Returns {name: html}. The public page uses record-dots-in-max; the configurator fetches all of them."""
     import markdown
-    text = re.sub(r'<!--.*?-->', '', src.read_text(encoding='utf-8'), flags=re.S)
-    body = markdown.markdown(text, extensions=['extra'])
-    body = re.sub(r'(src|href)="images/', rf'\1="{base}/help/images/', body)   # absolute, so the configurator can show it too
-    out = site / 'help'; out.mkdir(parents=True, exist_ok=True)
+    out = site / 'help'
+    docs = {}
+    for src in sorted((Path(root) / 'content').glob('*.md')):
+        text = re.sub(r'<!--.*?-->', '', src.read_text(encoding='utf-8'), flags=re.S)
+        body = markdown.markdown(text, extensions=['extra'])
+        body = re.sub(r'(src|href)="images/', rf'\1="{base}/help/images/', body)   # absolute, so the configurator can show it too
+        out.mkdir(parents=True, exist_ok=True)
+        (out / f'{src.stem}.html').write_text(body, encoding='utf-8')
+        docs[src.stem] = body
     imgs = Path(root) / 'content' / 'images'
-    if imgs.is_dir():
+    if docs and imgs.is_dir():
         shutil.copytree(imgs, out / 'images', dirs_exist_ok=True, ignore=shutil.ignore_patterns('.gitkeep'))
-    (out / 'record-dots-in-max.html').write_text(body, encoding='utf-8')
-    return body
+    return docs
 
 
 def main():
@@ -93,7 +95,7 @@ def main():
         rows.append(f'<details data-q="{e(search)}"><summary>{e(m["name"])}</summary><table>{ffg}</table></details>')
     rec = ''.join(f'<tr><th>Day {d}</th>' + ''.join(f'<td><a href="{base}/records/default/D{d}_{t.upper()}.kmz">{t.upper()}</a></td>'
                                                    for t in expected.TYPES) + '</tr>' for d in expected.DAYS)
-    help_html = render_help(a.root, site, base)
+    help_html = render_help(a.root, site, base).get('record-dots-in-max', '')
 
     ffg_panel = (f'<div role="tabpanel" id="panel-ffg" aria-labelledby="tab-ffg">'
                  f'<h2>Flash flood guidance</h2><p class="muted">Each market has its own map box. 1, 3 and 6 hour guidance. '

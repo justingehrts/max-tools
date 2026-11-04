@@ -56,7 +56,9 @@ function parse_save_request(string $raw, array $markets): array {
     if ($exp !== null && (!is_string($exp) || !preg_match(UTC_RE, $exp))) $err['expectUpdatedUtc'] = 'bad time';
     if ($err) return [null, $err];
     if ($req['ffg'] !== null) $req['ffg'] = ['colors' => array_map('strtolower', $req['ffg']['colors'])];
-    return [['market' => $req['market'], 'ffg' => $req['ffg'], 'expectUpdatedUtc' => $exp], []];
+    // checkExpected: the page always sends expectUpdatedUtc (null = "this market had no saved colors when I loaded it").
+    return [['market' => $req['market'], 'ffg' => $req['ffg'], 'expectUpdatedUtc' => $exp,
+             'checkExpected' => array_key_exists('expectUpdatedUtc', $req)], []];
 }
 
 /** Find a market's entry in a decoded configs.json. */

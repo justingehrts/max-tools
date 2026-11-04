@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Max layers</title>
+<style>
+  :root {
+    --ink: #17212b; --muted: #55636f; --paper: #edf0f3; --panel: #ffffff; --line: #d2d9df;
+    --accent: #1f4fbf; --accent-ink: #ffffff; --good: #19703f; --bad: #b3261e; --warn-bg: #fdecea; --ok-bg: #e6f3ea;
+    --scope: #19232c; --scope-line: #2c3a46; --tab: #dde3e8; --field: #8e9ba6;
+    --font: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --mono: Consolas, "Cascadia Mono", "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #e6ebf0; --muted: #a0adb8; --paper: #11181e; --panel: #1a232b; --line: #30404c;
+      --accent: #7aa2ff; --accent-ink: #0b1220; --good: #5fcf8f; --bad: #ff8d84; --warn-bg: #3a1f1d; --ok-bg: #17301f;
+      --scope: #0e151b; --scope-line: #243440; --tab: #141c23; --field: #5b6c79;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--paper); }
+  body { margin: 0; font: 15px/1.5 var(--font); color: var(--ink); background: var(--paper); }
+  h1, h2, h3 { line-height: 1.25; margin: 0; }
+  h1 { font-size: 19px; font-weight: 650; }
+  h2 { font-size: 20px; font-weight: 650; margin-bottom: 4px; }
+  h3 { font-size: 15px; font-weight: 650; margin-bottom: 6px; }
+  p { margin: 0 0 8px; }
+  a { color: var(--accent); }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  [hidden] { display: none !important; }
+  .muted { color: var(--muted); }
+  .mono, .url { font-family: var(--mono); font-size: 13.5px; overflow-wrap: anywhere; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  .top h1 { flex: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 4px 3px 12px; font-weight: 600; }
+  .status { padding: 6px 20px; font-size: 13.5px; background: var(--ok-bg); border-bottom: 1px solid var(--line); }
+  .status.bad { background: var(--warn-bg); color: var(--bad); font-weight: 600; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 18px 20px 48px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; }
+  .lede { color: var(--muted); max-width: 64ch; }
+
+  button, .btn { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--field); border-radius: 6px; padding: 6px 12px; cursor: pointer; min-height: 34px; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button[disabled] { opacity: .5; cursor: default; }
+  button.small { min-height: 28px; padding: 2px 9px; font-size: 13px; }
+  button.link { border: none; background: none; color: var(--accent); text-decoration: underline; padding: 0 4px; min-height: 0; }
+  input[type="text"], input[type="search"] { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--field); border-radius: 6px; padding: 7px 10px; min-height: 36px; width: 100%; }
+  input[aria-invalid="true"] { border-color: var(--bad); box-shadow: 0 0 0 1px var(--bad); }
+
+  /* market picker */
+  .picker { max-width: 640px; }
+  .mlist { list-style: none; margin: 12px 0 0; padding: 0; max-height: 60vh; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+  .mlist li + li { border-top: 1px solid var(--line); }
+  .mlist button { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 9px 12px; cursor: pointer; }
+  .mlist button:hover, .mlist button:focus-visible { background: var(--paper); outline: none; box-shadow: inset 3px 0 0 var(--accent); }
+  .mlist small { color: var(--muted); margin-left: 6px; }
+
+  /* tabs */
+  [role=tablist] { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+  [role=tab] { background: var(--tab); border: 1px solid var(--line); border-bottom: none; border-radius: 8px 8px 0 0; padding: 8px 14px; margin-bottom: -1px; min-height: 0; }
+  [role=tab][aria-selected=true] { background: var(--panel); font-weight: 650; }
+  [role=tabpanel] { background: var(--panel); border: 1px solid var(--line); border-top: none; border-radius: 0 0 8px 8px; padding: 18px 20px; }
+
+  table.urls { border-collapse: collapse; width: 100%; }
+  table.urls th, table.urls td { padding: 4px 8px 4px 0; text-align: left; vertical-align: middle; }
+  table.urls th { white-space: nowrap; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 22px; margin-top: 18px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+  /* the scope: the one dark, memorable element */
+  .scope { background: var(--scope); border: 1px solid var(--scope-line); border-radius: 8px; padding: 12px 14px; color: #dce4eb; }
+  .scope-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .seg { display: inline-flex; border: 1px solid #50616f; border-radius: 6px; overflow: hidden; }
+  .seg label { padding: 3px 11px; cursor: pointer; font-size: 13.5px; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg input:checked + span { font-weight: 700; color: #fff; }
+  .seg label:has(input:checked) { background: #2f4a63; }
+  .seg label:has(input:focus-visible) { outline: 3px solid #7aa2ff; outline-offset: -3px; }
+  canvas#pv { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 4px; background: #24313c; }
+  .pv-note { font-size: 12.5px; color: #9fb0bf; margin: 6px 0 0; }
+  .legend { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 0; margin: 8px 0 0; font-size: 12.5px; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; border: 1px solid #0006; }
+
+  /* ramp editor */
+  .rows { list-style: none; margin: 0; padding: 0; }
+  .rows li { display: grid; grid-template-columns: minmax(0, 1fr) 40px 104px; gap: 4px 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--line); }
+  .rows input[type=color] { width: 40px; height: 32px; padding: 0 2px; border: 1px solid var(--field); border-radius: 6px; background: var(--panel); cursor: pointer; }
+  .rows input.hex { font-family: var(--mono); font-size: 13.5px; min-height: 32px; padding: 4px 8px; }
+  .rows .err { grid-column: 1 / -1; color: var(--bad); font-size: 13px; }
+  .rows .err:empty { display: none; }
+  .ramp { display: flex; height: 14px; border-radius: 4px; overflow: hidden; border: 1px solid var(--line); margin: 10px 0 4px; }
+  .ramp span { flex: 1; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+  .state { margin-top: 10px; font-size: 14px; min-height: 1.5em; }
+  .state.bad { color: var(--bad); font-weight: 600; }
+  .state.good { color: var(--good); font-weight: 600; }
+
+  .help { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .help img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+  dialog { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--ink); max-width: 440px; padding: 20px; }
+  dialog::backdrop { background: #0008; }
+  .toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 6px 14px; border-radius: 6px; font-size: 14px; }
+  @media (max-width: 520px) { .wrap { padding: 12px 12px 40px; } [role=tabpanel] { padding: 14px 12px; } .top { padding: 10px 12px; } .status { padding: 6px 12px; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Max layers</h1>
+  <div class="chip" id="chip" hidden><span id="chip-name"></span><button class="small" id="change" type="button">Change market</button></div>
+</header>
+<div class="status" id="status" role="status">Checking when the layers were last built...</div>
+
+<div class="wrap">
+  <section class="card picker" id="picker" hidden aria-labelledby="picker-h">
+    <h2 id="picker-h">Which market are you in?</h2>
+    <p class="lede">Every station in a market shares the same layers, so pick your market once. You can change it any time.</p>
+    <label for="mq" class="sr">Find your market</label>
+    <input type="search" id="mq" placeholder="Type a city or call letters, e.g. Columbus or WBNS" autocomplete="off">
+    <ul class="mlist" id="mlist" aria-label="Markets"></ul>
+    <p class="muted" id="mnone" hidden>No market matches. Try a city name.</p>
+    <p><button type="button" class="link" id="pick-cancel" hidden>Back to my market</button></p>
+  </section>
+
+  <section id="tools" hidden>
+    <div role="tablist" aria-label="Layers">
+      <button role="tab" type="button" id="tab-ffg" data-hash="ffg" aria-controls="panel-ffg">Flash flood guidance</button>
+      <button role="tab" type="button" id="tab-records" data-hash="record-dots" aria-controls="panel-records">Record dots</button>
+      <button role="tab" type="button" id="tab-help" data-hash="add-to-max" aria-controls="panel-help">Adding layers to Max</button>
+    </div>
+
+    <div role="tabpanel" id="panel-ffg" aria-labelledby="tab-ffg">
+      <h2 id="ffg-title">Flash flood guidance</h2>
+      <p class="muted" id="ffg-sub">Add these three URLs in Max as KML layers. They never change, even when you change the colors.</p>
+      <table class="urls" id="ffg-urls"></table>
+
+      <div class="grid">
+        <div class="scope" aria-labelledby="pv-h">
+          <div class="scope-head">
+            <h3 id="pv-h" style="margin:0;color:#fff">Preview: current guidance</h3>
+            <div class="seg" role="radiogroup" aria-label="Duration" id="dur"></div>
+          </div>
+          <canvas id="pv" width="960" height="540" role="img" aria-label="Preview of the current flash flood guidance with your colors"></canvas>
+          <p class="pv-note" id="pv-note">Loading the preview...</p>
+          <ul class="legend" id="legend" aria-label="Legend"></ul>
+        </div>
+
+        <div>
+          <h3>Colors</h3>
+          <p class="muted" style="font-size:13.5px">The inch ranges are fixed so the map means the same thing at every station. Only the colors change.</p>
+          <ol class="rows" id="rows"></ol>
+          <div class="ramp" id="ramp" aria-hidden="true"></div>
+          <div class="actions">
+            <button type="button" class="primary" id="save" disabled>Save my colors</button>
+            <button type="button" id="standard">Use the standard colors</button>
+            <button type="button" class="link" id="discard" hidden>Discard changes</button>
+          </div>
+          <p class="state" id="ffg-state" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+
+    <div role="tabpanel" id="panel-records" aria-labelledby="tab-records" hidden>
+      <h2>Record dots</h2>
+      <p class="muted">The same 28 files for every station. Day 1 is today. Nothing to save here.</p>
+      <p class="url" id="rec-pattern"></p>
+      <table class="urls" id="rec-urls"></table>
+      <div class="actions"><button type="button" id="copy-all">Copy all 28 links</button></div>
+      <div class="help" id="rec-help"></div>
+    </div>
+
+    <div role="tabpanel" id="panel-help" aria-labelledby="tab-help" hidden>
+      <div id="add-help"></div>
+    </div>
+  </section>
+</div>
+
+<dialog id="confirm" aria-labelledby="confirm-h">
+  <h2 id="confirm-h">Replace the saved colors?</h2>
+  <p id="confirm-text"></p>
+  <div class="actions"><button type="button" class="primary" id="confirm-yes">Replace</button><button type="button" id="confirm-no">Keep mine</button></div>
+</dialog>
+<div class="toast" id="toast" hidden></div>
+<div class="sr" id="announce" aria-live="polite"></div>
+
+<script>var CFG = {"pagesBase":"https://justingehrts.github.io/max-tools","api":"api/save.php","buildsUrl":"https://github.com/justingehrts/max-tools/actions/workflows/build.yml","markets":[{"id":"abilene-tx","name":"Abilene, TX","stations":["KXVA"]},{"id":"atlanta-ga","name":"Atlanta, GA","stations":["WXIA-TV","WATL"]},{"id":"austin-tx","name":"Austin, TX","stations":["KVUE"]},{"id":"bangor-me","name":"Bangor, ME","stations":["WLBZ"]},{"id":"beaumont-tx","name":"Beaumont, TX","stations":["KBMT"]},{"id":"boise-id","name":"Boise, ID","stations":["KTVB"]},{"id":"bryan-college-station-tx","name":"Bryan–College Station, TX","stations":["KAGS-LD"]},{"id":"buffalo-ny","name":"Buffalo, NY","stations":["WGRZ"]},{"id":"charlotte-nc","name":"Charlotte, NC","stations":["WCNC-TV"]},{"id":"cleveland-oh","name":"Cleveland, OH","stations":["WKYC"]},{"id":"columbia-sc","name":"Columbia, SC","stations":["WLTX"]},{"id":"columbus-oh","name":"Columbus, OH","stations":["WBNS-TV"]},{"id":"corpus-christi-tx","name":"Corpus Christi, TX","stations":["KIII"]},{"id":"dallas-fort-worth-tx","name":"Dallas–Fort Worth, TX","stations":["WFAA","KFAA-TV"]},{"id":"davenport-ia","name":"Davenport (Quad Cities), IA","stations":["WQAD-TV"]},{"id":"denver-co","name":"Denver, CO","stations":["KUSA","KTVD"]},{"id":"des-moines-ia","name":"Des Moines, IA","stations":["WOI-DT","KCWI-TV"]},{"id":"flagstaff-az","name":"Flagstaff, AZ","stations":["KNAZ-TV"]},{"id":"fort-smith-fayetteville-ar","name":"Fort Smith–Fayetteville, AR","stations":["KFSM-TV"]},{"id":"grand-rapids-mi","name":"Grand Rapids, MI","stations":["WZZM"]},{"id":"greensboro-nc","name":"Greensboro, NC","stations":["WFMY-TV"]},{"id":"harrisburg-pa","name":"Harrisburg, PA","stations":["WPMT"]},{"id":"hartford-new-haven-ct","name":"Hartford–New Haven, CT","stations":["WTIC-TV","WCCT-TV"]},{"id":"houston-tx","name":"Houston, TX","stations":["KHOU","KTBU"]},{"id":"huntsville-al","name":"Huntsville, AL","stations":["WZDX"]},{"id":"indianapolis-in","name":"Indianapolis, IN","stations":["WTHR","WALV-CD"]},{"id":"jacksonville-fl","name":"Jacksonville, FL","stations":["WJXX","WTLV"]},{"id":"knoxville-tn","name":"Knoxville, TN","stations":["WBIR-TV"]},{"id":"little-rock-ar","name":"Little Rock, AR","stations":["KTHV"]},{"id":"louisville-ky","name":"Louisville, KY","stations":["WHAS-TV"]},{"id":"macon-ga","name":"Macon, GA","stations":["WMAZ-TV"]},{"id":"memphis-tn","name":"Memphis, TN","stations":["WATN-TV","WLMT"]},{"id":"minneapolis-mn","name":"Minneapolis–Saint Paul, MN","stations":["KARE"]},{"id":"new-orleans-la","name":"New Orleans, LA","stations":["WWL-TV","WUPL"]},{"id":"norfolk-va","name":"Norfolk, VA","stations":["WVEC"]},{"id":"odessa-midland-tx","name":"Odessa–Midland, TX","stations":["KWES-TV"]},{"id":"phoenix-az","name":"Phoenix, AZ","stations":["KPNX"]},{"id":"portland-me","name":"Portland, ME","stations":["WCSH"]},{"id":"portland-or","name":"Portland, OR","stations":["KGW"]},{"id":"sacramento-ca","name":"Sacramento, CA","stations":["KXTV"]},{"id":"san-angelo-tx","name":"San Angelo, TX","stations":["KIDY"]},{"id":"san-antonio-tx","name":"San Antonio, TX","stations":["KENS"]},{"id":"san-diego-ca","name":"San Diego, CA","stations":["KFMB-TV"]},{"id":"scranton-wilkes-barre-pa","name":"Scranton–Wilkes-Barre, PA","stations":["WNEP-TV"]},{"id":"seattle-wa","name":"Seattle–Tacoma, WA","stations":["KING-TV","KONG"]},{"id":"spokane-wa","name":"Spokane, WA","stations":["KREM","KSKN"]},{"id":"st-louis-mo","name":"St. Louis, MO","stations":["KSDK"]},{"id":"tampa-fl","name":"Tampa–St. Petersburg, FL","stations":["WTSP"]},{"id":"toledo-oh","name":"Toledo, OH","stations":["WTOL","WUPW"]},{"id":"tucson-az","name":"Tucson, AZ","stations":["KMSB","KTTU"]},{"id":"twin-falls-id","name":"Twin Falls, ID","stations":["KTFT-LD"]},{"id":"tyler-tx","name":"Tyler, TX","stations":["KYTX"]},{"id":"waco-tx","name":"Waco, TX","stations":["KCEN-TV"]},{"id":"washington-dc","name":"Washington, DC","stations":["WUSA"]}]};</script>
+<script>// Pure helpers for the configurator (no DOM). Tested by configurator/test_lib.js under Node.
+var LIB = (function () {
+  'use strict';
+  // Must match tools/build_ffg.py (STANDARD, BOUNDS) and the server's rules (configurator/api/lib.php).
+  var STANDARD = ['#67000d', '#a50f15', '#cb181d', '#ef3b2c', '#fc9272', '#fff5f0', '#d9d9d9'];
+  var BOUNDS = [0, 0.5, 0.75, 1, 1.5, 2, 3];
+  var HOURS = [1, 3, 6];
+  var TYPES = ['HIMAX', 'LOMAX', 'HIMIN', 'LOMIN'];
+  var DAYS = [1, 2, 3, 4, 5, 6, 7];
+  var STALE_HOURS = 3;
+
+  function bandLabel(i) {
+    var f = function (x) { return x.toFixed(2); };
+    if (i === 0) return 'Under ' + f(BOUNDS[1]) + ' in';
+    if (i === BOUNDS.length - 1) return f(BOUNDS[i]) + ' in and up';
+    return f(BOUNDS[i]) + ' to ' + f(BOUNDS[i + 1]) + ' in';
+  }
+
+  /** '#A50F15', 'a50f15', ' #a50f15 ' -> '#a50f15'; anything else -> null. Same rule as the server (no newlines etc.). */
+  function normHex(v) {
+    if (typeof v !== 'string') return null;
+    var s = v.trim();
+    if (s.charAt(0) !== '#') s = '#' + s;
+    return /^#[0-9a-fA-F]{6}$/.test(s) ? s.toLowerCase() : null;
+  }
+
+  function sameColors(a, b) {
+    if (!a || !b || a.length !== b.length) return false;
+    for (var i = 0; i < a.length; i++) if (normHex(a[i]) !== normHex(b[i])) return false;
+    return true;
+  }
+
+  function isStandard(colors) { return sameColors(colors, STANDARD); }
+
+  /** What to send: null when the colors are the standard ones (the server then removes the override). */
+  function savePayload(market, colors, expectUpdatedUtc) {
+    var clean = colors.map(normHex);
+    return { market: market, ffg: isStandard(clean) ? null : { colors: clean }, expectUpdatedUtc: expectUpdatedUtc || null };
+  }
+
+  /** Per-row errors for the editor: { index: message }. */
+  function colorErrors(colors) {
+    var err = {};
+    colors.forEach(function (c, i) { if (!normHex(c)) err[i] = 'Use a color like #a50f15.'; });
+    return err;
+  }
+
+  /** Map server field errors ("ffg.colors[3]") to editor rows; others go to 'form'. */
+  function serverErrors(errors) {
+    var out = { rows: {}, form: [] };
+    Object.keys(errors || {}).forEach(function (k) {
+      var m = /^ffg\.colors\[(\d)\]$/.exec(k);
+      if (m) out.rows[+m[1]] = errors[k]; else out.form.push(errors[k]);
+    });
+    return out;
+  }
+
+  function ffgUrls(base, market) {
+    return HOURS.map(function (h) { return { hours: h, url: base + '/markets/' + market + '/Custom_FFG_' + h + 'hr.kmz' }; });
+  }
+  function recordUrl(base, day, type) { return base + '/records/default/D' + day + '_' + type + '.kmz'; }
+  function allRecordUrls(base) {
+    var out = [];
+    DAYS.forEach(function (d) { TYPES.forEach(function (t) { out.push(recordUrl(base, d, t)); }); });
+    return out;
+  }
+
+  function hoursOld(isoUtc, nowMs) {
+    var t = Date.parse(isoUtc);
+    return isNaN(t) ? Infinity : ((nowMs === undefined ? Date.now() : nowMs) - t) / 3600000;
+  }
+  function isStale(isoUtc, nowMs) { return !(hoursOld(isoUtc, nowMs) <= STALE_HOURS); }
+
+  /**
+   * Recolor a bin map. bins: RGBA bytes of the grayscale bin PNG (R = band 0..6, 255 = none).
+   * Returns RGBA bytes: band colors fully opaque, everything else transparent. Same colors the KMZ would use.
+   */
+  function recolor(bins, colors, out) {
+    var rgb = colors.map(function (c) { var h = normHex(c) || '#000000'; return [parseInt(h.substr(1, 2), 16), parseInt(h.substr(3, 2), 16), parseInt(h.substr(5, 2), 16)]; });
+    out = out || new Uint8ClampedArray(bins.length);
+    for (var i = 0; i < bins.length; i += 4) {
+      var b = bins[i];
+      if (b < rgb.length && bins[i + 3] > 0) { out[i] = rgb[b][0]; out[i + 1] = rgb[b][1]; out[i + 2] = rgb[b][2]; out[i + 3] = 255; }
+      else { out[i] = out[i + 1] = out[i + 2] = out[i + 3] = 0; }
+    }
+    return out;
+  }
+
+  /** Markets whose name or call letters contain the query (case-insensitive). */
+  function filterMarkets(markets, q) {
+    q = (q || '').trim().toLowerCase();
+    if (!q) return markets.slice();
+    return markets.filter(function (m) { return (m.name + ' ' + (m.stations || []).join(' ')).toLowerCase().indexOf(q) >= 0; });
+  }
+
+  return { STANDARD: STANDARD, BOUNDS: BOUNDS, HOURS: HOURS, TYPES: TYPES, DAYS: DAYS, STALE_HOURS: STALE_HOURS,
+           bandLabel: bandLabel, normHex: normHex, sameColors: sameColors, isStandard: isStandard, savePayload: savePayload,
+           colorErrors: colorErrors, serverErrors: serverErrors, ffgUrls: ffgUrls, recordUrl: recordUrl,
+           allRecordUrls: allRecordUrls, hoursOld: hoursOld, isStale: isStale, recolor: recolor, filterMarkets: filterMarkets };
+})();
+if (typeof module !== 'undefined') module.exports = LIB;
+</script>
+<script>(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var BASE = CFG.pagesBase.replace(/\/$/, '');
+  var MARKETS = CFG.markets;
+  var byId = {}; MARKETS.forEach(function (m) { byId[m.id] = m; });
+  var STORE = 'maxtools.market';
+
+  var S = {
+    market: null,
+    saved: null,          // saved colors (null = standard)
+    updatedUtc: null,     // when the saved custom colors were saved (server time)
+    loaded: false,        // saved colors loaded from the server
+    blocked: '',          // why saving is off (e.g. could not load)
+    savedThisVisit: false,
+    edit: LIB.STANDARD.slice(),
+    hour: 1,
+    saving: false,
+    status: { ffg: null, records: null },
+    bins: {}              // hour -> ImageData of the bin map
+  };
+
+  // ---------------------------------------------------------------- small utilities
+  function store(get, val) {
+    try { if (get) return localStorage.getItem(STORE); localStorage.setItem(STORE, val); } catch (e) { /* private mode etc. */ }
+    return null;
+  }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function fmtTime(iso) {
+    var d = new Date(iso); if (isNaN(d)) return 'unknown';
+    var t = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    return d.toDateString() === new Date().toDateString() ? t : d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ', ' + t;
+  }
+  function fmtDate(iso) { var d = new Date(iso); return isNaN(d) ? 'earlier' : d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); }
+  var toastTimer;
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.hidden = false; $('announce').textContent = msg;
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 1800);
+  }
+  function copy(text, what) {
+    function ok() { toast('Copied ' + what); }
+    function fallback() {
+      var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); ok(); } catch (e) { toast('Copy failed. Select the text and press Ctrl+C.'); }
+      document.body.removeChild(ta);
+    }
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(ok, fallback); else fallback();
+  }
+  function getJSON(url) {
+    return fetch(url, { cache: 'no-store', credentials: 'same-origin' }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (body) { return { status: r.status, body: body }; });
+    });
+  }
+
+  // ---------------------------------------------------------------- status strip
+  function loadStatus() {
+    var parts = [['ffg', 'FFG', BASE + '/ffg/status.json'], ['records', 'Record dots', BASE + '/records/status.json']];
+    Promise.all(parts.map(function (p) {
+      return fetch(p[2], { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    })).then(function (res) {
+      var bad = false, txt = [];
+      res.forEach(function (st, i) {
+        S.status[parts[i][0]] = st;
+        if (!st) { bad = true; txt.push(parts[i][1] + ': can\'t reach the status page'); return; }
+        var stale = LIB.isStale(st.generatedUtc);
+        bad = bad || stale;
+        txt.push(parts[i][1] + ' ' + fmtTime(st.generatedUtc) + (stale ? ' (older than ' + LIB.STALE_HOURS + ' hours)' : ''));
+      });
+      $('status').textContent = 'Last build: ' + txt.join(' · ');
+      $('status').classList.toggle('bad', bad);
+      if (S.market) loadPreview();
+    });
+  }
+
+  // ---------------------------------------------------------------- market picker
+  function renderPicker() {
+    var list = LIB.filterMarkets(MARKETS, $('mq').value);
+    $('mlist').innerHTML = list.map(function (m) {
+      return '<li><button type="button" data-id="' + esc(m.id) + '">' + esc(m.name) + '<small>' + esc((m.stations || []).join(', ')) + '<\/small><\/button><\/li>';
+    }).join('');
+    $('mnone').hidden = list.length > 0;
+  }
+  function showPicker() {
+    $('picker').hidden = false; $('tools').hidden = true; $('chip').hidden = true;
+    $('pick-cancel').hidden = !S.market;
+    $('mq').value = ''; renderPicker(); $('mq').focus();
+  }
+  $('mq').addEventListener('input', renderPicker);
+  $('mq').addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter') { var b = $('mlist').querySelector('button'); if (b) b.click(); }
+    if (ev.key === 'ArrowDown') { var f = $('mlist').querySelector('button'); if (f) { ev.preventDefault(); f.focus(); } }
+  });
+  $('mlist').addEventListener('keydown', function (ev) {
+    var btns = [].slice.call($('mlist').querySelectorAll('button')), i = btns.indexOf(document.activeElement);
+    if (ev.key === 'ArrowDown' && i < btns.length - 1) { ev.preventDefault(); btns[i + 1].focus(); }
+    if (ev.key === 'ArrowUp') { ev.preventDefault(); (i > 0 ? btns[i - 1] : $('mq')).focus(); }
+  });
+  $('mlist').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (b) chooseMarket(b.getAttribute('data-id'));
+  });
+  $('pick-cancel').addEventListener('click', function () { if (S.market) chooseMarket(S.market); });
+  $('change').addEventListener('click', function () {
+    if (isDirty() && !window.confirm('You have unsaved color changes. Change market and lose them?')) return;
+    showPicker();
+  });
+
+  function chooseMarket(id) {
+    if (!byId[id]) return;
+    S.market = id; store(false, id);
+    S.bins = {}; S.savedThisVisit = false;
+    $('picker').hidden = true; $('tools').hidden = false; $('chip').hidden = false;
+    $('chip-name').textContent = byId[id].name;
+    renderUrls(); loadSaved(); loadPreview();
+    showTab(tabFromHash() || $('tab-ffg'));
+  }
+
+  // ---------------------------------------------------------------- tabs
+  var tabs = [].slice.call(document.querySelectorAll('[role=tab]'));
+  function tabFromHash() { return tabs.filter(function (t) { return '#' + t.getAttribute('data-hash') === location.hash; })[0]; }
+  function showTab(t, focus) {
+    tabs.forEach(function (x) {
+      var on = x === t; x.setAttribute('aria-selected', on ? 'true' : 'false'); x.tabIndex = on ? 0 : -1;
+      $(x.getAttribute('aria-controls')).hidden = !on;
+    });
+    if (focus) t.focus();
+    try { history.replaceState(null, '', '#' + t.getAttribute('data-hash')); } catch (e) { /* file:// etc. */ }
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { showTab(t); });
+    t.addEventListener('keydown', function (ev) {
+      var k = ev.key, j = k === 'ArrowRight' ? i + 1 : k === 'ArrowLeft' ? i - 1 : k === 'Home' ? 0 : k === 'End' ? tabs.length - 1 : null;
+      if (j === null) return; ev.preventDefault(); showTab(tabs[(j + tabs.length) % tabs.length], true);
+    });
+  });
+
+  // ---------------------------------------------------------------- URLs
+  function renderUrls() {
+    $('ffg-urls').innerHTML = LIB.ffgUrls(BASE, S.market).map(function (u) {
+      return '<tr><th>' + u.hours + ' hour<\/th><td class="url">' + esc(u.url) + '<\/td><td><button type="button" class="small" data-copy="' + esc(u.url) +
+        '" data-what="the ' + u.hours + '-hour URL" aria-label="Copy the ' + u.hours + '-hour URL">Copy<\/button><\/td><\/tr>';
+    }).join('');
+    $('rec-pattern').textContent = BASE + '/records/default/D<day>_<TYPE>.kmz';
+    $('rec-urls').innerHTML = '<tr><th><\/th>' + LIB.TYPES.map(function (t) { return '<th scope="col">' + t + '<\/th>'; }).join('') + '<\/tr>' +
+      LIB.DAYS.map(function (d) {
+        return '<tr><th scope="row">Day ' + d + '<\/th>' + LIB.TYPES.map(function (t) {
+          var u = LIB.recordUrl(BASE, d, t);
+          return '<td><button type="button" class="small" data-copy="' + esc(u) + '" data-what="Day ' + d + ' ' + t + '" aria-label="Copy the Day ' + d + ' ' + t + ' link" title="' + esc(u) + '">Copy<\/button><\/td>';
+        }).join('') + '<\/tr>';
+      }).join('');
+  }
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-copy]'); if (b) copy(b.getAttribute('data-copy'), b.getAttribute('data-what'));
+  });
+  $('copy-all').addEventListener('click', function () { copy(LIB.allRecordUrls(BASE).join('\n'), 'all 28 links'); });
+
+  // ---------------------------------------------------------------- saved colors
+  function savedColors() { return S.saved || LIB.STANDARD; }
+  function isDirty() { return S.market && !LIB.sameColors(S.edit, savedColors()); }
+
+  function loadSaved() {
+    S.loaded = false; S.blocked = ''; S.saved = null; S.updatedUtc = null;
+    setEdit(LIB.STANDARD.slice());
+    setState('Loading your saved colors...', '');
+    var m = S.market;
+    getJSON(CFG.api + '?market=' + encodeURIComponent(m)).then(function (r) {
+      if (m !== S.market) return;
+      if (r.status === 200 && r.body.ok) {
+        S.saved = r.body.ffg ? r.body.ffg.colors : null; S.updatedUtc = r.body.updatedUtc; S.loaded = true;
+        setEdit(savedColors().slice()); setState('', '');
+      } else {
+        S.blocked = (r.body && r.body.error) || 'The save service answered with an error (' + r.status + ').';
+        setState('Could not load your saved colors, so saving is off. ' + S.blocked, 'bad');
+      }
+      refresh();
+    }, function () {
+      if (m !== S.market) return;
+      S.blocked = 'Could not reach the save service.';
+      setState('Could not reach the save service, so saving is off. Reload the page to try again.', 'bad'); refresh();
+    });
+  }
+
+  // ---------------------------------------------------------------- editor
+  function buildRows() {
+    $('rows').innerHTML = LIB.STANDARD.map(function (_, i) {
+      var lab = LIB.bandLabel(i);
+      return '<li><span id="lab-' + i + '">' + lab + '<\/span>' +
+        '<input type="color" id="c-' + i + '" aria-labelledby="lab-' + i + '" title="Pick a color for ' + lab + '">' +
+        '<input type="text" class="hex" id="h-' + i + '" maxlength="7" spellcheck="false" autocomplete="off" aria-label="' + lab + ' color code" aria-describedby="e-' + i + '">' +
+        '<span class="err" id="e-' + i + '"><\/span><\/li>';
+    }).join('');
+    LIB.STANDARD.forEach(function (_, i) {
+      $('c-' + i).addEventListener('input', function (ev) { S.edit[i] = ev.target.value; $('h-' + i).value = ev.target.value; refresh(); });
+      $('h-' + i).addEventListener('input', function (ev) {
+        S.edit[i] = ev.target.value; var v = LIB.normHex(ev.target.value); if (v) $('c-' + i).value = v; refresh();
+      });
+      $('h-' + i).addEventListener('blur', function (ev) { var v = LIB.normHex(ev.target.value); if (v) { ev.target.value = v; S.edit[i] = v; } refresh(); });
+    });
+  }
+  function setEdit(colors) {
+    S.edit = colors.slice();
+    S.edit.forEach(function (c, i) { $('h-' + i).value = c; $('c-' + i).value = LIB.normHex(c) || '#000000'; $('e-' + i).textContent = ''; });
+    refresh();
+  }
+  function setState(msg, kind) { var e = $('ffg-state'); e.textContent = msg; e.className = 'state' + (kind ? ' ' + kind : ''); }
+
+  function refresh() {
+    var errs = LIB.colorErrors(S.edit);
+    S.edit.forEach(function (_, i) {
+      $('h-' + i).setAttribute('aria-invalid', errs[i] ? 'true' : 'false');
+      if (errs[i] || $('e-' + i).getAttribute('data-server') !== 'y') $('e-' + i).textContent = errs[i] || '';
+    });
+    var dirty = isDirty(), valid = Object.keys(errs).length === 0;
+    $('save').disabled = !dirty || !valid || S.saving || !!S.blocked || !S.loaded;
+    $('discard').hidden = !dirty || S.saving;
+    $('standard').disabled = LIB.isStandard(S.edit) || S.saving;
+    var shown = valid ? S.edit : savedColors();
+    $('ramp').innerHTML = shown.map(function (c) { return '<span style="background:' + LIB.normHex(c) + '"><\/span>'; }).join('');
+    $('legend').innerHTML = shown.map(function (c, i) { return '<li><i style="background:' + LIB.normHex(c) + '"><\/i>' + LIB.bandLabel(i) + '<\/li>'; }).join('');
+    var name = S.market ? byId[S.market].name : '';
+    $('ffg-title').textContent = S.saved ? 'Custom colors for ' + name : 'Standard colors for ' + name;
+    if (S.loaded && !S.saving && !S.blocked && $('ffg-state').className.indexOf('bad') < 0 && $('ffg-state').className.indexOf('good') < 0) {
+      setState(dirty ? 'Unsaved changes.' + (LIB.isStandard(S.edit) ? ' Saving switches ' + name + ' back to the standard colors.' : '') :
+               (S.saved ? 'These are your saved colors (saved ' + fmtDate(S.updatedUtc) + ').' : 'These are the standard colors.'), '');
+    }
+    draw();
+  }
+  function clearMessages() { setState('', ''); [].forEach.call(document.querySelectorAll('.rows .err'), function (e) { e.removeAttribute('data-server'); }); }
+
+  $('standard').addEventListener('click', function () { clearMessages(); setEdit(LIB.STANDARD.slice()); });
+  $('discard').addEventListener('click', function () { clearMessages(); setEdit(savedColors().slice()); });
+  // Capture phase: clear an old 'Saved'/'Not saved' message before the field's own handler refreshes the state line.
+  ['input', 'change'].forEach(function (evn) { $('rows').addEventListener(evn, function () { if ($('ffg-state').className !== 'state') clearMessages(); }, true); });
+
+  $('save').addEventListener('click', function () {
+    if ($('save').disabled) return;
+    // Replacing a custom look someone saved earlier: ask first (not again for one saved during this visit).
+    if (S.saved && !S.savedThisVisit) {
+      $('confirm-text').textContent = byId[S.market].name + ' already has custom colors, saved ' + fmtDate(S.updatedUtc) +
+        '. Every station in the market uses them. Replace them?';
+      var dlg = $('confirm');
+      if (typeof dlg.showModal === 'function') { dlg.showModal(); $('confirm-no').focus(); return; }
+      if (!window.confirm($('confirm-text').textContent)) return;
+    }
+    doSave();
+  });
+  $('confirm-yes').addEventListener('click', function () { $('confirm').close(); doSave(); });
+  $('confirm-no').addEventListener('click', function () { $('confirm').close(); $('save').focus(); });
+
+  function doSave() {
+    var m = S.market, body = LIB.savePayload(m, S.edit, S.updatedUtc);
+    S.saving = true; setState('Saving...', ''); refresh();
+    fetch(CFG.api, { method: 'POST', credentials: 'same-origin', cache: 'no-store',
+                     headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'configurator' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; }); })
+      .then(function (r) {
+        S.saving = false;
+        if (m !== S.market) return;
+        if (r.status === 200 && r.body.ok) {
+          S.saved = body.ffg ? body.ffg.colors : null; S.updatedUtc = r.body.updatedUtc; S.savedThisVisit = true;
+          setEdit(savedColors().slice());
+          if (!r.body.changed) setState('Nothing to save: these colors are already saved.', 'good');
+          else setStateHtml('Saved. The new colors go live ' + esc(r.body.goesLive) + '. The URLs stay the same. ' +
+                            '<a href="' + esc(CFG.buildsUrl) + '" target="_blank" rel="noopener">Build status<\/a>', 'good');
+        } else if (r.status === 400 && r.body.errors) {
+          var e = LIB.serverErrors(r.body.errors);
+          Object.keys(e.rows).forEach(function (i) { $('e-' + i).textContent = e.rows[i]; $('e-' + i).setAttribute('data-server', 'y'); $('h-' + i).setAttribute('aria-invalid', 'true'); });
+          setState('Not saved. ' + (e.form.join(' ') || 'Fix the colors marked below.'), 'bad');
+        } else if (r.status === 409) {
+          setStateHtml('Not saved. ' + esc(r.body.error || 'Someone else saved this market after you opened the page.') +
+                       ' <button type="button" class="link" id="reload-saved">Load their colors<\/button>', 'bad');
+          $('reload-saved').addEventListener('click', loadSaved);
+        } else if (r.status === 401) {
+          setState('Not saved. Your login expired. Reload the page and sign in again.', 'bad');
+        } else {
+          setState('Not saved. ' + (r.body.error || 'The save service answered with an error (' + r.status + '). Try again in a minute.'), 'bad');
+        }
+        refresh();
+      }, function () {
+        S.saving = false; setState('Not saved. Could not reach the save service. Check your connection and try again.', 'bad'); refresh();
+      });
+  }
+  function setStateHtml(html, kind) { var e = $('ffg-state'); e.innerHTML = html; e.className = 'state' + (kind ? ' ' + kind : ''); }
+
+  // ---------------------------------------------------------------- preview
+  function buildDurations() {
+    $('dur').innerHTML = LIB.HOURS.map(function (h) {
+      return '<label><input type="radio" name="dur" value="' + h + '"' + (h === S.hour ? ' checked' : '') + '><span>' + h + ' hour<\/span><\/label>';
+    }).join('');
+    $('dur').addEventListener('change', function (ev) { S.hour = +ev.target.value; loadPreview(); });
+  }
+  function loadPreview() {
+    if (!S.market) return;
+    var m = S.market, h = S.hour;
+    if (S.bins[h]) { draw(); return; }
+    var st = S.status.ffg, v = st ? encodeURIComponent(st.generatedUtc) : Date.now();
+    var img = new Image(); img.crossOrigin = 'anonymous';
+    img.onload = function () {
+      if (m !== S.market) return;
+      var c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+      var cx = c.getContext('2d'); cx.drawImage(img, 0, 0);
+      try { S.bins[h] = cx.getImageData(0, 0, c.width, c.height); } catch (e) { S.bins[h] = 'error'; }
+      if (h === S.hour) draw();
+    };
+    img.onerror = function () { if (m === S.market) { S.bins[h] = 'error'; if (h === S.hour) draw(); } };
+    img.src = BASE + '/markets/' + m + '/bins_' + h + 'hr.png?v=' + v;
+    $('pv-note').textContent = 'Loading the preview...';
+  }
+  var off = document.createElement('canvas');
+  function draw() {
+    var cv = $('pv'), cx = cv.getContext('2d'), b = S.bins[S.hour];
+    cx.fillStyle = '#24313c'; cx.fillRect(0, 0, cv.width, cv.height);
+    cx.strokeStyle = 'rgba(255,255,255,0.06)'; cx.lineWidth = 1;
+    for (var x = 0; x <= cv.width; x += 60) { cx.beginPath(); cx.moveTo(x + .5, 0); cx.lineTo(x + .5, cv.height); cx.stroke(); }
+    for (var y = 0; y <= cv.height; y += 60) { cx.beginPath(); cx.moveTo(0, y + .5); cx.lineTo(cv.width, y + .5); cx.stroke(); }
+    if (!b) return;
+    if (b === 'error') { $('pv-note').textContent = 'The preview is not available right now. The colors and URLs work as usual.'; return; }
+    var errs = LIB.colorErrors(S.edit), colors = Object.keys(errs).length ? savedColors() : S.edit;
+    off.width = b.width; off.height = b.height;
+    var oc = off.getContext('2d'), out = oc.createImageData(b.width, b.height);
+    LIB.recolor(b.data, colors, out.data); oc.putImageData(out, 0, 0);
+    cx.drawImage(off, 0, 0, cv.width, cv.height);
+    var st = S.status.ffg;
+    $('pv-note').textContent = byId[S.market].name + ', ' + S.hour + '-hour guidance' + (st ? ', built ' + fmtTime(st.generatedUtc) : '') +
+      '. Same map box and shapes as the layer in Max; no basemap here.';
+  }
+
+  // ---------------------------------------------------------------- help text (written by Justin in content/*.md)
+  function loadHelp(name, el, title) {
+    fetch(BASE + '/help/' + name + '.html', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw r; return r.text(); })
+      .then(function (html) { $(el).innerHTML = html; }, function () {
+        $(el).innerHTML = '<h2>' + esc(title) + '<\/h2><p>Help is on the <a href="' + esc(BASE) + '/" target="_blank" rel="noopener">public URL page<\/a>.<\/p>';
+      });
+  }
+
+  // ---------------------------------------------------------------- start
+  buildRows(); buildDurations();
+  window.addEventListener('beforeunload', function (ev) { if (isDirty() && !S.saving) { ev.preventDefault(); ev.returnValue = ''; } });
+  loadStatus(); setInterval(loadStatus, 5 * 60 * 1000);
+  loadHelp('record-dots-in-max', 'rec-help', 'Changing how the dots look in Max');
+  loadHelp('add-layer-in-max', 'add-help', 'Adding a layer in Max');
+  var remembered = store(true);
+  if (remembered && byId[remembered]) chooseMarket(remembered); else showPicker();
+})();
+</script>
+</body>
+</html>
