@@ -125,6 +125,8 @@ with no software installed locally and an optional way to change how the layers 
   and the contact-sheet image (outline + kept/dropped pieces + box per market).
 
 ## Gotchas collected so far
+- NOAA record lists: an occasional single failed download (Nov 4 20:45 UTC, "SSL connection could not be established" on d2.lomax)
+  made a run red. Each list is now tried up to 3 times (waits 3 s, 8 s) before it counts as failed.
 - The original standard FFG ramp is not monotonic in lightness (cream L*97 before grey L*87) and its two lightest bands are close for
   protan viewers (CIEDE2000 5.9). Decided Nov 4 (Justin): "Standard, refined" is the default for all markets; the old ramp is the
   "Original" preset and still colors the legacy Ohio box at the max-tools site root (drop-in for the old ffg URLs).

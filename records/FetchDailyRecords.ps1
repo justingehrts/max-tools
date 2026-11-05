@@ -164,11 +164,23 @@ foreach ($day in $days) {
         $randomVal = Get-Random -Minimum 100000 -Maximum 999999
         $noaaUrl   = "$baseUrl$day.$type.txt?v=$randomVal"
         
+        # Up to 3 tries: a single dropped connection (e.g. an SSL handshake failure) should not cost the list.
         $rawText = $null
-        try {
-            $rawText = Invoke-RestMethod -Uri $noaaUrl -UserAgent "Mozilla/5.0" -TimeoutSec 10 -ErrorAction Stop
-        } catch {
-            Write-RunLog "DOWNLOAD FAILED $day.$type : $($_.Exception.Message)"
+        $lastError = $null
+        $waits = @(3, 8)
+        for ($attempt = 1; $attempt -le 3; $attempt++) {
+            try {
+                $rawText = Invoke-RestMethod -Uri $noaaUrl -UserAgent "Mozilla/5.0" -TimeoutSec 10 -ErrorAction Stop
+                if ($attempt -gt 1) { Write-RunLog "Downloaded $day.$type on try $attempt" }
+                $lastError = $null
+                break
+            } catch {
+                $lastError = $_.Exception.Message
+                if ($attempt -lt 3) { Start-Sleep -Seconds $waits[$attempt - 1] }
+            }
+        }
+        if ($lastError) {
+            Write-RunLog "DOWNLOAD FAILED $day.$type after 3 tries : $lastError"
             $failedDownloads++
             continue
         }
