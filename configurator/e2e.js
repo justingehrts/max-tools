@@ -144,6 +144,28 @@ const step = (s) => { steps.push(s); console.log('  - ' + s); };
   assert.ok(p.url().endsWith('#add-to-max'), p.url());
   step('copy buttons, keyboard tabs, both help texts');
 
+  // the web apps: one tab each, a link out, and the write-up fetched from the Pages site
+  const apps = [['astrographics', 'https://astrographics.streamlit.app/', /Astrographics draws the night sky/],
+                ['graph-maker', 'https://maxgraphmaker.streamlit.app/', /Graph Maker builds chart graphics/],
+                ['gridded-climo', 'https://gridded-climo.streamlit.app/', /Gridded Climo makes climate maps/]];
+  for (const [id, url, text] of apps) {
+    await p.click('#tab-' + id);
+    assert.strictEqual(await p.isVisible('#panel-' + id), true, id);
+    assert.strictEqual(await p.getAttribute('#panel-' + id + ' .open-app', 'href'), url);
+    assert.strictEqual(await p.getAttribute('#panel-' + id + ' .open-app', 'target'), '_blank');
+    assert.match(await p.getAttribute('#panel-' + id + ' .open-app', 'rel'), /noopener/);
+    await p.waitForFunction(([i, re]) => new RegExp(re).test(document.getElementById('appdoc-' + i).textContent), [id, text.source]);
+    assert.ok(p.url().endsWith('#' + id), p.url());
+    await p.waitForFunction(i => { const ims = [...document.querySelectorAll('#panel-' + i + ' img')]; return ims.length > 0 && ims.every(m => m.complete); }, id);
+    assert.deepStrictEqual(await p.$$eval('#panel-' + id + ' img', ims => ims.filter(m => m.naturalWidth === 0).length), 0, id + ': every screenshot loads');
+  }
+  await p.focus('#tab-help'); await p.keyboard.press('ArrowRight');
+  assert.strictEqual(await p.evaluate(() => document.activeElement.id), 'tab-astrographics');
+  await p.keyboard.press('End');
+  assert.strictEqual(await p.evaluate(() => document.activeElement.id), 'tab-gridded-climo');
+  await p.screenshot({ path: SHOTS + '/4b-app-tab.png', fullPage: true });
+  step('app tabs: link, write-up, screenshots, keyboard order');
+
   // change market
   await p.click('#change'); await p.fill('#mq', 'seattle'); await p.keyboard.press('Enter');
   await p.waitForFunction(() => document.getElementById('chip-name').textContent === 'Seattle–Tacoma, WA');
@@ -153,7 +175,7 @@ const step = (s) => { steps.push(s); console.log('  - ' + s); };
   const phone = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const q = await phone.newPage(); await q.goto(PAGE); await q.fill('#mq', 'Columbus'); await q.click('#mlist button');
   await q.waitForFunction(() => /built/.test(document.getElementById('pv-note').textContent));
-  for (const t of ['#tab-ffg', '#tab-records', '#tab-help']) {
+  for (const t of ['#tab-ffg', '#tab-records', '#tab-help', '#tab-astrographics', '#tab-graph-maker', '#tab-gridded-climo']) {
     await q.click(t);
     const w = await q.evaluate(() => document.documentElement.scrollWidth);
     assert.ok(w <= 390, t + ' scrollWidth ' + w);

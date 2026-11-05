@@ -14,7 +14,7 @@ import argparse, html, json, re, shutil, sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import expected, registry
+import apps as apps_mod, expected, registry
 
 CSS = '''
 :root{--ink:#17212b;--muted:#55636f;--paper:#edf0f3;--panel:#fff;--line:#d2d9df;--accent:#1f4fbf;--tab:#dde3e8}
@@ -22,7 +22,7 @@ CSS = '''
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,sans-serif}
 main{max-width:60rem;margin:0 auto;padding:1.5rem 16px 4rem}h1{font-size:1.4rem;margin:0 0 .25rem}
 .muted{color:var(--muted)}code,.url{font-family:Consolas,ui-monospace,monospace;font-size:.85rem;overflow-wrap:anywhere}
-[role=tablist]{display:flex;gap:.25rem;margin-top:1.25rem;border-bottom:1px solid var(--line)}
+[role=tablist]{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:1.25rem;border-bottom:1px solid var(--line)}
 [role=tab]{font:inherit;color:var(--ink);background:var(--tab);border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;
   padding:.5rem 1rem;cursor:pointer;margin-bottom:-1px}
 [role=tab][aria-selected=true]{background:var(--panel);font-weight:600}
@@ -36,6 +36,12 @@ table{border-collapse:collapse;width:100%}td,th{padding:2px 8px 2px 0;text-align
 .help{margin-top:1.5rem;border-top:1px solid var(--line);padding-top:1rem}.help h2{margin-top:0}
 .help img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px}
 a{color:var(--accent)}
+.open-app{display:inline-block;background:var(--accent);color:var(--panel);text-decoration:none;font-weight:600;padding:.45rem .9rem;border-radius:6px;margin:.25rem 0 .5rem}
+.open-app:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.tagline{margin:.1rem 0 .4rem}
+.appdoc h2{margin:1rem 0 .25rem}.appdoc h3{font-size:1rem;margin:1.3rem 0 .3rem}.appdoc ul,.appdoc ol{padding-left:1.3rem}.appdoc li{margin:.2rem 0}
+.appdoc p img{display:block;max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;margin:.6rem 0 .3rem}
+.appdoc em{color:var(--muted);font-size:.9rem}
 '''
 
 JS = '''
@@ -95,7 +101,9 @@ def main():
         rows.append(f'<details data-q="{e(search)}"><summary>{e(m["name"])}</summary><table>{ffg}</table></details>')
     rec = ''.join(f'<tr><th>Day {d}</th>' + ''.join(f'<td><a href="{base}/records/default/D{d}_{t.upper()}.kmz">{t.upper()}</a></td>'
                                                    for t in expected.TYPES) + '</tr>' for d in expected.DAYS)
-    help_html = render_help(a.root, site, base).get('record-dots-in-max', '')
+    docs = render_help(a.root, site, base)
+    help_html = docs.get('record-dots-in-max', '')
+    apps = apps_mod.load_apps(a.root)
     static = Path(a.root) / 'static'          # files kept in the repo and published as-is (e.g. lines/ for the preview)
     if static.is_dir():
         shutil.copytree(static, site, dirs_exist_ok=True)
@@ -110,15 +118,24 @@ def main():
                  f'Last build {stamp("records/status.json")} (<a href="records/status.json">status</a>).</p>'
                  f'<p class="url">{base}/records/default/D&lt;day&gt;_&lt;TYPE&gt;.kmz</p><table>{rec}</table>'
                  + (f'<section class="help">{help_html}</section>' if help_html else '') + '</div>')
+    app_tabs, app_panels = '', ''
+    for ap_ in apps:
+        i = ap_['id']
+        app_tabs += (f'<button role="tab" id="tab-{i}" data-hash="{i}" aria-controls="panel-{i}" aria-selected="false">{e(ap_["name"])}</button>')
+        body = docs.get(f'app-{i}') or f'<h2>{e(ap_["name"])}</h2><p class="muted">Instructions coming soon.</p>'
+        app_panels += (f'<div role="tabpanel" id="panel-{i}" aria-labelledby="tab-{i}">'
+                       f'<p class="tagline muted">{e(ap_["tagline"])}</p>'
+                       f'<a class="open-app" href="{e(ap_["url"])}" target="_blank" rel="noopener">Open {e(ap_["name"])}</a>'
+                       f'<div class="appdoc">{body}</div></div>')
     page = ('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-            f'<meta name="robots" content="noindex,nofollow"><title>Max layer URLs</title><style>{CSS}</style><main>'
-            '<h1>Max layer URLs</h1><p class="muted">Add these URLs in Max as KML layers. URLs never change.</p>'
+            f'<meta name="robots" content="noindex,nofollow"><title>Max tools</title><style>{CSS}</style><main>'
+            '<h1>Max tools</h1><p class="muted">Layer addresses for Max (add them as KML layers; they never change) and our web apps.</p>'
             '<div role="tablist" aria-label="Layers">'
             '<button role="tab" id="tab-ffg" data-hash="ffg" aria-controls="panel-ffg" aria-selected="true">Flash flood guidance</button>'
             '<button role="tab" id="tab-records" data-hash="record-dots" aria-controls="panel-records" aria-selected="false">Record dots</button>'
-            '</div>' + ffg_panel + rec_panel + f'</main><script>{JS}</script></html>')
+            + app_tabs + '</div>' + ffg_panel + rec_panel + app_panels + f'</main><script>{JS}</script></html>')
     (site / 'index.html').write_text(page, encoding='utf-8')
-    print(f'Wrote index.html for {len(markets)} markets' + (' with record-dot help.' if help_html else '.'))
+    print(f'Wrote index.html for {len(markets)} markets, {len(apps)} app tabs' + (', record-dot help.' if help_html else '.'))
     return 0
 
 

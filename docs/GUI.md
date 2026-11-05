@@ -47,6 +47,13 @@ per market, shared by every station in it. Remember the choice in localStorage a
   (it comes from the repo, not from users). If the fetch fails, show "Help is on the public URL page" with a link.
 - (Parked Nov 3: the per-market icon editor. Stations restyle the dots in Max instead. See `parked/record-dot-icons/`.)
 
+**App tabs (Nov 5):** after the layer tabs, one tab each for Astrographics, Graph Maker and Gridded Climo (the Streamlit apps under
+`justingehrts/*`). Each shows its tagline, an **Open <app>** button (new tab, `rel=noopener`) and a write-up: features, how to use it,
+screenshots. The list (id, name, address, tagline) is `content/apps.json`; the write-up is `content/app-<id>.md`, screenshots in
+`content/images/`. The same content builds the public URL page tabs and these tabs; adding an app = one entry in `apps.json` plus its
+`.md`. The configurator only embeds names and links (build step) and fetches each write-up from `help/app-<id>.html`; the links are
+opened, never fetched, so they are not requests the page makes.
+
 **Status strip (all pages):** "Last build: FFG 12:15 PM, Record dots 12:21 PM" read from each pipeline's `status.json`.
 Turns red if older than 3 hours or if the fetch fails ("Can't reach the status page").
 

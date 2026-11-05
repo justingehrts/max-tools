@@ -23,7 +23,7 @@ def build(md=None):
 class Index(unittest.TestCase):
     def test_tabs_and_market_names_only(self):
         page = (build('# Hi') / 'index.html').read_text()
-        self.assertEqual(len(re.findall(r'role="tab"', page)), 2)
+        self.assertEqual(len(re.findall(r'role="tab"', page)), 2)      # layer tabs only: this temp repo has no apps.json
         summaries = re.findall(r'<summary>(.*?)</summary>', page)
         self.assertEqual(len(summaries), 54)
         self.assertIn('Columbus, OH', summaries)
@@ -37,6 +37,19 @@ class Index(unittest.TestCase):
         self.assertIn('src="https://x.example/max-tools/help/images/shot.png"', frag)
         self.assertTrue((site / 'help' / 'images' / 'shot.png').is_file())
         self.assertIn(frag, (site / 'index.html').read_text())
+
+    def test_app_tabs_link_out_and_show_their_writeup(self):
+        site = Path(tempfile.mkdtemp()) / 'site'; site.mkdir()          # the real repo: apps.json, app-*.md and screenshots
+        r = subprocess.run([sys.executable, str(ROOT / 'tools' / 'build_index.py'), '--site', str(site), '--root', str(ROOT),
+                            '--base', 'https://x.example/max-tools'], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        page = (site / 'index.html').read_text()
+        for aid, url in [('astrographics', 'https://astrographics.streamlit.app/'), ('graph-maker', 'https://maxgraphmaker.streamlit.app/'),
+                         ('gridded-climo', 'https://gridded-climo.streamlit.app/')]:
+            self.assertIn(f'id="tab-{aid}" data-hash="{aid}"', page)
+            self.assertRegex(page, rf'<a class="open-app" href="{re.escape(url)}" target="_blank" rel="noopener">')
+            self.assertTrue((site / 'help' / f'app-{aid}.html').is_file(), aid)
+        self.assertTrue(any((site / 'help' / 'images').glob('astrographics-*.png')))
 
     def test_no_help_file_no_help_section(self):
         site = build(None)

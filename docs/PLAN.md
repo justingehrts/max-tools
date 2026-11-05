@@ -124,6 +124,13 @@ with no software installed locally and an optional way to change how the layers 
 - Still to do: fuzzy matching of Justin's market names to dataset names (e.g. "Miami-Ft. Lauderdale, FL" was not found as typed),
   and the contact-sheet image (outline + kept/dropped pieces + box per market).
 
+## Web apps tabs (Nov 5)
+Justin asked for a tab per web app on both pages: Astrographics (`astrographics.streamlit.app`), Graph Maker (`maxgraphmaker.streamlit.app`),
+Gridded Climo (`gridded-climo.streamlit.app`), each with a link, a summary of features and operation, and screenshots. Source of truth:
+`content/apps.json` + `content/app-<id>.md` + `content/images/` (screenshots were captured by running each app locally against live IEM/ACIS
+data; re-capture when an app's screen changes). Tab order on the public page: Flash flood guidance, Record dots, then the apps.
+These apps run on Streamlit Community Cloud; idle apps sleep and take ~30 s to wake (noted in each write-up).
+
 ## Gotchas collected so far
 - NOAA record lists: an occasional single failed download (Nov 4 20:45 UTC, "SSL connection could not be established" on d2.lomax)
   made a run red. Each list is now tried up to 3 times (waits 3 s, 8 s) before it counts as failed.

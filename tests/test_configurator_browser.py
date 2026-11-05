@@ -40,8 +40,6 @@ class Browser(unittest.TestCase):
         (site / 'ffg').mkdir(parents=True, exist_ok=True); (site / 'records').mkdir(parents=True, exist_ok=True)
         if not (site / 'ffg' / 'status.json').exists(): (site / 'ffg' / 'status.json').write_text(json.dumps({'generatedUtc': now}))
         (site / 'records' / 'status.json').write_text(json.dumps({'generatedUtc': now}))
-        subprocess.run([sys.executable, str(ROOT / 'tools' / 'build_index.py'), '--site', str(site), '--base', 'http://unused'], check=True,
-                       capture_output=True)
 
         gh = http.server.ThreadingHTTPServer(('127.0.0.1', 0), FakeGitHub)
         threading.Thread(target=gh.serve_forever, daemon=True).start()
@@ -63,6 +61,9 @@ class Browser(unittest.TestCase):
         pages = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Pages)
         threading.Thread(target=pages.serve_forever, daemon=True).start()
         pages_base = f'http://127.0.0.1:{pages.server_port}'
+        # the help pages embed absolute image addresses, so build them for the address they will be served from
+        subprocess.run([sys.executable, str(ROOT / 'tools' / 'build_index.py'), '--site', str(site), '--base', pages_base], check=True,
+                       capture_output=True)
 
         doc = tmp / 'docroot'; (doc / 'api').mkdir(parents=True)
         for f in ('save.php', 'lib.php'): shutil.copy(ROOT / 'configurator' / 'api' / f, doc / 'api' / f)

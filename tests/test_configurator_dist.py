@@ -17,7 +17,10 @@ class Dist(unittest.TestCase):
         html = (ROOT / 'configurator' / 'dist' / 'index.html').read_text()
         self.assertNotRegex(html, r'<(script|link|img)[^>]+(src|href)="https?://')
         hosts = set(__import__('re').findall(r'https?://([a-z0-9.-]+)', html))
-        self.assertLessEqual(hosts, {'justingehrts.github.io', 'github.com'}, hosts)
+        import json
+        apps = {__import__('re').match(r'https://([^/]+)', a['url']).group(1)
+                for a in json.loads((ROOT / 'content' / 'apps.json').read_text())['apps']}      # links the page opens, never fetches
+        self.assertLessEqual(hosts, {'justingehrts.github.io', 'github.com'} | apps, hosts)
 
 
 if __name__ == '__main__':

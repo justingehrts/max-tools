@@ -119,6 +119,18 @@
   }
 
   // ---------------------------------------------------------------- tabs
+  // One tab per web app listed in content/apps.json (name, link and tagline are embedded at build time; the write-up is
+  // fetched from the Pages site like the other help texts).
+  (CFG.apps || []).forEach(function (a) {
+    var b = document.createElement('button');
+    b.setAttribute('role', 'tab'); b.type = 'button'; b.id = 'tab-' + a.id; b.setAttribute('data-hash', a.id);
+    b.setAttribute('aria-controls', 'panel-' + a.id); b.textContent = a.name;
+    document.querySelector('[role=tablist]').appendChild(b);
+    var d = document.createElement('div');
+    d.setAttribute('role', 'tabpanel'); d.id = 'panel-' + a.id; d.setAttribute('aria-labelledby', 'tab-' + a.id); d.hidden = true;
+    d.innerHTML = '<p class="muted">' + esc(a.tagline || '') + '</p><a class="open-app" target="_blank" rel="noopener" href="' + esc(a.url) + '">Open ' + esc(a.name) + '</a><div class="appdoc" id="appdoc-' + a.id + '"></div>';
+    $('tools').appendChild(d);
+  });
   var tabs = [].slice.call(document.querySelectorAll('[role=tab]'));
   function tabFromHash() { return tabs.filter(function (t) { return '#' + t.getAttribute('data-hash') === location.hash; })[0]; }
   function showTab(t, focus) {
@@ -398,6 +410,7 @@
   loadStatus(); setInterval(loadStatus, 5 * 60 * 1000);
   loadHelp('record-dots-in-max', 'rec-help', 'Changing how the dots look in Max');
   loadHelp('add-layer-in-max', 'add-help', 'Adding a layer in Max');
+  (CFG.apps || []).forEach(function (a) { loadHelp('app-' + a.id, 'appdoc-' + a.id, a.name); });
   var remembered = store(true);
   if (remembered && byId[remembered]) chooseMarket(remembered); else showPicker();
 })();

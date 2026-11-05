@@ -1,0 +1,11 @@
+{
+  "_note": "The apps that get their own tab (public page and configurator). Order here = tab order. url = the live Streamlit app; id names the help file content/app-<id>.md and the page address #<id>.",
+  "apps": [
+    { "id": "astrographics", "name": "Astrographics", "url": "https://astrographics.streamlit.app/",
+      "tagline": "Night-sky graphics for a place and time, with your city's horizon." },
+    { "id": "graph-maker", "name": "Graph Maker", "url": "https://maxgraphmaker.streamlit.app/",
+      "tagline": "Chart graphics and climate charts as transparent PNGs for Max." },
+    { "id": "gridded-climo", "name": "Gridded Climo", "url": "https://gridded-climo.streamlit.app/",
+      "tagline": "Climate maps for broadcast, exported as colorized KMZ." }
+  ]
+}
