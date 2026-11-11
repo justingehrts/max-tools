@@ -132,6 +132,9 @@ data; re-capture when an app's screen changes). Tab order on the public page: Fl
 These apps run on Streamlit Community Cloud; idle apps sleep and take ~30 s to wake (noted in each write-up).
 
 ## Gotchas collected so far
+- GitHub's deploy step flakes: `actions/deploy-pages` sometimes reports "Found 0 artifact(s)" right after our site bundle uploaded fine (3 of 56
+  runs on Nov 10-11, plus one `startup_failure` where GitHub never started the run). Not our code; the live site stays on the last good
+  deploy. Since Nov 11 the workflow waits 45 s and retries the deploy once (test it with Run workflow > simulate = deploy-retry).
 - NOAA record lists: an occasional single failed download (Nov 4 20:45 UTC, "SSL connection could not be established" on d2.lomax)
   made a run red. Each list is now tried up to 3 times (waits 3 s, 8 s) before it counts as failed.
 - The original standard FFG ramp is not monotonic in lightness (cream L*97 before grey L*87) and its two lightest bands are close for

@@ -13,7 +13,7 @@ on:
         description: 'Test the failure handling (the live site must stay intact and the run must end red)'
         type: choice
         default: none
-        options: [none, records-fail, ffg-fail, one-market-fail]
+        options: [none, records-fail, ffg-fail, one-market-fail, deploy-retry]
   push:
     branches: [main]
     paths:
@@ -119,7 +119,30 @@ jobs:
         with:
           path: site
 
+      # GitHub's deploy step sometimes cannot find the bundle it has just stored ("Found 0 artifact(s)"): a timing flake on
+      # GitHub's side, seen about 3 times in 56 runs. So: try once, and if that fails wait and try once more.
+      - name: Simulate a failed first deploy (test run only)
+        id: deploy_sim
+        if: env.SIMULATE == 'deploy-retry'
+        continue-on-error: true
+        run: |
+          echo "::error::Simulated failed first deploy (test run)"
+          exit 1
+
       - name: Deploy to GitHub Pages
+        id: deploy_first
+        if: env.SIMULATE != 'deploy-retry'
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+
+      - name: Wait 45 seconds before retrying the deploy
+        if: steps.deploy_first.outcome == 'failure' || steps.deploy_sim.outcome == 'failure'
+        run: |
+          echo "::warning::The first deploy failed (usually a GitHub timing flake); retrying once."
+          sleep 45
+
+      - name: Deploy to GitHub Pages (retry)
+        if: steps.deploy_first.outcome == 'failure' || steps.deploy_sim.outcome == 'failure'
         uses: actions/deploy-pages@v4
 
       - name: Save newly learned NOAA stations
