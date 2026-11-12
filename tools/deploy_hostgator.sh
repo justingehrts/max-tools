@@ -17,6 +17,7 @@
 #   HOSTGATOR_FTPS         true (default: encrypted, required) | false (only for the local test server)
 #   HOSTGATOR_VERIFY_CERT  true (default) | false
 #   BACKUP_DIR             default hostgator-backup
+#   HOSTGATOR_CMD_TIMEOUT  seconds one FTP step may take before it is cut off and reported (default 90)
 set -euo pipefail
 
 : "${HOSTGATOR_HOST:?set HOSTGATOR_HOST}" "${HOSTGATOR_USER:?set HOSTGATOR_USER}" "${HOSTGATOR_PASSWORD:?set HOSTGATOR_PASSWORD}"
@@ -25,6 +26,7 @@ PORT="${HOSTGATOR_PORT:-21}"
 FTPS="${HOSTGATOR_FTPS:-true}"
 VERIFY="${HOSTGATOR_VERIFY_CERT:-true}"
 BACKUP_DIR="${BACKUP_DIR:-hostgator-backup}"
+CMD_TIMEOUT="${HOSTGATOR_CMD_TIMEOUT:-90}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # local path (from the repo root) : path on the server (below REMOTE_DIR). This list IS the whole permission.
@@ -38,12 +40,15 @@ FILES=(
 quote() { local s="${1//\\/\\\\}"; printf '"%s"' "${s//\"/\\\"}"; }   # lftp double-quote escaping
 
 # Run lftp commands (arguments, one command each) with the connection settings; the password never goes on a command line.
+# Every call has a hard time limit, so a stuck connection becomes a clear failure instead of a hung job. On failure it prints the
+# tail of lftp's own protocol log (lftp shows the password as ****; the exact password is also blanked) unless FTP_SHOW_DEBUG=0.
 ftp() {
-  local script; script="$(mktemp)"; chmod 600 "$script"
+  local script dbg; script="$(mktemp)"; dbg="$(mktemp)"; chmod 600 "$script" "$dbg"
   {
+    echo "debug -o $(quote "$dbg") 3"
     echo "set cmd:fail-exit yes"
     echo "set net:max-retries 2"
-    echo "set net:timeout 30"
+    echo "set net:timeout 20"
     echo "set net:reconnect-interval-base 3"
     if [ "$FTPS" = "true" ]; then
       echo "set ftp:ssl-allow yes"
@@ -60,8 +65,13 @@ ftp() {
     for c in "$@"; do echo "$c"; done
     echo "bye"
   } > "$script"
-  local rc=0; lftp -f "$script" || rc=$?
-  rm -f "$script"
+  local rc=0; timeout "$CMD_TIMEOUT" lftp -f "$script" </dev/null || rc=$?
+  if [ "$rc" != 0 ] && [ "${FTP_SHOW_DEBUG:-1}" != 0 ]; then
+    [ "$rc" = 124 ] && echo "   (cut off after ${CMD_TIMEOUT}s: the server stopped answering)" >&2
+    echo "   --- last lines of the FTP conversation (password hidden) ---" >&2
+    tail -n 25 "$dbg" | while IFS= read -r line; do printf '   %s\n' "${line//"$HOSTGATOR_PASSWORD"/****}"; done >&2
+  fi
+  rm -f "$script" "$dbg"
   return $rc
 }
 
@@ -73,8 +83,11 @@ done
 if [ "$FTPS" != "true" ]; then echo "WARNING: FTPS is off (test server only)."; fi
 
 echo "1/4 Checking the login and the folder..."
-listing="$(ftp "set ftp:list-options -a" "pwd" "echo ---" "cls -1" 2>&1)" \
-  || { echo "Could not log in or open the folder. Check the host, user, password and remote folder." >&2; exit 3; }
+listing="$(FTP_SHOW_DEBUG=0 ftp "set ftp:list-options -a" "pwd" "echo ---" "cls -1" 2>/dev/null)" || {
+  echo "   (listing with hidden files did not work; trying a plain listing)"
+  listing="$(ftp "pwd" "echo ---" "cls -1")" \
+    || { echo "Could not log in or open the folder. Check the host, user, password and remote folder." >&2; exit 3; }
+}
 # lftp's pwd prints the whole login URL (password included): keep only the path after the host.
 echo "   the account starts in: $(printf '%s\n' "$listing" | sed -n '1p' | sed -E 's#^[A-Za-z]+://[^/]*##; s#^$#/#')"
 names="$(printf '%s\n' "$listing" | sed '1,/^---$/d' | sed 's#/$##' | sort | tr '\n' ' ')"
@@ -92,12 +105,12 @@ echo "2/4 Saving the current server copies to $BACKUP_DIR/ ..."
 mkdir -p "$BACKUP_DIR"
 for pair in "${FILES[@]}"; do
   remote="${pair#*:}"; mkdir -p "$BACKUP_DIR/$(dirname "$remote")"
-  ftp "get $(quote "$remote") -o $(quote "$BACKUP_DIR/$remote")" >/dev/null 2>&1 \
+  FTP_SHOW_DEBUG=0 ftp "get $(quote "$remote") -o $(quote "$BACKUP_DIR/$remote")" >/dev/null 2>&1 \
     && echo "   saved $remote" || echo "   (no existing $remote on the server)"
 done
 
 echo "3/4 Uploading..."
-ftp "cd api" >/dev/null 2>&1 || ftp "mkdir api"      # create api/ only when it is missing (mkdir on an existing folder is an error)
+FTP_SHOW_DEBUG=0 ftp "cd api" >/dev/null 2>&1 || ftp "mkdir api"      # create api/ only when it is missing (mkdir on an existing folder is an error)
 for pair in "${FILES[@]}"; do
   local_path="${pair%%:*}"; remote="${pair#*:}"
   ftp "put $(quote "$ROOT/$local_path") -o $(quote "$remote")"

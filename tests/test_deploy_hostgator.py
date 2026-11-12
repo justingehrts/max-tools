@@ -41,9 +41,10 @@ class Deploy(unittest.TestCase):
         (self.srv_root / 'index.html').write_text('OLD PAGE')
         self.backup = Path(tempfile.mkdtemp()) / 'bk'
 
-    def run_deploy(self, password='s3cret"pass\\word$'):
+    def run_deploy(self, password='s3cret"pass\\word$', port=None, timeout='20'):
         env = dict(os.environ, HOSTGATOR_HOST='127.0.0.1', HOSTGATOR_USER='maxftp', HOSTGATOR_PASSWORD=password,
-                   HOSTGATOR_PORT=str(self.port), HOSTGATOR_FTPS='false', BACKUP_DIR=str(self.backup))
+                   HOSTGATOR_PORT=str(port or self.port), HOSTGATOR_FTPS='false', BACKUP_DIR=str(self.backup),
+                   HOSTGATOR_CMD_TIMEOUT=timeout)
         return subprocess.run(['bash', str(SCRIPT)], env=env, capture_output=True, text=True, timeout=120)
 
     def test_uploads_exactly_the_listed_files_and_backs_up_first(self):
@@ -85,6 +86,28 @@ class Deploy(unittest.TestCase):
         self.assertIn('the account starts in:', r.stdout)
         self.assertIn('it contains:', r.stdout)
         self.assertIn('.htaccess', r.stdout)                 # dot files are listed (the password file)
+
+    def test_a_server_that_stops_answering_cannot_hang_the_job(self):
+        """A server that accepts the connection and then says nothing (what a stuck FTPS handshake looks like)."""
+        import time
+        dead = socket.socket(); dead.bind(('127.0.0.1', 0)); dead.listen(5); dport = dead.getsockname()[1]
+        held = []
+        threading.Thread(target=lambda: [held.append(dead.accept()[0]) for _ in range(20)], daemon=True).start()
+        t0 = time.time()
+        try:
+            r = self.run_deploy(port=dport, timeout='4')
+        finally:
+            dead.close()
+        self.assertNotEqual(r.returncode, 0)
+        self.assertLess(time.time() - t0, 60, 'must fail promptly, not hang')
+        self.assertIn('FTP conversation', r.stderr)                       # shows what the connection was doing
+        self.assertNotIn('s3cret', r.stdout + r.stderr)
+        self.assertEqual((self.srv_root / 'index.html').read_text(), 'OLD PAGE')
+
+    def test_failure_log_never_contains_the_password(self):
+        r = self.run_deploy(password='Hunter2!secret')
+        self.assertNotEqual(r.returncode, 0)
+        self.assertNotIn('Hunter2', r.stdout + r.stderr)
 
     def test_is_repeatable(self):
         self.assertEqual(self.run_deploy().returncode, 0)

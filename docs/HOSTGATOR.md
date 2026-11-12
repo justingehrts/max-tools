@@ -122,6 +122,15 @@ security certificate matches that name; your own domain name may not match).
    comparison of every file against the repository. The run is green only if they all match.
 4. The replaced server files are kept for one day as the run's `hostgator-backup` artifact if you need to put them back.
 
+### Check that the approval gate is really on
+After you press Run workflow, the **deploy** job must show **Waiting** with a "Review deployments" button. If it starts by itself a few
+seconds after the checks finish, the `hostgator` environment has no required reviewer, and anyone who can run workflows could upload
+without approval. Fix: Settings > Environments > `hostgator` > tick **Required reviewers**, add yourself, **Save protection rules**.
+
+### If the upload step hangs or the log shows a conversation
+Every FTP step is cut off after 90 seconds. If one is, the log prints "cut off after 90s: the server stopped answering" and the last lines
+of the FTP conversation (the password is hidden), which show whether the problem is the connection, the encryption handshake or the login.
+
 ### If the log says STOPPED, or the page did not change
 The upload step prints where the FTP account starts and what that folder contains. If it contains `public_html`, `mail`, `etc` or
 WordPress files, the account's **Directory** is wrong (usually it is the account's home folder). The script stops before uploading.
