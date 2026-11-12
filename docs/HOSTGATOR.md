@@ -127,6 +127,15 @@ After you press Run workflow, the **deploy** job must show **Waiting** with a "R
 seconds after the checks finish, the `hostgator` environment has no required reviewer, and anyone who can run workflows could upload
 without approval. Fix: Settings > Environments > `hostgator` > tick **Required reviewers**, add yourself, **Save protection rules**.
 
+### What the first lines of the upload log mean
+- `0/4 Testing the connection (no login yet)` checks, without any password, that the name resolves, that the FTP server greets us, and
+  that the encrypted (TLS) handshake works. If it prints **NO GREETING**, the host is not answering GitHub's address at all: this is the
+  host's firewall or FTP being unavailable, not your password. Ask HostGator support whether FTP from outside addresses is limited or
+  blocked (shared hosts often block an address that opens many connections quickly), or tell me and we can switch to a method where
+  HostGator fetches the files itself.
+- `1/4 ... the account starts in / it contains ...` shows which folder the FTP account lands in. It must be `public_html/max`.
+- The upload logs in only twice (one listing, then one session for every transfer) to stay clear of such firewalls.
+
 ### If the upload step hangs or the log shows a conversation
 Every FTP step is cut off after 90 seconds. If one is, the log prints "cut off after 90s: the server stopped answering" and the last lines
 of the FTP conversation (the password is hidden), which show whether the problem is the connection, the encryption handshake or the login.
