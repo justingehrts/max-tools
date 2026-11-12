@@ -73,7 +73,20 @@ done
 if [ "$FTPS" != "true" ]; then echo "WARNING: FTPS is off (test server only)."; fi
 
 echo "1/4 Checking the login and the folder..."
-ftp "cls" >/dev/null || { echo "Could not log in or open the folder. Check the host, user, password and remote folder." >&2; exit 3; }
+listing="$(ftp "set ftp:list-options -a" "pwd" "echo ---" "cls -1" 2>&1)" \
+  || { echo "Could not log in or open the folder. Check the host, user, password and remote folder." >&2; exit 3; }
+# lftp's pwd prints the whole login URL (password included): keep only the path after the host.
+echo "   the account starts in: $(printf '%s\n' "$listing" | sed -n '1p' | sed -E 's#^[A-Za-z]+://[^/]*##; s#^$#/#')"
+names="$(printf '%s\n' "$listing" | sed '1,/^---$/d' | sed 's#/$##' | sort | tr '\n' ' ')"
+echo "   it contains: ${names:-(nothing)}"
+# Refuse to write into the wrong place: an account home or a WordPress folder has these, public_html/max never does.
+for bad in public_html mail etc logs tmp wp-config.php wp-content wp-admin wp-includes; do
+  case " $names " in *" $bad "*)
+    echo "STOPPED before uploading anything: this folder contains '$bad', so it is not public_html/max." >&2
+    echo "Fix the FTP account's Directory in cPanel (FTP Accounts > Change Directory) to public_html/max, or set HOSTGATOR_REMOTE_DIR." >&2
+    exit 5 ;;
+  esac
+done
 
 echo "2/4 Saving the current server copies to $BACKUP_DIR/ ..."
 mkdir -p "$BACKUP_DIR"

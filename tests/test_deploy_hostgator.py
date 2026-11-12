@@ -70,6 +70,22 @@ class Deploy(unittest.TestCase):
         good = self.run_deploy()
         self.assertNotIn('s3cret', good.stdout + good.stderr)
 
+    def test_refuses_to_upload_into_an_account_home_or_wordpress_folder(self):
+        for marker in ('public_html', 'wp-content'):
+            (self.srv_root / marker).mkdir()
+            r = self.run_deploy()
+            self.assertEqual(r.returncode, 5, r.stdout + r.stderr)
+            self.assertIn('STOPPED before uploading', r.stderr)
+            self.assertEqual((self.srv_root / 'index.html').read_text(), 'OLD PAGE')     # untouched
+            self.assertFalse((self.srv_root / 'api').exists())
+            shutil.rmtree(self.srv_root / marker)
+
+    def test_shows_where_it_landed(self):
+        r = self.run_deploy()
+        self.assertIn('the account starts in:', r.stdout)
+        self.assertIn('it contains:', r.stdout)
+        self.assertIn('.htaccess', r.stdout)                 # dot files are listed (the password file)
+
     def test_is_repeatable(self):
         self.assertEqual(self.run_deploy().returncode, 0)
         self.assertEqual(self.run_deploy().returncode, 0)

@@ -122,6 +122,14 @@ security certificate matches that name; your own domain name may not match).
    comparison of every file against the repository. The run is green only if they all match.
 4. The replaced server files are kept for one day as the run's `hostgator-backup` artifact if you need to put them back.
 
+### If the log says STOPPED, or the page did not change
+The upload step prints where the FTP account starts and what that folder contains. If it contains `public_html`, `mail`, `etc` or
+WordPress files, the account's **Directory** is wrong (usually it is the account's home folder). The script stops before uploading.
+Fix it in cPanel > FTP Accounts > Change Directory to `public_html/max`, and run again. Also check File Manager for stray copies of
+`index.html` and `api/` from an earlier run in the wrong folder, and delete them.
+Your host also caches pages for a short time (`cache-control: max-age=7200`), so after a good upload a browser can show the old page for up
+to two hours: hard-refresh (Ctrl+F5) or open it in a private window.
+
 ### Safety notes
 - The password lives only in the `hostgator` environment. GitHub hands it to the job only after you approve, never to pull requests,
   and masks it in logs.
