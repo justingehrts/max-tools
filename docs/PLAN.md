@@ -124,6 +124,12 @@ with no software installed locally and an optional way to change how the layers 
 - Still to do: fuzzy matching of Justin's market names to dataset names (e.g. "Miami-Ft. Lauderdale, FL" was not found as typed),
   and the contact-sheet image (outline + kept/dropped pieces + box per market).
 
+## HostGator upload from GitHub (Nov 12)
+Justin asked for a way to push the HostGator files from GitHub with his permission. Built: workflow `deploy-hostgator.yml` (manual
+button, then approval through the `hostgator` environment's required reviewer) running `tools/deploy_hostgator.sh` (FTPS via lftp, a
+fixed 4-file list, backup first, byte-for-byte verification). Tested against a local FTP server (3 tests, in CI too); **not yet run
+against the real HostGator account** (needs the FTP account + environment secrets, docs/HOSTGATOR.md section 4).
+
 ## Web apps tabs (Nov 5)
 Justin asked for a tab per web app on both pages: Astrographics (`astrographics.streamlit.app`), Graph Maker (`maxgraphmaker.streamlit.app`),
 Gridded Climo (`gridded-climo.streamlit.app`), each with a link, a summary of features and operation, and screenshots. Source of truth:

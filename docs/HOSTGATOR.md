@@ -89,3 +89,43 @@ Logged in through the password prompt, open `https://<your domain>/max/api/save.
 
 The page has the market list built in: when `markets.json` changes, rebuild (`python3 configurator/build.py`, or ask Claude) and
 upload `index.html` again. Help text comes from the Pages site, so editing `content/*.md` needs no upload.
+
+## 4. Uploading from GitHub instead of by hand (needs your approval each time)
+
+The workflow **Deploy to HostGator (needs approval)** uploads the four files that live on HostGator over encrypted FTP (FTPS):
+`index.html`, `api/save.php`, `api/lib.php`, `api/.htaccess`. It runs only when you press Run workflow, and then it stops and
+waits until you approve it. It cannot touch anything else on the server: the shared-password file (`.htaccess` in `public_html/max/`),
+`maxtools-private/`, the token file and your WordPress site are all outside its list.
+
+### One-time setup
+**a. A restricted FTP account (cPanel).** cPanel > **FTP Accounts** > Add FTP Account:
+- Log In: `maxdeploy` (the full login becomes `maxdeploy@justingehrts.com`)
+- Password: a long random one (save it in your password manager)
+- **Directory: `public_html/max`** (cPanel fills in `public_html/maxdeploy`: change it)
+- Quota: Unlimited (or 10 MB; the files total about 70 KB)
+
+**b. The server name.** cPanel's right-hand sidebar shows **Server Name**, like `gator1234.hostgator.com`. Use that as the host (its
+security certificate matches that name; your own domain name may not match).
+
+**c. A GitHub environment with you as the approver.** Repository > Settings > **Environments** > New environment, name it exactly
+`hostgator`. Then:
+- **Required reviewers:** add yourself. Leave "Prevent self-review" **unticked**, or you could not approve your own run.
+- **Deployment branches and tags:** choose "Selected branches and tags" and add `main`.
+- **Environment secrets** (not repository secrets): `HOSTGATOR_HOST` (the server name), `HOSTGATOR_USER` (the full login, e.g.
+  `maxdeploy@justingehrts.com`), `HOSTGATOR_PASSWORD`.
+- Optional **environment variable** `HOSTGATOR_REMOTE_DIR`: leave unset. The FTP account already starts in `public_html/max`.
+
+### Each time
+1. Repository > Actions > **Deploy to HostGator (needs approval)** > Run workflow.
+2. The checks run first (PHP syntax, endpoint tests, and the page matches a fresh build). Then GitHub emails you: **Review deployments**.
+3. Click **Approve and deploy**. The log shows four steps: login check, backup of the current server files, upload, and a byte-for-byte
+   comparison of every file against the repository. The run is green only if they all match.
+4. The replaced server files are kept for one day as the run's `hostgator-backup` artifact if you need to put them back.
+
+### Safety notes
+- The password lives only in the `hostgator` environment. GitHub hands it to the job only after you approve, never to pull requests,
+  and masks it in logs.
+- The upload is encrypted (FTPS, certificate checked). It refuses to fall back to plain FTP. If the certificate check fails, the host is
+  probably your domain name instead of the server name (step b).
+- To cut it off: delete the FTP account in cPanel, or delete the secrets. Nothing else depends on it.
+- Not covered: `config.php`, the token file and the password file. If those ever change, edit them in cPanel as before.

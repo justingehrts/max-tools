@@ -1,0 +1,73 @@
+name: Deploy to HostGator (needs approval)
+
+# Uploads the configurator page and the save endpoint to HostGator over FTPS. Runs only when you press "Run workflow", then
+# waits for you to approve it (the `hostgator` environment has you as its required reviewer). Which files go where is the
+# FILES list in tools/deploy_hostgator.sh: nothing else on the server is touched. Setup: docs/HOSTGATOR.md section 4.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hostgator-deploy
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    # Runs first, without any secrets: do not upload something broken.
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install jsonschema markdown matplotlib numpy scipy requests
+      - name: PHP files are valid and the endpoint tests pass
+        run: |
+          php -l configurator/api/save.php
+          php -l configurator/api/lib.php
+          php tests/php/test_lib.php
+      - name: The page in the repository matches a fresh build
+        run: python -m unittest tests.test_configurator_dist tests.test_registry tests.test_apps
+      - name: Page library tests
+        run: node configurator/test_lib.js
+
+  deploy:
+    needs: checks
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: hostgator          # <- the approval gate: this job waits here until the reviewer approves
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the HostGator login details are set
+        env:
+          H: ${{ secrets.HOSTGATOR_HOST }}
+          U: ${{ secrets.HOSTGATOR_USER }}
+          P: ${{ secrets.HOSTGATOR_PASSWORD }}
+        run: |
+          for v in H U P; do
+            if [ -z "${!v}" ]; then echo "::error::Missing a secret in the 'hostgator' environment (HOSTGATOR_HOST, HOSTGATOR_USER, HOSTGATOR_PASSWORD). See docs/HOSTGATOR.md section 4."; exit 1; fi
+          done
+      - name: Install lftp
+        run: sudo apt-get update -q && sudo apt-get install -y -q lftp
+      - name: Upload to HostGator over FTPS and verify
+        env:
+          HOSTGATOR_HOST: ${{ secrets.HOSTGATOR_HOST }}
+          HOSTGATOR_USER: ${{ secrets.HOSTGATOR_USER }}
+          HOSTGATOR_PASSWORD: ${{ secrets.HOSTGATOR_PASSWORD }}
+          HOSTGATOR_REMOTE_DIR: ${{ vars.HOSTGATOR_REMOTE_DIR }}
+          HOSTGATOR_VERIFY_CERT: ${{ vars.HOSTGATOR_VERIFY_CERT || 'true' }}
+          BACKUP_DIR: hostgator-backup
+        run: bash tools/deploy_hostgator.sh
+      - name: Keep the replaced server files for a day (in case you need to put them back)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hostgator-backup
+          path: hostgator-backup
+          retention-days: 1
+          if-no-files-found: ignore
