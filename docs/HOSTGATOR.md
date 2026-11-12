@@ -58,7 +58,7 @@ Folder names below are suggestions; `<home>` is the folder that contains `public
     <home>/public_html/max/index.html           the configurator page (step 6)
     <home>/public_html/max/api/save.php         from configurator/api/
     <home>/public_html/max/api/lib.php          from configurator/api/
-    <home>/public_html/max/api/.htaccess        from configurator/api/ (blocks direct access to lib.php)
+    (no .htaccess is uploaded by us: the server's own .htaccess files hold the password protection)
 
 `save.php` finds `config.php` three folders up from `api/` (`<home>/maxtools-private/config.php`). If you use a different depth,
 tell me and I will change that one line.
@@ -93,8 +93,8 @@ upload `index.html` again. Help text comes from the Pages site, so editing `cont
 ## 4. Uploading from GitHub instead of by hand (needs your approval each time)
 
 The workflow **Deploy to HostGator (needs approval)** uploads the four files that live on HostGator over encrypted FTP (FTPS):
-`index.html`, `api/save.php`, `api/lib.php`, `api/.htaccess`. It runs only when you press Run workflow, and then it stops and
-waits until you approve it. It cannot touch anything else on the server: the shared-password file (`.htaccess` in `public_html/max/`),
+`index.html`, `api/save.php` and `api/lib.php`. It runs only when you press Run workflow, and then it stops and
+waits until you approve it. It cannot touch anything else on the server: **any `.htaccess`** (the script refuses to even list one),
 `maxtools-private/`, the token file and your WordPress site are all outside its list.
 
 ### One-time setup
@@ -121,6 +121,18 @@ security certificate matches that name; your own domain name may not match).
 3. Click **Approve and deploy**. The log shows four steps: login check, backup of the current server files, upload, and a byte-for-byte
    comparison of every file against the repository. The run is green only if they all match.
 4. The replaced server files are kept for one day as the run's `hostgator-backup` artifact if you need to put them back.
+
+### After every deploy: check the password still works
+Open `https://www.justingehrts.com/max/` in a **private window**. The browser must ask for the shared user name and password before the
+configurator page (or at least before it saves). Also open `https://www.justingehrts.com/max/api/save.php?market=columbus-oh`: it must
+ask for the password, not show `{"ok":true...}`.
+
+**What went wrong once (Nov 12):** the first versions of the deploy listed `api/.htaccess`. On your server that file held the password
+protection, so the upload replaced it and `api/` was open to anyone for about an hour. Nobody used it (the settings file stayed empty and
+there were no commits), but it is why the deploy now refuses to touch any `.htaccess`, and why `lib.php` blocks direct requests itself in
+code. To restore protection: cPanel > **Directory Privacy** > `public_html/max` > password-protect it ("Max tools", your shared user),
+then re-add `ErrorDocument 401 default` as the first line of `public_html/max/.htaccess` if the prompt shows WordPress's 404 page.
+Protecting `max` itself (not only `api`) also puts the page behind the password.
 
 ### Check that the approval gate is really on
 After you press Run workflow, the **deploy** job must show **Waiting** with a "Review deployments" button. If it starts by itself a few

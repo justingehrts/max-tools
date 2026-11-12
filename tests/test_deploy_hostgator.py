@@ -51,13 +51,13 @@ class Deploy(unittest.TestCase):
         r = self.run_deploy()
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         for local, remote in [('configurator/dist/index.html', 'index.html'), ('configurator/api/save.php', 'api/save.php'),
-                              ('configurator/api/lib.php', 'api/lib.php'), ('configurator/api/.htaccess', 'api/.htaccess')]:
+                              ('configurator/api/lib.php', 'api/lib.php')]:
             self.assertEqual((self.srv_root / remote).read_bytes(), (ROOT / local).read_bytes(), remote)
         # nothing else was touched
         self.assertEqual((self.srv_root / '.htaccess').read_text(), 'AuthType Basic  # the shared password\n')
         self.assertEqual((self.srv_root / 'wp-note.txt').read_text(), 'not ours')
         self.assertEqual(sorted(p.name for p in self.srv_root.iterdir()), ['.htaccess', 'api', 'index.html', 'wp-note.txt'])
-        self.assertEqual(sorted(p.name for p in (self.srv_root / 'api').iterdir()), ['.htaccess', 'lib.php', 'save.php'])
+        self.assertEqual(sorted(p.name for p in (self.srv_root / 'api').iterdir()), ['lib.php', 'save.php'])
         # the old copy was saved before being replaced
         self.assertEqual((self.backup / 'index.html').read_text(), 'OLD PAGE')
         self.assertIn('Done.', r.stdout)
@@ -189,6 +189,30 @@ ThreadedFTPServer(('127.0.0.1', int(port)), h).serve_forever()
         self.assertIn('does not resolve', r.stderr)
         self.assertIn('characters', r.stdout)                            # its shape, so a wrong value is easy to spot
         self.assertNotIn('Logging in', r.stdout)
+
+    def test_never_touches_any_htaccess_on_the_server(self):
+        """The password protection lives in .htaccess files on the server (Nov 12: an overwritten api/.htaccess removed it)."""
+        (self.srv_root / 'api').mkdir()
+        protection = 'AuthType Basic\nAuthName "Max tools"\nrequire valid-user\n'
+        (self.srv_root / 'api' / '.htaccess').write_text(protection)
+        r = self.run_deploy()
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual((self.srv_root / 'api' / '.htaccess').read_text(), protection)
+        self.assertEqual((self.srv_root / '.htaccess').read_text(), 'AuthType Basic  # the shared password\n')
+        self.assertTrue((self.srv_root / 'api' / 'save.php').is_file())
+
+    def test_refuses_a_file_list_that_contains_an_htaccess(self):
+        text = SCRIPT.read_text()
+        self.assertNotIn('.htaccess:', text.split('FILES=(')[1].split(')')[0])           # none is listed
+        bad = Path(tempfile.mkdtemp()) / 'deploy.sh'
+        bad.write_text(text.replace('"configurator/api/lib.php:api/lib.php"', '"configurator/api/lib.php:api/lib.php"\n  "configurator/api/save.php:api/.htaccess"')
+                       .replace('ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"', f'ROOT="{ROOT}"'))
+        env = dict(os.environ, HOSTGATOR_HOST='127.0.0.1', HOSTGATOR_USER='maxftp', HOSTGATOR_PASSWORD='x', HOSTGATOR_PORT=str(self.port),
+                   HOSTGATOR_FTPS='false', BACKUP_DIR=str(self.backup))
+        r = subprocess.run(['bash', str(bad)], env=env, capture_output=True, text=True, timeout=60)
+        self.assertEqual(r.returncode, 2)
+        self.assertIn('refusing to deploy an .htaccess', r.stderr)
+        self.assertFalse((self.srv_root / 'api').exists())
 
     def test_is_repeatable(self):
         self.assertEqual(self.run_deploy().returncode, 0)

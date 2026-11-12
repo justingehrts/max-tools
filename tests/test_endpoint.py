@@ -114,6 +114,14 @@ class Endpoint(unittest.TestCase):
         s, r = self.call(body={'market': 'columbus-oh', 'ffg': None, 'expectUpdatedUtc': None})  # page loaded "no colors"
         self.assertEqual(s, 409); self.assertEqual(len(self.configs()['configs']), 1)
 
+    def test_lib_php_cannot_be_requested_directly(self):
+        """No .htaccess is deployed any more, so lib.php guards itself."""
+        with self.assertRaises(urllib.error.HTTPError) as cm:
+            urllib.request.urlopen(f'http://127.0.0.1:{self.port}/api/lib.php', timeout=10)
+        self.assertEqual(cm.exception.code, 403)
+        self.assertEqual(cm.exception.read(), b'')                       # no source, no error text
+        self.assertEqual(self.call('GET', query='?market=columbus-oh')[0], 200)      # save.php still includes it fine
+
     def test_other_markets_untouched(self):
         FakeGitHub.files['configs.json'] = (json.dumps({'schemaVersion': 1, 'configs': [
             {'market': 'seattle-wa', 'updatedUtc': '2026-01-01T00:00:00Z', 'ffg': {'colors': SEVEN}}]}), 'c1')

@@ -71,3 +71,4 @@ jobs:
           path: hostgator-backup
           retention-days: 1
           if-no-files-found: ignore
+          include-hidden-files: true       # dot-files are skipped by default; a backup must not skip any file

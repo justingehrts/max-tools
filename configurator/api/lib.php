@@ -4,6 +4,13 @@
 
 declare(strict_types=1);
 
+// This file is only meant to be included by save.php. If the web server is asked for it directly, refuse. (Doing this in code means
+// no .htaccess has to be deployed for it, and the server's own password file is never touched by a deploy.)
+if (PHP_SAPI !== 'cli' && isset($_SERVER['SCRIPT_FILENAME']) && realpath((string)$_SERVER['SCRIPT_FILENAME']) === realpath(__FILE__)) {
+    http_response_code(403);
+    exit;
+}
+
 const MARKET_RE = '/^[a-z0-9][a-z0-9-]{0,39}$/D';   // D: '$' must not match before a trailing newline
 const HEX_RE = '/^#[0-9a-fA-F]{6}$/D';
 const UTC_RE = '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/D';

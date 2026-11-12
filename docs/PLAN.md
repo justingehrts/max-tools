@@ -125,6 +125,10 @@ with no software installed locally and an optional way to change how the layers 
   and the contact-sheet image (outline + kept/dropped pieces + box per market).
 
 ## HostGator upload from GitHub (Nov 12)
+**Incident (Nov 12, ~01:29-02:00 UTC):** the first successful deploy overwrote the server's `api/.htaccess`, which held the password
+protection, so `/max/api/save.php` answered without a password. No save was made (configs.json unchanged, no commits). Causes: the file
+was in the deploy list, and the backup artifact skips hidden files, so the original was not saved. Fixed: the deploy never lists an
+.htaccess (refuses if one is added), `lib.php` blocks direct requests in code, and the docs say to protect `public_html/max` itself.
 Justin asked for a way to push the HostGator files from GitHub with his permission. Built: workflow `deploy-hostgator.yml` (manual
 button, then approval through the `hostgator` environment's required reviewer) running `tools/deploy_hostgator.sh` (FTPS via lftp, a
 fixed 4-file list, backup first, byte-for-byte verification). Tested against a local FTP server (3 tests, in CI too); **not yet run

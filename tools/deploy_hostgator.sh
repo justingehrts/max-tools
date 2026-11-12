@@ -5,8 +5,8 @@
 #
 # Used by .github/workflows/deploy-hostgator.yml (which waits for Justin's approval first) and by tests/test_deploy_hostgator.py.
 #
-# It touches ONLY the files listed in FILES below. Never the password file (.htaccess in the folder above api/), config.php,
-# the token, or anything else on the server. Before overwriting it saves the current server copies to $BACKUP_DIR.
+# It touches ONLY the files listed in FILES below. Never an .htaccess (the password protection), config.php, the token, or
+# anything else on the server. Before overwriting it saves the current server copies to $BACKUP_DIR.
 #
 # It logs in twice (a listing, then one session that does all the transfers). Shared hosts often firewall an address that opens
 # many connections quickly, so fewer is safer. Step 0 tests the connection with no password at all.
@@ -50,8 +50,12 @@ FILES=(
   "configurator/dist/index.html:index.html"
   "configurator/api/save.php:api/save.php"
   "configurator/api/lib.php:api/lib.php"
-  "configurator/api/.htaccess:api/.htaccess"
 )
+# NEVER list an .htaccess here. On the server those files hold the password protection (Directory Privacy) and the WordPress
+# workaround; overwriting one removes the password. (This happened once, on Nov 12: api/.htaccess was in this list.)
+for pair in "${FILES[@]}"; do
+  case "${pair#*:}" in .htaccess|*/.htaccess) echo "refusing to deploy an .htaccess file: ${pair#*:}" >&2; exit 2 ;; esac
+done
 
 quote() { local s="${1//\\/\\\\}"; printf '"%s"' "${s//\"/\\\"}"; }   # lftp double-quote escaping
 
