@@ -1,20 +1,4 @@
 {
   "schemaVersion": 1,
-  "configs": [
-    {
-      "market": "columbus-oh",
-      "updatedUtc": "2026-11-12T01:50:17Z",
-      "ffg": {
-        "colors": [
-          "#6d001a",
-          "#a20015",
-          "#cf2920",
-          "#ef5b3d",
-          "#ee977e",
-          "#ecc8c3",
-          "#c006e5"
-        ]
-      }
-    }
-  ]
+  "configs": []
 }
