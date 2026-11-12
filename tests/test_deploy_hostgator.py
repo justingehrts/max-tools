@@ -41,10 +41,10 @@ class Deploy(unittest.TestCase):
         (self.srv_root / 'index.html').write_text('OLD PAGE')
         self.backup = Path(tempfile.mkdtemp()) / 'bk'
 
-    def run_deploy(self, password='s3cret"pass\\word$', port=None, timeout='20'):
-        env = dict(os.environ, HOSTGATOR_HOST='127.0.0.1', HOSTGATOR_USER='maxftp', HOSTGATOR_PASSWORD=password,
-                   HOSTGATOR_PORT=str(port or self.port), HOSTGATOR_FTPS='false', BACKUP_DIR=str(self.backup),
-                   HOSTGATOR_CMD_TIMEOUT=timeout)
+    def run_deploy(self, password='s3cret"pass\\word$', port=None, timeout='20', host='127.0.0.1', user='maxftp', env_port=True):
+        env = dict(os.environ, HOSTGATOR_HOST=host, HOSTGATOR_USER=user, HOSTGATOR_PASSWORD=password,
+                   HOSTGATOR_FTPS='false', BACKUP_DIR=str(self.backup), HOSTGATOR_CMD_TIMEOUT=timeout)
+        if env_port: env['HOSTGATOR_PORT'] = str(port or self.port)
         return subprocess.run(['bash', str(SCRIPT)], env=env, capture_output=True, text=True, timeout=120)
 
     def test_uploads_exactly_the_listed_files_and_backs_up_first(self):
@@ -164,6 +164,31 @@ ThreadedFTPServer(('127.0.0.1', int(port)), h).serve_forever()
         self.assertIn('tls:', r.stdout)                                  # the TLS handshake was checked in step 0
         self.assertNotIn('FTPS is off', r.stdout)
         self.assertEqual((self.srv_root / 'api' / 'save.php').read_bytes(), (ROOT / 'configurator/api/save.php').read_bytes())
+
+    def test_cleans_secrets_pasted_with_invisible_characters(self):
+        """A newline or space pasted into a GitHub secret, or an ftp:// prefix, must not break or hang the upload."""
+        pw = 's3cret"pass\\word$'
+        cases = [('host with a trailing newline', dict(host='127.0.0.1\n')),
+                 ('host with spaces', dict(host=' 127.0.0.1 ')),
+                 ('host with ftp:// and a slash', dict(host='ftp://127.0.0.1/')),
+                 ('host with FTPS:// in capitals', dict(host='FTPS://127.0.0.1')),
+                 ('host with a :port suffix', dict(host=f'127.0.0.1:{self.port}', env_port=False)),
+                 ('user with a trailing newline', dict(user='maxftp\n')),
+                 ('password with a trailing newline', dict(password=pw + '\n'))]
+        for name, kw in cases:
+            for p in self.srv_root.iterdir():
+                if p.name not in ('.htaccess', 'wp-note.txt'): shutil.rmtree(p) if p.is_dir() else p.unlink()
+            r = self.run_deploy(**kw)
+            self.assertEqual(r.returncode, 0, f'{name}: {r.stdout}{r.stderr}')
+            self.assertIn('cleaned:', r.stdout, name)
+            self.assertEqual((self.srv_root / 'index.html').read_bytes(), (ROOT / 'configurator/dist/index.html').read_bytes(), name)
+
+    def test_a_host_that_does_not_resolve_is_explained_without_printing_it(self):
+        r = self.run_deploy(host='not a real host!.invalid')
+        self.assertEqual(r.returncode, 6, r.stdout + r.stderr)
+        self.assertIn('does not resolve', r.stderr)
+        self.assertIn('characters', r.stdout)                            # its shape, so a wrong value is easy to spot
+        self.assertNotIn('Logging in', r.stdout)
 
     def test_is_repeatable(self):
         self.assertEqual(self.run_deploy().returncode, 0)

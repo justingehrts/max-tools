@@ -24,8 +24,21 @@
 set -uo pipefail
 
 : "${HOSTGATOR_HOST:?set HOSTGATOR_HOST}" "${HOSTGATOR_USER:?set HOSTGATOR_USER}" "${HOSTGATOR_PASSWORD:?set HOSTGATOR_PASSWORD}"
-REMOTE_DIR="${HOSTGATOR_REMOTE_DIR:-/}"
+# Secrets pasted into a web form often carry an invisible newline or space, or a "ftp://" prefix. lftp reads its script line by line,
+# so a newline inside the host or user name corrupts the script. Clean them here, and say (without printing the value) what was fixed.
+CLEAN_NOTES=()
+raw_host="$HOSTGATOR_HOST"
+HOST="${raw_host//[$'\r\n\t ']/}"
+[ "$HOST" != "$raw_host" ] && CLEAN_NOTES+=("the host contained spaces or line breaks (removed)")
+case "$HOST" in *://*) CLEAN_NOTES+=("the host started with '${HOST%%://*}://' (removed)"); HOST="${HOST#*://}" ;; esac
+case "$HOST" in */*) CLEAN_NOTES+=("the host had a path after the name (removed)"); HOST="${HOST%%/*}" ;; esac
 PORT="${HOSTGATOR_PORT:-21}"
+case "$HOST" in *:[0-9]*) PORT="${HOST##*:}"; HOST="${HOST%:*}"; CLEAN_NOTES+=("the host had a :port suffix (used as the port)") ;; esac
+USERNAME="$(printf '%s' "$HOSTGATOR_USER" | tr -d '\r\n')"; USERNAME="${USERNAME#"${USERNAME%%[![:space:]]*}"}"; USERNAME="${USERNAME%"${USERNAME##*[![:space:]]}"}"
+[ "$USERNAME" != "$HOSTGATOR_USER" ] && CLEAN_NOTES+=("the user name had spaces or line breaks around it (removed)")
+PASSWORD="$(printf '%s' "$HOSTGATOR_PASSWORD" | tr -d '\r\n')"          # only line breaks: a password may contain spaces
+[ "$PASSWORD" != "$HOSTGATOR_PASSWORD" ] && CLEAN_NOTES+=("the password ended with a line break (removed)")
+REMOTE_DIR="${HOSTGATOR_REMOTE_DIR:-/}"
 FTPS="${HOSTGATOR_FTPS:-true}"
 VERIFY="${HOSTGATOR_VERIFY_CERT:-true}"
 BACKUP_DIR="${BACKUP_DIR:-hostgator-backup}"
@@ -61,8 +74,8 @@ ftp() {
     else
       echo "set ftp:ssl-allow no"
     fi
-    echo "open -p $PORT $(quote "$HOSTGATOR_HOST")"
-    echo "user $(quote "$HOSTGATOR_USER") $(quote "$HOSTGATOR_PASSWORD")"
+    echo "open -p $PORT $(quote "$HOST")"
+    echo "user $(quote "$USERNAME") $(quote "$PASSWORD")"
     echo "cd $(quote "$REMOTE_DIR")"
     for c in "$@"; do echo "$c"; done
     echo "bye"
@@ -72,7 +85,7 @@ ftp() {
   if [ "$rc" != 0 ] && [ "${FTP_SHOW_DEBUG:-1}" != 0 ]; then
     [ "$rc" = 124 ] && echo "   (cut off after ${CMD_TIMEOUT}s: the server stopped answering)" >&2
     echo "   --- last lines of the FTP conversation (password hidden) ---" >&2
-    tail -n 30 "$dbg" | while IFS= read -r line; do printf '   %s\n' "${line//"$HOSTGATOR_PASSWORD"/****}"; done >&2
+    tail -n 30 "$dbg" | while IFS= read -r line; do printf '   %s\n' "${line//"$PASSWORD"/****}"; done >&2
   fi
   rm -f "$script" "$dbg"
   return $rc
@@ -86,11 +99,19 @@ done
 if [ "$FTPS" != "true" ]; then echo "WARNING: FTPS is off (test server only)."; fi
 
 # ---------------------------------------------------------------- 0. can we reach the server at all? (no password involved)
-echo "0/4 Testing the connection to $HOSTGATOR_HOST:$PORT (no login yet)..."
-ip="$(getent hosts "$HOSTGATOR_HOST" 2>/dev/null | awk '{print $1; exit}')"
-if [ -z "$ip" ]; then echo "   The name $HOSTGATOR_HOST does not resolve. Check the HOSTGATOR_HOST secret." >&2; exit 6; fi
+echo "0/4 Testing the connection (no login yet)..."
+for n in "${CLEAN_NOTES[@]+"${CLEAN_NOTES[@]}"}"; do echo "   cleaned: $n"; done
+# GitHub masks the host in the log, so describe its shape (never its content) to make a wrong value easy to spot.
+dots="${HOST//[^.]/}"; echo "   host: ${#HOST} characters, ${#dots} dots, port $PORT"
+ip="$(getent hosts "$HOST" 2>/dev/null | awk '{print $1; exit}')"
+if [ -z "$ip" ]; then
+  echo "   The host name does not resolve to an address. Check the HOSTGATOR_HOST secret: it should be the Server Name from cPanel" >&2
+  echo "   (like gator1234.hostgator.com: letters, digits, dots and hyphens only, no ftp:// in front, no spaces)." >&2
+  case "$HOST" in *[!A-Za-z0-9.-]*) echo "   Its characters are not all letters, digits, dots or hyphens: that is probably the problem." >&2 ;; esac
+  exit 6
+fi
 echo "   address: $ip"
-banner="$(timeout 20 bash -c 'exec 3<>"/dev/tcp/$0/$1" && IFS= read -r -t 15 line <&3 && printf "%s" "$line"' "$HOSTGATOR_HOST" "$PORT" 2>/dev/null | tr -d '\r' | cut -c1-100)"
+banner="$(timeout 20 bash -c 'exec 3<>"/dev/tcp/$0/$1" && IFS= read -r -t 15 line <&3 && printf "%s" "$line"' "$HOST" "$PORT" 2>/dev/null | tr -d '\r' | cut -c1-100)"
 if [ -z "$banner" ]; then
   echo "   NO GREETING from the FTP server within 15 seconds (the connection was refused, dropped or silent)." >&2
   echo "   That is usually the host's firewall blocking this address, or FTP being unavailable. Not a password problem." >&2
@@ -98,7 +119,7 @@ if [ -z "$banner" ]; then
 fi
 echo "   greeting: $banner"
 if [ "$FTPS" = "true" ] && command -v openssl >/dev/null 2>&1; then
-  tls="$(timeout 25 openssl s_client -starttls ftp -connect "$HOSTGATOR_HOST:$PORT" -servername "$HOSTGATOR_HOST" </dev/null 2>&1 || true)"
+  tls="$(timeout 25 openssl s_client -starttls ftp -connect "$HOST:$PORT" -servername "$HOST" </dev/null 2>&1 || true)"
   echo "$tls" | grep -E "^subject=|^issuer=|Verification|Verify return code|Protocol  |Protocol:|Cipher is|Cipher    :" | head -6 | sed 's/^/   tls: /'
   if ! echo "$tls" | grep -qE "Cipher is|Cipher    :|Protocol"; then
     echo "   The encryption (TLS) handshake did not complete. FTPS may be unavailable on this host or port." >&2; exit 6

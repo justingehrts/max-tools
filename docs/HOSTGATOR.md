@@ -127,6 +127,13 @@ After you press Run workflow, the **deploy** job must show **Waiting** with a "R
 seconds after the checks finish, the `hostgator` environment has no required reviewer, and anyone who can run workflows could upload
 without approval. Fix: Settings > Environments > `hostgator` > tick **Required reviewers**, add yourself, **Save protection rules**.
 
+### If step 0 says the host name does not resolve
+GitHub hides the secret in logs (it shows `***`), so the log describes the value's shape instead: how many characters and dots it has.
+`HOSTGATOR_HOST` must be just the server name, like `gator1234.hostgator.com`: letters, digits, dots and hyphens, no `ftp://`, no
+spaces or line breaks. The script already removes spaces, line breaks, a leading `ftp://` or `ftps://`, a trailing `/` and a `:21`, and
+lists what it removed under `cleaned:`. If it still does not resolve, re-create the secret: delete `HOSTGATOR_HOST` and add it again,
+typing the name rather than pasting it. In cPanel the name is under **Server Name** on the right-hand side.
+
 ### What the first lines of the upload log mean
 - `0/4 Testing the connection (no login yet)` checks, without any password, that the name resolves, that the FTP server greets us, and
   that the encrypted (TLS) handshake works. If it prints **NO GREETING**, the host is not answering GitHub's address at all: this is the
