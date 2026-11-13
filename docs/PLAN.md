@@ -124,6 +124,11 @@ with no software installed locally and an optional way to change how the layers 
 - Still to do: fuzzy matching of Justin's market names to dataset names (e.g. "Miami-Ft. Lauderdale, FL" was not found as typed),
   and the contact-sheet image (outline + kept/dropped pieces + box per market).
 
+## Two pages (Nov 13, Justin)
+Public page = everyday home (pick market, Copy buttons, record dots, adding layers to Max, apps); private page = customizing FFG colors
+only (renamed "Customize flash flood colors"), with a link back carrying `?market=`. One copy of each thing, no login for daily use.
+Details: docs/GUI.md "Two pages".
+
 ## Configurator demo (Nov 13)
 Shareable click-through copy at `https://justingehrts.github.io/max-tools/demo/` (no login, nothing saved), built by the site workflow
 from the same source as the real page. Also a preview of what the real page will look like before it is uploaded. The demo e2e test

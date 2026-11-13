@@ -3,6 +3,18 @@
 Audience: station meteorologists and producers with mixed technical skill. They visit a few times (setup, then occasional
 tweaks), mostly on desktop, sometimes on a phone. Their job: **get my URLs** (default) or **change how my layers look, then get my URLs.**
 
+## Two pages (restructured Nov 13; this supersedes the tab layout described further down)
+| | **Max tools** (public, GitHub Pages) | **Customize flash flood colors** (private, HostGator, password) |
+|---|---|---|
+| Address | `https://justingehrts.github.io/max-tools/` | `https://www.justingehrts.com/max/` |
+| For | everyday use by every station, no login | changing a market's FFG colors |
+| Has | pick your market (remembered on the device, or sent as `?market=`), its 3 flash flood addresses with Copy, record dots (28 addresses, Copy all) + help, "Adding layers to Max", one tab per web app (link + write-up + screenshots), build status | market picker, preview with county lines, presets, 7-color editor with hide-band, Save, confirm/conflict handling, build status, a link back to the public page (`?market=` carries the market) |
+| Source | `public/` (template + app.js), `tools/build_index.py`, `content/*` | `configurator/src/`, uploaded to HostGator by the approval-gated workflow |
+
+The public page links to the private one ("Station setup ... A password is required"). The private page has no address lists, record dots,
+apps or help any more: those live only on the public page, so there is one copy of each and day-to-day use needs no password. The private
+page's source is the only thing that needs uploading to HostGator when it changes. The click-through demo (`/demo/`) is the private page.
+
 ## Principles
 1. Pick your market once. Every tool then shows *your* URLs first, with copy buttons. No installers.
 2. The default is good enough. Getting URLs needs no edits and no save.

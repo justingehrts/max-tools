@@ -34,21 +34,6 @@
     return d.toDateString() === new Date().toDateString() ? t : d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ', ' + t;
   }
   function fmtDate(iso) { var d = new Date(iso); return isNaN(d) ? 'earlier' : d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }); }
-  var toastTimer;
-  function toast(msg) {
-    var t = $('toast'); t.textContent = msg; t.hidden = false; $('announce').textContent = msg;
-    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 1800);
-  }
-  function copy(text, what) {
-    function ok() { toast('Copied ' + what); }
-    function fallback() {
-      var ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy'); ok(); } catch (e) { toast('Copy failed. Select the text and press Ctrl+C.'); }
-      document.body.removeChild(ta);
-    }
-    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(ok, fallback); else fallback();
-  }
   function getJSON(url) {
     return fetch(url, { cache: 'no-store', credentials: 'same-origin' }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (body) { return { status: r.status, body: body }; });
@@ -123,60 +108,9 @@
     S.bins = {}; S.savedThisVisit = false;
     $('picker').hidden = true; $('tools').hidden = false; $('chip').hidden = false;
     $('chip-name').textContent = byId[id].name;
-    S.lines = null; renderUrls(); loadSaved(); loadPreview(); loadLines();
-    showTab(tabFromHash() || $('tab-ffg'));
+    S.lines = null; loadSaved(); loadPreview(); loadLines();
+    $('home-link').href = CFG.homeUrl + '?market=' + encodeURIComponent(id);     // the public page opens on this market
   }
-
-  // ---------------------------------------------------------------- tabs
-  // One tab per web app listed in content/apps.json (name, link and tagline are embedded at build time; the write-up is
-  // fetched from the Pages site like the other help texts).
-  (CFG.apps || []).forEach(function (a) {
-    var b = document.createElement('button');
-    b.setAttribute('role', 'tab'); b.type = 'button'; b.id = 'tab-' + a.id; b.setAttribute('data-hash', a.id);
-    b.setAttribute('aria-controls', 'panel-' + a.id); b.textContent = a.name;
-    document.querySelector('[role=tablist]').appendChild(b);
-    var d = document.createElement('div');
-    d.setAttribute('role', 'tabpanel'); d.id = 'panel-' + a.id; d.setAttribute('aria-labelledby', 'tab-' + a.id); d.hidden = true;
-    d.innerHTML = '<p class="muted">' + esc(a.tagline || '') + '</p><a class="open-app" target="_blank" rel="noopener" href="' + esc(a.url) + '">Open ' + esc(a.name) + '</a><div class="appdoc" id="appdoc-' + a.id + '"></div>';
-    $('tools').appendChild(d);
-  });
-  var tabs = [].slice.call(document.querySelectorAll('[role=tab]'));
-  function tabFromHash() { return tabs.filter(function (t) { return '#' + t.getAttribute('data-hash') === location.hash; })[0]; }
-  function showTab(t, focus) {
-    tabs.forEach(function (x) {
-      var on = x === t; x.setAttribute('aria-selected', on ? 'true' : 'false'); x.tabIndex = on ? 0 : -1;
-      $(x.getAttribute('aria-controls')).hidden = !on;
-    });
-    if (focus) t.focus();
-    try { history.replaceState(null, '', '#' + t.getAttribute('data-hash')); } catch (e) { /* file:// etc. */ }
-  }
-  tabs.forEach(function (t, i) {
-    t.addEventListener('click', function () { showTab(t); });
-    t.addEventListener('keydown', function (ev) {
-      var k = ev.key, j = k === 'ArrowRight' ? i + 1 : k === 'ArrowLeft' ? i - 1 : k === 'Home' ? 0 : k === 'End' ? tabs.length - 1 : null;
-      if (j === null) return; ev.preventDefault(); showTab(tabs[(j + tabs.length) % tabs.length], true);
-    });
-  });
-
-  // ---------------------------------------------------------------- URLs
-  function renderUrls() {
-    $('ffg-urls').innerHTML = LIB.ffgUrls(BASE, S.market).map(function (u) {
-      return '<tr><th>' + u.hours + ' hour</th><td class="url">' + esc(u.url) + '</td><td><button type="button" class="small" data-copy="' + esc(u.url) +
-        '" data-what="the ' + u.hours + '-hour URL" aria-label="Copy the ' + u.hours + '-hour URL">Copy</button></td></tr>';
-    }).join('');
-    $('rec-pattern').textContent = BASE + '/records/default/D<day>_<TYPE>.kmz';
-    $('rec-urls').innerHTML = '<tr><th></th>' + LIB.TYPES.map(function (t) { return '<th scope="col">' + t + '</th>'; }).join('') + '</tr>' +
-      LIB.DAYS.map(function (d) {
-        return '<tr><th scope="row">Day ' + d + '</th>' + LIB.TYPES.map(function (t) {
-          var u = LIB.recordUrl(BASE, d, t);
-          return '<td><button type="button" class="small" data-copy="' + esc(u) + '" data-what="Day ' + d + ' ' + t + '" aria-label="Copy the Day ' + d + ' ' + t + ' link" title="' + esc(u) + '">Copy</button></td>';
-        }).join('') + '</tr>';
-      }).join('');
-  }
-  document.addEventListener('click', function (ev) {
-    var b = ev.target.closest('[data-copy]'); if (b) copy(b.getAttribute('data-copy'), b.getAttribute('data-what'));
-  });
-  $('copy-all').addEventListener('click', function () { copy(LIB.allRecordUrls(BASE).join('\n'), 'all 28 links'); });
 
   // ---------------------------------------------------------------- saved colors
   function savedColors() { return S.saved || LIB.STANDARD; }
@@ -407,22 +341,13 @@
     });
   }
 
-  // ---------------------------------------------------------------- help text (written by Justin in content/*.md)
-  function loadHelp(name, el, title) {
-    fetch(BASE + '/help/' + name + '.html', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw r; return r.text(); })
-      .then(function (html) { $(el).innerHTML = html; }, function () {
-        $(el).innerHTML = '<h2>' + esc(title) + '</h2><p>Help is on the <a href="' + esc(BASE) + '/" target="_blank" rel="noopener">public URL page</a>.</p>';
-      });
-  }
-
   // ---------------------------------------------------------------- start
-  if (CFG.demo) { $('demo-banner').hidden = false; document.title = 'Max layers (demo)'; }
+  if (CFG.demo) { $('demo-banner').hidden = false; document.title = 'Customize flash flood colors (demo)'; }
   buildRows(); buildDurations(); buildPresets();
   window.addEventListener('beforeunload', function (ev) { if (isDirty() && !S.saving) { ev.preventDefault(); ev.returnValue = ''; } });
   loadStatus(); setInterval(loadStatus, 5 * 60 * 1000);
-  loadHelp('record-dots-in-max', 'rec-help', 'Changing how the dots look in Max');
-  loadHelp('add-layer-in-max', 'add-help', 'Adding a layer in Max');
-  (CFG.apps || []).forEach(function (a) { loadHelp('app-' + a.id, 'appdoc-' + a.id, a.name); });
-  var remembered = store(true);
+  $('home-link').href = CFG.homeUrl;
+  var fromLink = (new URLSearchParams(location.search).get('market') || '').toLowerCase();     // sent by the public page's "Customize" link
+  var remembered = byId[fromLink] ? fromLink : store(true);
   if (remembered && byId[remembered]) chooseMarket(remembered); else showPicker();
 })();

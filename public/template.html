@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Max tools</title>
+<style>
+:root{--ink:#17212b;--muted:#55636f;--paper:#edf0f3;--panel:#fff;--line:#d2d9df;--accent:#1f4fbf;--accent-ink:#fff;--tab:#dde3e8;--field:#8e9ba6;--ok-bg:#e6f3ea;--warn-bg:#fdecea;--bad:#b3261e}
+@media (prefers-color-scheme:dark){:root{--ink:#e6eaee;--muted:#a3adb7;--paper:#11161c;--panel:#1a2129;--line:#2e3843;--accent:#8fb0ff;--accent-ink:#0b1220;--tab:#151b22;--field:#5b6c79;--ok-bg:#17301f;--warn-bg:#3a1f1d;--bad:#ff8d84}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}
+main{max-width:60rem;margin:0 auto;padding:1.5rem 16px 4rem}
+h1{font-size:1.4rem;margin:0 0 .25rem}h2{font-size:1.1rem;margin:0 0 .25rem}
+a{color:var(--accent)}[hidden]{display:none!important}
+.muted{color:var(--muted)}code,.url{font-family:Consolas,ui-monospace,monospace;font-size:.85rem;overflow-wrap:anywhere}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--field);border-radius:6px;padding:5px 12px;cursor:pointer;min-height:32px}
+button:hover{border-color:var(--accent)}button.small{min-height:28px;padding:2px 9px;font-size:.85rem}
+button.link{border:none;background:none;color:var(--accent);text-decoration:underline;padding:0 4px;min-height:0}
+input[type=search]{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--field);border-radius:6px;padding:7px 10px;min-height:36px;width:100%;margin:.6rem 0}
+.setup{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:.6rem .9rem;margin:1rem 0 0}
+.setup p{margin:0;flex:1 1 18rem}.setup a.go{font-weight:600}
+.status{margin-top:1rem;padding:6px 12px;font-size:.85rem;background:var(--ok-bg);border:1px solid var(--line);border-radius:6px}
+.status.bad{background:var(--warn-bg);color:var(--bad);font-weight:600}
+[role=tablist]{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:1.25rem;border-bottom:1px solid var(--line)}
+[role=tab]{font:inherit;color:var(--ink);background:var(--tab);border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;padding:.5rem 1rem;cursor:pointer;margin-bottom:-1px}
+[role=tab][aria-selected=true]{background:var(--panel);font-weight:600}
+[role=tabpanel]{background:var(--panel);border:1px solid var(--line);border-top:none;border-radius:0 0 8px 8px;padding:1rem 1.1rem 1.2rem}
+table{border-collapse:collapse;width:100%}td,th{padding:3px 8px 3px 0;text-align:left;vertical-align:middle}th{white-space:nowrap}
+table.urls td.url{width:100%}
+.mlist{list-style:none;margin:.5rem 0 0;padding:0;max-height:60vh;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.mlist li+li{border-top:1px solid var(--line)}
+.mlist button{all:unset;box-sizing:border-box;display:block;width:100%;padding:9px 12px;cursor:pointer}
+.mlist button:hover,.mlist button:focus-visible{background:var(--paper);box-shadow:inset 3px 0 0 var(--accent)}
+.chosen-head{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:.25rem}.chosen-head h2{margin:0}
+.custom{margin:1rem 0 0;padding-top:.75rem;border-top:1px solid var(--line)}
+.tagline{margin:.1rem 0 .4rem}
+.open-app{display:inline-block;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:600;padding:.45rem .9rem;border-radius:6px;margin:.25rem 0 .5rem}
+.open-app:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.appdoc h2,.mdoc h2{margin:1rem 0 .25rem}.appdoc h3,.mdoc h3{font-size:1rem;margin:1.3rem 0 .3rem}
+.appdoc ul,.appdoc ol,.mdoc ul,.mdoc ol{padding-left:1.3rem}.appdoc li,.mdoc li{margin:.2rem 0}
+.appdoc p img,.mdoc p img{display:block;max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;margin:.6rem 0 .3rem}
+.appdoc em,.mdoc em{color:var(--muted);font-size:.9rem}
+.help{margin-top:1.5rem;border-top:1px solid var(--line);padding-top:1rem}.help h2{margin-top:0}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:6px 14px;border-radius:6px;font-size:.9rem}
+@media (max-width:520px){main{padding:1rem 12px 3rem}[role=tabpanel]{padding:.9rem .7rem}table.urls td.url{display:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>Max tools</h1>
+<p class="muted">Layer addresses for Max (add them as KML layers; they never change) and our web apps.</p>
+<!--SETUP-->
+<div class="status" id="status" role="status">Checking when the layers were last built...</div>
+<div role="tablist" aria-label="Max tools"><!--TABS--></div>
+
+<div role="tabpanel" id="panel-ffg" aria-labelledby="tab-ffg">
+  <div id="picker" hidden>
+    <h2>Which market are you in?</h2>
+    <p class="muted">Every station in a market shares the same flash flood layers. Pick yours once; this device remembers it.</p>
+    <label for="mq" class="sr">Find your market</label>
+    <input type="search" id="mq" placeholder="Type a city or call letters, e.g. Columbus or WBNS" autocomplete="off">
+    <ul class="mlist" id="mlist" aria-label="Markets"></ul>
+    <p class="muted" id="mnone" hidden>No market matches. Try a city name.</p>
+    <p><button type="button" class="link" id="pick-cancel" hidden>Back to my market</button></p>
+  </div>
+  <div id="chosen" hidden>
+    <div class="chosen-head"><h2 id="ffg-title">Flash flood guidance</h2><button type="button" class="small" id="change">Change market</button></div>
+    <p class="muted">Add these three addresses in Max as KML layers. They never change, even when your market changes its colors.</p>
+    <table class="urls" id="ffg-urls"></table>
+    <p class="custom" id="custom" hidden>Want different colors for your market? <a id="customize" target="_blank" rel="noopener">Customize your colors (password required)</a></p>
+  </div>
+  <noscript><p>This page needs JavaScript to show your market's addresses.</p></noscript>
+</div>
+
+<div role="tabpanel" id="panel-records" aria-labelledby="tab-records" hidden>
+  <h2>Record dots</h2>
+  <p class="muted">The same 28 files for every station. Day 1 is today.</p>
+  <p class="url" id="rec-pattern"></p>
+  <table class="urls" id="rec-urls"></table>
+  <p><button type="button" id="copy-all">Copy all 28 links</button></p>
+  <!--RECHELP-->
+</div>
+
+<!--PANELS-->
+</main>
+<div class="toast" id="toast" hidden></div>
+<script>var CFG = /*CONFIG*/;</script>
+<script>/*LIB*/</script>
+<script>/*APP*/</script>
+</body>
+</html>

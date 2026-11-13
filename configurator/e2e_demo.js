@@ -13,7 +13,7 @@ const [PAGE, SHOTS] = process.argv.slice(2);
   await p.waitForSelector('#picker:not([hidden])');
   assert.strictEqual(await p.isVisible('#demo-banner'), true, 'demo banner');
   assert.match(await p.textContent('#demo-banner'), /Nothing is saved or published/);
-  assert.strictEqual(await p.title(), 'Max layers (demo)');
+  assert.strictEqual(await p.title(), 'Customize flash flood colors (demo)');
   await p.fill('#mq', 'columbus'); await p.click('#mlist button');
   await p.waitForSelector('#tools:not([hidden])');
   await p.waitForFunction(() => /Standard colors for Columbus/.test(document.getElementById('ffg-title').textContent));
@@ -30,10 +30,6 @@ const [PAGE, SHOTS] = process.argv.slice(2);
   // reset to standard and save again
   await p.click('#standard'); await p.click('#save');
   await p.waitForFunction(() => /Standard colors for Columbus/.test(document.getElementById('ffg-title').textContent));
-  // other tabs still work
-  await p.click('#tab-records'); assert.strictEqual(await p.$$eval('#rec-urls button[data-copy]', b => b.length), 28);
-  await p.click('#tab-astrographics');
-  assert.strictEqual(await p.getAttribute('#panel-astrographics .open-app', 'href'), 'https://astrographics.streamlit.app/');
   // "saved" colors live only in memory: a reload forgets them
   await p.reload(); await p.waitForSelector('#demo-banner:not([hidden])');
   assert.deepStrictEqual(apiCalls, [], 'the demo must never call the real save service');

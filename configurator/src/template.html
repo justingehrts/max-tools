@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Max layers</title>
+<title>Customize flash flood colors</title>
 <style>
   :root {
     --ink: #17212b; --muted: #55636f; --paper: #edf0f3; --panel: #ffffff; --line: #d2d9df;
@@ -65,14 +65,8 @@
   .mlist small { color: var(--muted); margin-left: 6px; }
 
   /* tabs */
-  [role=tablist] { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
-  [role=tab] { background: var(--tab); border: 1px solid var(--line); border-bottom: none; border-radius: 8px 8px 0 0; padding: 8px 14px; margin-bottom: -1px; min-height: 0; }
-  [role=tab][aria-selected=true] { background: var(--panel); font-weight: 650; }
   [role=tabpanel] { background: var(--panel); border: 1px solid var(--line); border-top: none; border-radius: 0 0 8px 8px; padding: 18px 20px; }
 
-  table.urls { border-collapse: collapse; width: 100%; }
-  table.urls th, table.urls td { padding: 4px 8px 4px 0; text-align: left; vertical-align: middle; }
-  table.urls th { white-space: nowrap; }
   .grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 22px; margin-top: 18px; align-items: start; }
   @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
 
@@ -119,21 +113,14 @@
   .state.bad { color: var(--bad); font-weight: 600; }
   .state.good { color: var(--good); font-weight: 600; }
 
-  .open-app { display: inline-block; background: var(--accent); color: var(--accent-ink); text-decoration: none; font-weight: 600; padding: 7px 14px; border-radius: 6px; margin: 2px 0 8px; }
-  .appdoc h2 { margin: 12px 0 4px; } .appdoc h3 { margin: 20px 0 4px; } .appdoc ul, .appdoc ol { padding-left: 22px; } .appdoc li { margin: 3px 0; }
-  .appdoc p img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; margin: 10px 0 4px; }
-  .appdoc em { color: var(--muted); font-size: 13.5px; }
-  .help { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 14px; }
-  .help img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
   dialog { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--ink); max-width: 440px; padding: 20px; }
   dialog::backdrop { background: #0008; }
-  .toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 6px 14px; border-radius: 6px; font-size: 14px; }
-  @media (max-width: 520px) { .wrap { padding: 12px 12px 40px; } [role=tabpanel] { padding: 14px 12px; } .top { padding: 10px 12px; } .status { padding: 6px 12px; } }
+  @media (max-width: 520px) { .wrap { padding: 12px 12px 40px; } .card { padding: 14px 12px; } .top { padding: 10px 12px; } .status { padding: 6px 12px; } }
 </style>
 </head>
 <body>
 <header class="top">
-  <h1>Max layers</h1>
+  <h1>Customize flash flood colors</h1>
   <div class="chip" id="chip" hidden><span id="chip-name"></span><button class="small" id="change" type="button">Change market</button></div>
 </header>
 <div class="demo-banner" id="demo-banner" role="note" hidden><b>Demo.</b> Click anything you like. Nothing is saved or published, and "saved" colors disappear when you reload this page.</div>
@@ -151,16 +138,10 @@
   </section>
 
   <section id="tools" hidden>
-    <div role="tablist" aria-label="Layers">
-      <button role="tab" type="button" id="tab-ffg" data-hash="ffg" aria-controls="panel-ffg">Flash flood guidance</button>
-      <button role="tab" type="button" id="tab-records" data-hash="record-dots" aria-controls="panel-records">Record dots</button>
-      <button role="tab" type="button" id="tab-help" data-hash="add-to-max" aria-controls="panel-help">Adding layers to Max</button>
-    </div>
-
-    <div role="tabpanel" id="panel-ffg" aria-labelledby="tab-ffg">
-      <h2 id="ffg-title">Flash flood guidance</h2>
-      <p class="muted" id="ffg-sub">Add these three URLs in Max as KML layers. They never change, even when you change the colors.</p>
-      <table class="urls" id="ffg-urls"></table>
+    <div class="card" id="panel-ffg">
+      <h2 id="ffg-title">Customize colors</h2>
+      <p class="muted" id="ffg-sub">Choose the colors for your market's flash flood layers, then save. Your layer addresses never change.
+        <a id="home-link" target="_blank" rel="noopener">See and copy your addresses</a> on the Max tools page.</p>
 
       <div class="grid">
         <div class="scope" aria-labelledby="pv-h">
@@ -194,18 +175,6 @@
       </div>
     </div>
 
-    <div role="tabpanel" id="panel-records" aria-labelledby="tab-records" hidden>
-      <h2>Record dots</h2>
-      <p class="muted">The same 28 files for every station. Day 1 is today. Nothing to save here.</p>
-      <p class="url" id="rec-pattern"></p>
-      <table class="urls" id="rec-urls"></table>
-      <div class="actions"><button type="button" id="copy-all">Copy all 28 links</button></div>
-      <div class="help" id="rec-help"></div>
-    </div>
-
-    <div role="tabpanel" id="panel-help" aria-labelledby="tab-help" hidden>
-      <div id="add-help"></div>
-    </div>
   </section>
 </div>
 
@@ -214,8 +183,6 @@
   <p id="confirm-text"></p>
   <div class="actions"><button type="button" class="primary" id="confirm-yes">Replace</button><button type="button" id="confirm-no">Keep mine</button></div>
 </dialog>
-<div class="toast" id="toast" hidden></div>
-<div class="sr" id="announce" aria-live="polite"></div>
 
 <script>var CFG = /*CONFIG*/;</script>
 <script>/*LIB*/</script>

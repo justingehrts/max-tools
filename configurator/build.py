@@ -15,14 +15,14 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(ROOT / 'tools'))
-import apps as apps_mod, registry
+import registry
 
 
 def build(pages_base, api, builds_url, demo=False):
     markets, problems = registry.load_markets(ROOT)
     if problems:
         raise SystemExit(f'markets.json has problems: {problems}')
-    cfg = {'pagesBase': pages_base, 'api': api, 'buildsUrl': builds_url, 'apps': apps_mod.load_apps(ROOT), 'demo': demo,
+    cfg = {'pagesBase': pages_base, 'api': api, 'buildsUrl': builds_url, 'homeUrl': pages_base.rstrip('/') + '/', 'demo': demo,
            'markets': sorted(({'id': m['id'], 'name': m['name'], 'stations': m.get('stations', [])} for m in markets.values()),
                              key=lambda m: m['name'])}
     safe = lambda s: s.replace('</', '<\\/')

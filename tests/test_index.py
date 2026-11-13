@@ -21,14 +21,17 @@ def build(md=None):
 
 
 class Index(unittest.TestCase):
-    def test_tabs_and_market_names_only(self):
+    def test_tabs_and_market_list(self):
+        import json
         page = (build('# Hi') / 'index.html').read_text()
-        self.assertEqual(len(re.findall(r'role="tab"', page)), 2)      # layer tabs only: this temp repo has no apps.json
-        summaries = re.findall(r'<summary>(.*?)</summary>', page)
-        self.assertEqual(len(summaries), 54)
-        self.assertIn('Columbus, OH', summaries)
-        self.assertFalse(any('WBNS' in s for s in summaries))           # no call letters in the list
-        self.assertEqual(len(set(re.findall(r'records/default/D\d_[A-Z]+\.kmz', page))), 28)
+        self.assertEqual(len(re.findall(r'role="tab"', page)), 3)       # flash flood, record dots, adding layers (no apps.json in this temp repo)
+        cfg = json.loads(re.search(r'var CFG = (\{.*?\});</script>', page, re.S).group(1))
+        names = [m['name'] for m in cfg['markets']]
+        self.assertEqual(len(names), 54); self.assertIn('Columbus, OH', names)
+        columbus = [m for m in cfg['markets'] if m['id'] == 'columbus-oh'][0]
+        self.assertIn('WBNS-TV', columbus['stations'])                  # searchable (the page never shows them in the list)
+        self.assertNotIn('/*', page.split('<script>')[1])               # every placeholder was filled
+        self.assertIn('id="picker"', page); self.assertIn('id="copy-all"', page)
 
     def test_help_rendered_once_for_both_pages_with_absolute_images(self):
         site = build('<!-- note -->\n## Changing dots\n\n1. Open Max\n\n![shot](images/shot.png)\n')
