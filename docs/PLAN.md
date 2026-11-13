@@ -124,6 +124,12 @@ with no software installed locally and an optional way to change how the layers 
 - Still to do: fuzzy matching of Justin's market names to dataset names (e.g. "Miami-Ft. Lauderdale, FL" was not found as typed),
   and the contact-sheet image (outline + kept/dropped pieces + box per market).
 
+## Configurator demo (Nov 13)
+Shareable click-through copy at `https://justingehrts.github.io/max-tools/demo/` (no login, nothing saved), built by the site workflow
+from the same source as the real page. Also a preview of what the real page will look like before it is uploaded. The demo e2e test
+proves it never calls the save service. The demo test also found a race on the real page (clicking a preset before the saved colors
+finished loading, which then overwrote it); the editor is now locked until they load. The real page needs a re-upload to get that fix.
+
 ## HostGator upload from GitHub (Nov 12)
 **Incident (Nov 12, ~01:29-02:00 UTC):** the first successful deploy overwrote the server's `api/.htaccess`, which held the password
 protection, so `/max/api/save.php` answered without a password. No save was made (configs.json unchanged, no commits). Causes: the file

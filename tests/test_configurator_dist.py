@@ -12,6 +12,14 @@ class Dist(unittest.TestCase):
         self.assertEqual(out.read_text(), (ROOT / 'configurator' / 'dist' / 'index.html').read_text(),
                          'configurator/dist/index.html is out of date: run python3 configurator/build.py and commit it')
 
+    def test_the_real_page_has_no_demo_code_and_the_demo_build_does(self):
+        real = (ROOT / 'configurator' / 'dist' / 'index.html').read_text()
+        self.assertNotIn('var DEMO', real); self.assertIn('"demo":false', real)
+        out = Path(tempfile.mkdtemp()) / 'demo.html'
+        subprocess.run([sys.executable, str(ROOT / 'configurator' / 'build.py'), '--demo', '--out', str(out)], check=True, capture_output=True)
+        demo = out.read_text()
+        self.assertIn('var DEMO', demo); self.assertIn('"demo":true', demo); self.assertIn('id="demo-banner"', demo)
+
     def test_only_allowed_requests(self):
         """The page talks to the Pages site and its own api/ only (docs/GUI.md)."""
         html = (ROOT / 'configurator' / 'dist' / 'index.html').read_text()

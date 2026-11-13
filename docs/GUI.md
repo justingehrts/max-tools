@@ -47,6 +47,11 @@ per market, shared by every station in it. Remember the choice in localStorage a
   (it comes from the repo, not from users). If the fetch fails, show "Help is on the public URL page" with a link.
 - (Parked Nov 3: the per-market icon editor. Stations restyle the dots in Max instead. See `parked/record-dot-icons/`.)
 
+**Demo (Nov 13):** `https://justingehrts.github.io/max-tools/demo/` is the same page with no login and no saving, safe to share. A banner says
+so; "saves" run in the page's memory only (`configurator/src/demo.js`, included only by `build.py --demo`) and vanish on reload; the
+page never calls the save service (tested). It is rebuilt by every site build, from the same source as the real page, so it also shows
+what the real page will look like before it is uploaded to HostGator.
+
 **App tabs (Nov 5):** after the layer tabs, one tab each for Astrographics, Graph Maker and Gridded Climo (the Streamlit apps under
 `justingehrts/*`). Each shows its tagline, an **Open <app>** button (new tab, `rel=noopener`) and a write-up: features, how to use it,
 screenshots. The list (id, name, address, tagline) is `content/apps.json`; the write-up is `content/app-<id>.md`, screenshots in

@@ -67,6 +67,8 @@ class Browser(unittest.TestCase):
 
         doc = tmp / 'docroot'; (doc / 'api').mkdir(parents=True)
         for f in ('save.php', 'lib.php'): shutil.copy(ROOT / 'configurator' / 'api' / f, doc / 'api' / f)
+        subprocess.run([sys.executable, str(ROOT / 'configurator' / 'build.py'), '--demo', '--pages-base', pages_base, '--out', str(doc / 'demo.html')],
+                       check=True, capture_output=True)
         subprocess.run([sys.executable, str(ROOT / 'configurator' / 'build.py'), '--pages-base', pages_base, '--out', str(doc / 'index.html')],
                        check=True, capture_output=True)
         (tmp / 'token').write_text('github_pat_TEST')
@@ -84,6 +86,12 @@ class Browser(unittest.TestCase):
                                 f'{pages_base}/__ctl', shots], capture_output=True, text=True, timeout=180)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             print(r.stdout)
+            commits_before = len(FakeGitHub.puts)
+            d = subprocess.run(['node', str(ROOT / 'configurator' / 'e2e_demo.js'), f'http://127.0.0.1:{port}/demo.html', shots],
+                               capture_output=True, text=True, timeout=120)
+            self.assertEqual(d.returncode, 0, d.stdout + d.stderr)
+            print(d.stdout)
+            self.assertEqual(len(FakeGitHub.puts), commits_before, 'the demo must never commit anything')
         finally:
             php.terminate(); gh.shutdown(); pages.shutdown()
 

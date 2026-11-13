@@ -111,6 +111,9 @@ jobs:
       - name: Write the URL index page
         run: python tools/build_index.py --site site --base "https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}"
 
+      - name: Build the click-through demo of the configurator (no login, nothing is saved)
+        run: python configurator/build.py --demo --out site/demo/index.html --pages-base "https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}"
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 

@@ -38,6 +38,8 @@
   .top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--line); }
   .top h1 { flex: 1; }
   .chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 4px 3px 12px; font-weight: 600; }
+  .demo-banner { padding: 8px 20px; background: #fff3c4; color: #5a4500; border-bottom: 1px solid #e0cf86; font-size: 14px; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .demo-banner { background: #4a3d10; color: #fbe9a6; border-color: #6b5a1c; } }
   .status { padding: 6px 20px; font-size: 13.5px; background: var(--ok-bg); border-bottom: 1px solid var(--line); }
   .status.bad { background: var(--warn-bg); color: var(--bad); font-weight: 600; }
 
@@ -85,6 +87,7 @@
   .seg label:has(input:focus-visible) { outline: 3px solid #7aa2ff; outline-offset: -3px; }
   .scope-ctl { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
   .lines-toggle { font-size: 13.5px; display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
+  [inert] { opacity: .55; }
   .presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; margin-bottom: 4px; }
   .presets button { text-align: left; padding: 6px 8px; min-height: 0; }
   .presets button[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
@@ -133,6 +136,7 @@
   <h1>Max layers</h1>
   <div class="chip" id="chip" hidden><span id="chip-name"></span><button class="small" id="change" type="button">Change market</button></div>
 </header>
+<div class="demo-banner" id="demo-banner" role="note" hidden><b>Demo.</b> Click anything you like. Nothing is saved or published, and "saved" colors disappear when you reload this page.</div>
 <div class="status" id="status" role="status">Checking when the layers were last built...</div>
 
 <div class="wrap">
@@ -215,6 +219,7 @@
 
 <script>var CFG = /*CONFIG*/;</script>
 <script>/*LIB*/</script>
+<script>/*DEMO*/</script>
 <script>/*APP*/</script>
 </body>
 </html>

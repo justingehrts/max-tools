@@ -55,6 +55,15 @@
     });
   }
 
+  // The save service. In the demo build (CFG.demo) it is replaced by DEMO (configurator/src/demo.js): no network, nothing kept.
+  function apiGet(market) { return CFG.demo ? DEMO.get(market) : getJSON(CFG.api + '?market=' + encodeURIComponent(market)); }
+  function apiPost(body) {
+    if (CFG.demo) return DEMO.post(body);
+    return fetch(CFG.api, { method: 'POST', credentials: 'same-origin', cache: 'no-store',
+                            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'configurator' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; }); });
+  }
+
   // ---------------------------------------------------------------- status strip
   function loadStatus() {
     var parts = [['ffg', 'FFG', BASE + '/ffg/status.json'], ['records', 'Record dots', BASE + '/records/status.json']];
@@ -178,7 +187,7 @@
     setEdit(LIB.STANDARD.slice());
     setState('Loading your saved colors...', '');
     var m = S.market;
-    getJSON(CFG.api + '?market=' + encodeURIComponent(m)).then(function (r) {
+    apiGet(m).then(function (r) {
       if (m !== S.market) return;
       if (r.status === 200 && r.body.ok) {
         S.saved = r.body.ffg ? r.body.ffg.colors : null; S.updatedUtc = r.body.updatedUtc; S.loaded = true;
@@ -239,11 +248,14 @@
       $('h-' + i).setAttribute('aria-invalid', errs[i] ? 'true' : 'false');
       if (errs[i] || $('e-' + i).getAttribute('data-server') !== 'y') $('e-' + i).textContent = errs[i] || '';
     });
+    // While the saved colors are still loading, the editor is locked: they arrive and replace whatever was clicked in the meantime.
+    var loading = !S.loaded && !S.blocked;
+    $('presets').inert = loading; $('rows').inert = loading;
     $('rows-err').textContent = errs.all || '';
     var dirty = isDirty(), valid = Object.keys(errs).length === 0;
     $('save').disabled = !dirty || !valid || S.saving || !!S.blocked || !S.loaded;
     $('discard').hidden = !dirty || S.saving;
-    $('standard').disabled = LIB.isStandard(S.edit) || S.saving;
+    $('standard').disabled = LIB.isStandard(S.edit) || S.saving || loading;
     var shown = valid ? S.edit : savedColors();
     function swatch(c) { return c === LIB.NONE ? ' class="hid"' : ' style="background:' + LIB.normHex(c) + '"'; }
     $('ramp').innerHTML = shown.map(function (c) { return '<span' + swatch(c) + '></span>'; }).join('');
@@ -284,9 +296,7 @@
   function doSave() {
     var m = S.market, body = LIB.savePayload(m, S.edit, S.updatedUtc);
     S.saving = true; setState('Saving...', ''); refresh();
-    fetch(CFG.api, { method: 'POST', credentials: 'same-origin', cache: 'no-store',
-                     headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'configurator' }, body: JSON.stringify(body) })
-      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; }); })
+    apiPost(body)
       .then(function (r) {
         S.saving = false;
         if (m !== S.market) return;
@@ -294,6 +304,7 @@
           S.saved = body.ffg ? body.ffg.colors : null; S.updatedUtc = r.body.updatedUtc; S.savedThisVisit = true;
           setEdit(savedColors().slice());
           if (!r.body.changed) setState('Nothing to save: these colors are already saved.', 'good');
+          else if (CFG.demo) setState('Demo: saved in this window only. On the real page the new colors would go live within a few minutes. Reloading clears it.', 'good');
           else setStateHtml('Saved. The new colors go live ' + esc(r.body.goesLive) + '. The URLs stay the same. ' +
                             '<a href="' + esc(CFG.buildsUrl) + '" target="_blank" rel="noopener">Build status</a>', 'good');
         } else if (r.status === 400 && r.body.errors) {
@@ -405,6 +416,7 @@
   }
 
   // ---------------------------------------------------------------- start
+  if (CFG.demo) { $('demo-banner').hidden = false; document.title = 'Max layers (demo)'; }
   buildRows(); buildDurations(); buildPresets();
   window.addEventListener('beforeunload', function (ev) { if (isDirty() && !S.saving) { ev.preventDefault(); ev.returnValue = ''; } });
   loadStatus(); setInterval(loadStatus, 5 * 60 * 1000);

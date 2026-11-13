@@ -7,7 +7,7 @@ Public data tools for WSI Max: NOAA/NWS data turned into KMZ layers that Max loa
 | `markets.json`, `configs.json` | The registry. `markets.json` = market names, TV call signs, map boxes (hand-edited). `configs.json` = one optional customization per market (written by the endpoint). Schemas in `schema/`. |
 | `tools/registry.py` | Shared loader/validator. A bad entry is skipped with a warning; it never stops the others. `python tools/registry.py` checks the files. |
 | `static/` | Published as-is: `lines/<market>.json` county/state lines for the preview (`tools/make_county_lines.py`). |
-| `configurator/` | The configurator: `src/` (page), `build.py` -> `dist/index.html` (upload to HostGator), `api/save.php` (save endpoint). |
+| `configurator/` | The configurator (also built as a login-free click-through demo at `/demo/`): `src/` (page), `build.py` -> `dist/index.html` (upload to HostGator), `api/save.php` (save endpoint). |
 | `content/` | Text you edit: help for Max (`record-dots-in-max.md`, `add-layer-in-max.md`), the web apps (`apps.json` + `app-<id>.md`) and `images/`. Shown on the public page and in the configurator. |
 | `records/` | Record dots: `FetchDailyRecords.ps1` (runs under `pwsh`), `stations.csv` (NOAA station list), `icons/`. |
 | `tools/records_status.py` | Checks the 28 shared record-dot KMZs and writes `records/status.json`. |
