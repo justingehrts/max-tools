@@ -39,6 +39,9 @@ a{color:var(--accent)}
 .open-app{display:inline-block;background:var(--accent);color:var(--panel);text-decoration:none;font-weight:600;padding:.45rem .9rem;border-radius:6px;margin:.25rem 0 .5rem}
 .open-app:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .tagline{margin:.1rem 0 .4rem}
+.setup{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:.6rem .9rem;margin:1rem 0 0}
+.setup p{margin:0;flex:1 1 18rem}
+.setup a.go{font-weight:600}
 .appdoc h2{margin:1rem 0 .25rem}.appdoc h3{font-size:1rem;margin:1.3rem 0 .3rem}.appdoc ul,.appdoc ol{padding-left:1.3rem}.appdoc li{margin:.2rem 0}
 .appdoc p img{display:block;max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;margin:.6rem 0 .3rem}
 .appdoc em{color:var(--muted);font-size:.9rem}
@@ -104,6 +107,11 @@ def main():
     docs = render_help(a.root, site, base)
     help_html = docs.get('record-dots-in-max', '')
     apps = apps_mod.load_apps(a.root)
+    try: configurator_url = json.loads((Path(a.root) / 'content' / 'site.json').read_text(encoding='utf-8')).get('configuratorUrl', '')
+    except (OSError, ValueError): configurator_url = ''
+    if not re.match(r'^https://[A-Za-z0-9.-]+(/[^\s"\'<>]*)?$', configurator_url or ''): configurator_url = ''        # only a plain https address is ever linked
+    setup = (f'<div class="setup"><p><b>Station setup:</b> to change your station\'s flash flood colors, use the private configurator. '
+             f'<b>A password is required.</b></p><a class="go" href="{e(configurator_url)}" target="_blank" rel="noopener">Open the configurator (password required)</a></div>') if configurator_url else ''
     static = Path(a.root) / 'static'          # files kept in the repo and published as-is (e.g. lines/ for the preview)
     if static.is_dir():
         shutil.copytree(static, site, dirs_exist_ok=True)
@@ -129,7 +137,7 @@ def main():
                        f'<div class="appdoc">{body}</div></div>')
     page = ('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<meta name="robots" content="noindex,nofollow"><title>Max tools</title><style>{CSS}</style><main>'
-            '<h1>Max tools</h1><p class="muted">Layer addresses for Max (add them as KML layers; they never change) and our web apps.</p>'
+            '<h1>Max tools</h1><p class="muted">Layer addresses for Max (add them as KML layers; they never change) and our web apps.</p>' + setup +
             '<div role="tablist" aria-label="Layers">'
             '<button role="tab" id="tab-ffg" data-hash="ffg" aria-controls="panel-ffg" aria-selected="true">Flash flood guidance</button>'
             '<button role="tab" id="tab-records" data-hash="record-dots" aria-controls="panel-records" aria-selected="false">Record dots</button>'

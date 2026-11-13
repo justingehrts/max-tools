@@ -47,6 +47,8 @@ per market, shared by every station in it. Remember the choice in localStorage a
   (it comes from the repo, not from users). If the fetch fails, show "Help is on the public URL page" with a link.
 - (Parked Nov 3: the per-market icon editor. Stations restyle the dots in Max instead. See `parked/record-dot-icons/`.)
 
+**Public page link (Nov 13):** the public page (`index.html`) shows a "Station setup" box under its heading with a button "Open the configurator (password required)" (address in `content/site.json`), so the two pages are hard to mix up.
+
 **Demo (Nov 13):** `https://justingehrts.github.io/max-tools/demo/` is the same page with no login and no saving, safe to share. A banner says
 so; "saves" run in the page's memory only (`configurator/src/demo.js`, included only by `build.py --demo`) and vanish on reload; the
 page never calls the save service (tested). It is rebuilt by every site build, from the same source as the real page, so it also shows

@@ -51,6 +51,26 @@ class Index(unittest.TestCase):
             self.assertTrue((site / 'help' / f'app-{aid}.html').is_file(), aid)
         self.assertTrue(any((site / 'help' / 'images').glob('astrographics-*.png')))
 
+    def test_link_to_the_private_configurator_says_a_password_is_required(self):
+        site = Path(tempfile.mkdtemp()) / 'site'; site.mkdir()
+        r = subprocess.run([sys.executable, str(ROOT / 'tools' / 'build_index.py'), '--site', str(site), '--root', str(ROOT),
+                            '--base', 'https://x.example/max-tools'], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        page = (site / 'index.html').read_text()
+        self.assertRegex(page, r'<a class="go" href="https://www\.justingehrts\.com/max/" target="_blank" rel="noopener">Open the configurator \(password required\)</a>')
+        self.assertIn('A password is required.', page)
+
+    def test_a_bad_configurator_address_is_not_linked(self):
+        import json
+        root = Path(tempfile.mkdtemp())
+        for f in ('markets.json', 'configs.json'): shutil.copy(ROOT / f, root)
+        shutil.copytree(ROOT / 'schema', root / 'schema'); (root / 'content').mkdir()
+        (root / 'content' / 'site.json').write_text(json.dumps({'configuratorUrl': 'javascript:alert(1)'}))
+        site = root / 'site'; site.mkdir()
+        subprocess.run([sys.executable, str(ROOT / 'tools' / 'build_index.py'), '--site', str(site), '--root', str(root), '--base', 'https://x.example/m'],
+                       check=True, capture_output=True)
+        self.assertNotIn('class="setup"', (site / 'index.html').read_text())
+
     def test_no_help_file_no_help_section(self):
         site = build(None)
         self.assertNotIn('class="help"', (site / 'index.html').read_text())
