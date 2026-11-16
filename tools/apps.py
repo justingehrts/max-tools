@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 ID_RE = re.compile(r'^[a-z0-9][a-z0-9-]{0,39}$')
-RESERVED = {'ffg', 'record-dots', 'add-to-max'}      # tab addresses already used by the layer tabs
+RESERVED = {'ffg', 'record-dots', 'river-flood-dots'}      # tab addresses already used by the layer tabs
 
 
 def load_apps(root=ROOT):

@@ -5,7 +5,7 @@
 
 Outputs:
   site/index.html                         the everyday page for stations: pick a market (remembered), its flash flood addresses with Copy
-                                          buttons, record dots, adding layers to Max, and one tab per web app. Source: public/.
+                                          buttons, record dots, river flood dots, and one tab per web app. Source: public/.
   site/help/<name>.html                   every content/<name>.md rendered (the configurator shows them too)
   site/help/images/...                    copied from content/images/
 
@@ -17,6 +17,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import apps as apps_mod, expected, registry
 
+RIVER_BASE = 'https://justingehrts.github.io/river-flood-dots'      # the river-flood-dots repo's own Pages site
 ROOT = Path(__file__).resolve().parent.parent      # where the page's own source lives (public/, configurator/src/lib.js)
 
 
@@ -61,11 +62,17 @@ def main():
     # Tabs: the first two are filled in by public/app.js (they depend on the chosen market); the rest are written here.
     def tab(tid, label, hash_):
         return f'<button role="tab" id="tab-{tid}" data-hash="{hash_}" aria-controls="panel-{tid}" aria-selected="false">{e(label)}</button>'
-    tabs = tab('ffg', 'Flash flood guidance', 'ffg') + tab('records', 'Record dots', 'record-dots') + tab('add-to-max', 'Adding layers to Max', 'add-to-max')
+    tabs = tab('ffg', 'Flash flood guidance', 'ffg') + tab('records', 'Record dots', 'record-dots') + tab('river', 'River flood dots', 'river-flood-dots')
     rec_help = docs.get('record-dots-in-max', '')
     rec_help_html = f'<section class="help mdoc">{rec_help}</section>' if rec_help else ''
-    add_help = docs.get('add-layer-in-max') or '<h2>Adding layers to Max</h2><p class="muted">Instructions coming soon.</p>'
-    panels = f'<div role="tabpanel" id="panel-add-to-max" aria-labelledby="tab-add-to-max" hidden><div class="mdoc">{add_help}</div></div>'
+    river_url = f'{RIVER_BASE}/observed_rivers.kmz'
+    river_help = docs.get('river-flood-dots-in-max', '')
+    panels = (f'<div role="tabpanel" id="panel-river" aria-labelledby="tab-river" hidden><h2>River flood dots</h2>'
+              f'<p class="muted">River gauges as dots colored by the NWS observed flood category, for the whole country. One address for everyone; it never changes and updates twice an hour.</p>'
+              f'<table class="urls"><tr><th>All gauges</th><td class="url">{e(river_url)}</td><td><button type="button" class="small" data-copy="{e(river_url)}" data-what="the river flood dots link" aria-label="Copy the river flood dots address">Copy</button></td></tr></table>'
+              f'<p class="muted" id="river-status" role="status">Checking when the river dots were last updated...</p>'
+              f'<p class="muted">Purple = major, red = moderate, orange = minor, yellow = action, green = no flooding. Gauges with no flood stages, stale observations or out of service are hidden.</p>'
+              f'<div class="mdoc">{river_help}</div></div>')
     for ap_ in apps:
         i = ap_['id']
         tabs += tab(i, ap_['name'], i)
@@ -75,7 +82,7 @@ def main():
                    f'<a class="open-app" href="{e(ap_["url"])}" target="_blank" rel="noopener">Open {e(ap_["name"])}</a>'
                    f'<div class="appdoc">{body}</div></div>')
 
-    cfg = {'base': base, 'configuratorUrl': configurator_url,
+    cfg = {'base': base, 'riverBase': RIVER_BASE, 'configuratorUrl': configurator_url,
            'markets': sorted(({'id': m['id'], 'name': m['name'], 'stations': m.get('stations', [])} for m in markets.values()), key=lambda m: m['name'])}
     safe = lambda s: s.replace('</', '<\\/')
     page = (ROOT / 'public' / 'template.html').read_text(encoding='utf-8')

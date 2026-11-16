@@ -51,6 +51,18 @@
     });
   }
 
+  // river flood dots: its own repo and status file (updated_utc is "YYYY-MM-DD HH:MM UTC")
+  (function () {
+    var el = $('river-status'); if (!el) return;
+    fetch(CFG.riverBase + '/status.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }).then(function (st) {
+      var m = st && /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}) UTC$/.exec(st.updated_utc || '');
+      if (!m) { el.textContent = "Can't reach the river dots status page right now."; return; }
+      var iso = m[1] + 'T' + m[2] + ':00Z', stale = LIB.isStale(iso);
+      el.textContent = 'Updated ' + fmtTime(iso) + (stale ? ' (older than ' + LIB.STALE_HOURS + ' hours)' : '') + ' · ' + (st.gauges_shown || 0) + ' gauges shown';
+      el.classList.toggle('bad', stale);
+    });
+  })();
+
   // ---------------------------------------------------------------- tabs
   var tabs = [].slice.call(document.querySelectorAll('[role=tab]'));
   function tabFromHash() { return tabs.filter(function (t) { return '#' + t.getAttribute('data-hash') === location.hash; })[0]; }

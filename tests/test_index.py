@@ -24,7 +24,7 @@ class Index(unittest.TestCase):
     def test_tabs_and_market_list(self):
         import json
         page = (build('# Hi') / 'index.html').read_text()
-        self.assertEqual(len(re.findall(r'role="tab"', page)), 3)       # flash flood, record dots, adding layers (no apps.json in this temp repo)
+        self.assertEqual(len(re.findall(r'role="tab"', page)), 3)       # flash flood, record dots, river dots (no apps.json in this temp repo)
         cfg = json.loads(re.search(r'var CFG = (\{.*?\});</script>', page, re.S).group(1))
         names = [m['name'] for m in cfg['markets']]
         self.assertEqual(len(names), 54); self.assertIn('Columbus, OH', names)

@@ -125,7 +125,7 @@ with no software installed locally and an optional way to change how the layers 
   and the contact-sheet image (outline + kept/dropped pieces + box per market).
 
 ## Two pages (Nov 13, Justin)
-Public page = everyday home (pick market, Copy buttons, record dots, adding layers to Max, apps); private page = customizing FFG colors
+Public page = everyday home (pick market, Copy buttons, record dots, river flood dots, apps); private page = customizing FFG colors
 only (renamed "Customize flash flood colors"), with a link back carrying `?market=`. One copy of each thing, no login for daily use.
 Details: docs/GUI.md "Two pages".
 

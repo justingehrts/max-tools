@@ -8,7 +8,7 @@ tweaks), mostly on desktop, sometimes on a phone. Their job: **get my URLs** (de
 |---|---|---|
 | Address | `https://justingehrts.github.io/max-tools/` | `https://www.justingehrts.com/max/` |
 | For | everyday use by every station, no login | changing a market's FFG colors |
-| Has | pick your market (remembered on the device, or sent as `?market=`), its 3 flash flood addresses with Copy, record dots (28 addresses, Copy all) + help, "Adding layers to Max", one tab per web app (link + write-up + screenshots), build status | market picker, preview with county lines, presets, 7-color editor with hide-band, Save, confirm/conflict handling, build status, a link back to the public page (`?market=` carries the market) |
+| Has | pick your market (remembered on the device, or sent as `?market=`), its 3 flash flood addresses with Copy, record dots (28 addresses, Copy all) + help, a "River flood dots" tab (the river-flood-dots repo's KMZ with Copy and status), one tab per web app (link + write-up + screenshots), build status | market picker, preview with county lines, presets, 7-color editor with hide-band, Save, confirm/conflict handling, build status, a link back to the public page (`?market=` carries the market) |
 | Source | `public/` (template + app.js), `tools/build_index.py`, `content/*` | `configurator/src/`, uploaded to HostGator by the approval-gated workflow |
 
 The public page links to the private one ("Station setup ... A password is required"). The private page has no address lists, record dots,
@@ -76,7 +76,7 @@ opened, never fetched, so they are not requests the page makes.
 **Status strip (all pages):** "Last build: FFG 12:15 PM, Record dots 12:21 PM" read from each pipeline's `status.json`.
 Turns red if older than 3 hours or if the fetch fails ("Can't reach the status page").
 
-**Help:** third tab "Adding layers to Max", from `content/add-layer-in-max.md` (Justin writes it), fetched like the record-dots help.
+**Help:** the River flood dots tab can show `content/river-flood-dots-in-max.md` if Justin writes it. (The "Adding layers to Max" tab was dropped.)
 
 **Built (Nov 4):** `configurator/src/` (template, `lib.js`, `app.js`), `configurator/build.py` -> `configurator/dist/index.html`
 (markets embedded; upload as `public_html/max/index.html`). Requests the page makes: `api/save.php` (same origin), and from the Pages

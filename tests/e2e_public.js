@@ -8,6 +8,9 @@ const [PAGE, SHOTS] = process.argv.slice(2);
   const ctx = await browser.newContext({ viewport: { width: 1100, height: 900 } });
   await ctx.grantPermissions(['clipboard-read', 'clipboard-write']);
   const p = await ctx.newPage(); const errors = []; p.on('pageerror', e => errors.push(e.message)); p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+  // the river-flood-dots site is another repo (and may not be published yet): answer its status file here
+  await ctx.route('https://justingehrts.github.io/river-flood-dots/status.json', r => r.fulfill({ status: 200, contentType: 'application/json',
+    headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ updated_utc: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC', gauges_shown: 6860 }) }));
   await p.goto(PAGE);
   // first visit: the market picker, no login anywhere, the setup box links to the private configurator
   await p.waitForSelector('#picker:not([hidden])');
@@ -37,8 +40,13 @@ const [PAGE, SHOTS] = process.argv.slice(2);
   assert.strictEqual(await p.$$eval('#rec-urls button[data-copy]', b => b.length), 28);
   await p.click('#copy-all'); assert.strictEqual((await p.evaluate(() => navigator.clipboard.readText())).split('\n').length, 28);
   assert.match(await p.textContent('#panel-records'), /Changing how the dots look in Max/);
-  // adding layers to Max + every app tab, with a link out and loaded screenshots
-  await p.click('#tab-add-to-max'); assert.match(await p.textContent('#panel-add-to-max'), /Adding a layer in Max/);
+  // river flood dots: the address is copyable
+  await p.click('#tab-river');
+  assert.match(await p.textContent('#panel-river'), /river-flood-dots\/observed_rivers\.kmz/);
+  await p.waitForFunction(() => /6860 gauges/.test(document.getElementById('river-status').textContent));
+  assert.ok(!(await p.getAttribute('#river-status', 'class') || '').includes('bad'));
+  await p.click('#panel-river button[data-copy]'); assert.strictEqual(await p.evaluate(() => navigator.clipboard.readText()), 'https://justingehrts.github.io/river-flood-dots/observed_rivers.kmz');
+  // every app tab, with a link out and loaded screenshots
   for (const [id, url] of [['astrographics', 'https://astrographics.streamlit.app/'], ['graph-maker', 'https://maxgraphmaker.streamlit.app/'], ['gridded-climo', 'https://gridded-climo.streamlit.app/']]) {
     await p.click('#tab-' + id);
     assert.strictEqual(await p.getAttribute('#panel-' + id + ' .open-app', 'href'), url);
@@ -59,7 +67,7 @@ const [PAGE, SHOTS] = process.argv.slice(2);
   // phone: no sideways scrolling on any tab
   const phone = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const q = await phone.newPage(); await q.goto(PAGE); await q.fill('#mq', 'houston'); await q.click('#mlist button');
-  for (const t of ['ffg', 'records', 'add-to-max', 'astrographics', 'graph-maker', 'gridded-climo']) {
+  for (const t of ['ffg', 'records', 'river', 'astrographics', 'graph-maker', 'gridded-climo']) {
     await q.click('#tab-' + t); const w = await q.evaluate(() => document.documentElement.scrollWidth); assert.ok(w <= 390, t + ' scrollWidth ' + w);
   }
   await q.click('#tab-ffg'); await q.screenshot({ path: SHOTS + '/public-phone.png', fullPage: true });
