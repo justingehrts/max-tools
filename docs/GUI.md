@@ -139,3 +139,5 @@ Editing map boxes (market-wide, maintained by Justin), editable thresholds, user
 Outdated after: FFG 3 h, record dots 12 h, river dots 2 h (`STALE_AFTER` in `configurator/src/lib.js`). The FFG line also shows the
 rainfall data's own time (from the WPC file name) and turns red if that is over 9 h old, so a stalled WPC feed is caught even though we keep rebuilding.
 The time is from each layer's `status.json`, which only a successful run writes (a failed run is not deployed over it).
+The FFG line also names any markets whose files failed to render in the last build ("N markets are using older files ...", from `failed` in
+`ffg/status.json`): their last good files are still served, so the box turns light red but the headline time stays green.

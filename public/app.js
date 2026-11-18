@@ -37,7 +37,7 @@
   }
   function fetchJson(url) { return fetch(url, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
   /** iso = time of the last successful run (or null if the status page could not be read); limit = hours before it counts as outdated; extra = optional second line; forceBad = outdated for another reason */
-  function showFresh(id, iso, limit, extra, forceBad) {
+  function showFresh(id, iso, limit, extra, forceBad, warn) {
     var el = $(id); if (!el) return;
     var h = iso ? LIB.hoursOld(iso) : Infinity, bad = forceBad || !(h <= limit);
     el.textContent = '';
@@ -46,14 +46,27 @@
     else if (bad) main.textContent = '⚠️ Warning: Outdated data. Last successful run: ' + fmtTime(iso) + ' (' + LIB.agoText(h) + ')';
     else { var dot = document.createElement('span'); dot.className = 'dot'; dot.setAttribute('aria-hidden', 'true'); el.appendChild(dot); main.textContent = 'Updated ' + fmtTime(iso) + ' (' + LIB.agoText(h) + ')'; }
     el.appendChild(main);
-    if (extra) { var s = document.createElement('span'); s.className = 'sub'; s.textContent = extra; el.appendChild(s); }
+    [].concat(extra || []).forEach(function (line) { var s = document.createElement('span'); s.className = 'sub'; s.textContent = line; el.appendChild(s); });
     el.classList.toggle('bad', bad);
+    el.classList.toggle('warn', !bad && !!warn);
+  }
+  /** Names of the markets whose files failed to render in the last build (their last good files are still being served). */
+  function olderMarkets(failed) {
+    var names = {}, out = [];
+    CFG.markets.forEach(function (m) { names[m.id] = m.name; });
+    (Array.isArray(failed) ? failed : []).forEach(function (f) {
+      var m = /^markets\/([a-z0-9-]+)\//.exec(f && f.file || ''), n = m ? (names[m[1]] || m[1]) : 'Ohio (original addresses)';
+      if (out.indexOf(n) < 0) out.push(n);
+    });
+    return out.sort();
   }
   function loadStatus() {
     fetchJson(BASE + '/ffg/status.json').then(function (st) {
       if (!st) return showFresh('fresh-ffg', null, 0);
       var dt = LIB.ffgDataTime(st.grib), extra = dt ? 'Rainfall data from ' + (st.source || '').replace(/\s*\S*$/, '').trim() + ' valid ' + fmtTime(dt) + ' (' + LIB.agoText(LIB.hoursOld(dt)) + ')' : '';
-      showFresh('fresh-ffg', st.generatedUtc, LIB.STALE_AFTER.ffg, extra, !!dt && LIB.hoursOld(dt) > LIB.FFG_DATA_STALE_HOURS);
+      var lines = extra ? [extra] : [], older = olderMarkets(st.failed);
+      if (older.length) lines.push('\u26a0\ufe0f ' + older.length + (older.length === 1 ? ' market is' : ' markets are') + ' using older files because the newest build failed for them: ' + older.join('; ') + '.');
+      showFresh('fresh-ffg', st.generatedUtc, LIB.STALE_AFTER.ffg, lines, !!dt && LIB.hoursOld(dt) > LIB.FFG_DATA_STALE_HOURS, older.length > 0);
     });
     fetchJson(BASE + '/records/status.json').then(function (st) { showFresh('fresh-records', st && st.generatedUtc, LIB.STALE_AFTER.records); });
     // river flood dots: its own repo and status file (updated_utc is "YYYY-MM-DD HH:MM UTC")
