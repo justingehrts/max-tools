@@ -22,8 +22,10 @@ button.link{border:none;background:none;color:var(--accent);text-decoration:unde
 input[type=search]{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--field);border-radius:6px;padding:7px 10px;min-height:36px;width:100%;margin:.6rem 0}
 .setup{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:.6rem .9rem;margin:1rem 0 0}
 .setup p{margin:0;flex:1 1 18rem}.setup a.go{font-weight:600}
-.status{margin-top:1rem;padding:6px 12px;font-size:.85rem;background:var(--ok-bg);border:1px solid var(--line);border-radius:6px}
-.status.bad{background:var(--warn-bg);color:var(--bad);font-weight:600}
+.fresh{margin:.2rem 0 1rem;padding:6px 12px;font-size:.9rem;background:var(--ok-bg);border:1px solid var(--line);border-radius:6px}
+.fresh.bad{background:var(--warn-bg);color:var(--bad);font-weight:600}
+.fresh .dot{display:inline-block;width:.7em;height:.7em;border-radius:50%;background:#2e9e4f;margin-right:.5em}
+.fresh .sub{display:block;font-weight:400;font-size:.85rem;color:var(--muted)}
 [role=tablist]{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:1.25rem;border-bottom:1px solid var(--line)}
 [role=tab]{font:inherit;color:var(--ink);background:var(--tab);border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;padding:.5rem 1rem;cursor:pointer;margin-bottom:-1px}
 [role=tab][aria-selected=true]{background:var(--panel);font-weight:600}
@@ -53,10 +55,10 @@ table.urls td.url{width:100%}
 <h1>Max tools</h1>
 <p class="muted">Layer addresses for Max (add them as KML layers; they never change) and our web apps.</p>
 <!--SETUP-->
-<div class="status" id="status" role="status">Checking when the layers were last built...</div>
 <div role="tablist" aria-label="Max tools"><!--TABS--></div>
 
 <div role="tabpanel" id="panel-ffg" aria-labelledby="tab-ffg">
+  <div class="fresh" id="fresh-ffg" role="status">Checking when this layer was last updated...</div>
   <div id="picker" hidden>
     <h2>Which market are you in?</h2>
     <p class="muted">Every station in a market shares the same flash flood layers. Pick yours once; this device remembers it.</p>
@@ -76,6 +78,7 @@ table.urls td.url{width:100%}
 </div>
 
 <div role="tabpanel" id="panel-records" aria-labelledby="tab-records" hidden>
+  <div class="fresh" id="fresh-records" role="status">Checking when this layer was last updated...</div>
   <h2>Record dots</h2>
   <p class="muted">The same 28 files for every station. Day 1 is today.</p>
   <p class="url" id="rec-pattern"></p>

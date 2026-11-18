@@ -43,8 +43,8 @@ const [PAGE, SHOTS] = process.argv.slice(2);
   // river flood dots: the address is copyable
   await p.click('#tab-river');
   assert.match(await p.textContent('#panel-river'), /river-flood-dots\/observed_rivers\.kmz/);
-  await p.waitForFunction(() => /6860 gauges/.test(document.getElementById('river-status').textContent));
-  assert.ok(!(await p.getAttribute('#river-status', 'class') || '').includes('bad'));
+  await p.waitForFunction(() => /6860 gauges/.test(document.getElementById('fresh-river').textContent));
+  assert.ok(!(await p.getAttribute('#fresh-river', 'class') || '').includes('bad'));
   await p.click('#panel-river button[data-copy]'); assert.strictEqual(await p.evaluate(() => navigator.clipboard.readText()), 'https://justingehrts.github.io/river-flood-dots/observed_rivers.kmz');
   // every app tab, with a link out and loaded screenshots
   for (const [id, url] of [['astrographics', 'https://astrographics.streamlit.app/'], ['graph-maker', 'https://maxgraphmaker.streamlit.app/'], ['gridded-climo', 'https://gridded-climo.streamlit.app/']]) {
@@ -61,7 +61,17 @@ const [PAGE, SHOTS] = process.argv.slice(2);
   const l = await ctx.newPage(); await l.goto(PAGE + '?market=denver-co');
   assert.match(await l.textContent('#ffg-title'), /Denver/);
   // status strip is fresh, and nothing contacted a login
-  assert.ok(!(await p.getAttribute('#status', 'class')).includes('bad'), await p.textContent('#status'));
+  for (const id of ['ffg', 'records']) assert.ok(!(await p.getAttribute('#fresh-' + id, 'class')).includes('bad'), await p.textContent('#fresh-' + id));
+  // outdated data: a river status 3 hours old is flagged (limit 2 h) with the last successful run; one 100 minutes old is not
+  const old = await ctx.newPage();
+  const riverAt = min => r => r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' },
+    body: JSON.stringify({ updated_utc: new Date(Date.now() - min * 60000).toISOString().slice(0, 16).replace('T', ' ') + ' UTC', gauges_shown: 5 }) });
+  await old.route('https://justingehrts.github.io/river-flood-dots/status.json', riverAt(180)); await old.goto(PAGE + '#river-flood-dots');
+  await old.waitForFunction(() => /Outdated/.test(document.getElementById('fresh-river').textContent));
+  assert.match(await old.textContent('#fresh-river'), /Warning: Outdated data\. Last successful run: .* \(3 hours ago\)/);
+  assert.ok((await old.getAttribute('#fresh-river', 'class')).includes('bad'));
+  await old.unroute('https://justingehrts.github.io/river-flood-dots/status.json'); await old.route('https://justingehrts.github.io/river-flood-dots/status.json', riverAt(100)); await old.reload();
+  await old.waitForFunction(() => /Updated/.test(document.getElementById('fresh-river').textContent));
   // a stranger's invalid ?market= is ignored
   const bad = await ctx.newPage(); await bad.goto(PAGE + '?market=%3Cscript%3E'); await bad.waitForSelector('#chosen:not([hidden])');   // falls back to the remembered market
   // phone: no sideways scrolling on any tab

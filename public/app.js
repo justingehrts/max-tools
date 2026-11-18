@@ -29,39 +29,39 @@
   });
   $('copy-all').addEventListener('click', function () { copy(LIB.allRecordUrls(BASE).join('\n'), 'all 28 links'); });
 
-  // ---------------------------------------------------------------- status strip
+  // ---------------------------------------------------------------- freshness of each layer (one line at the top of its tab)
   function fmtTime(iso) {
     var d = new Date(iso); if (isNaN(d)) return 'unknown';
     var t = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     return d.toDateString() === new Date().toDateString() ? t : d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ', ' + t;
   }
+  function fetchJson(url) { return fetch(url, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
+  /** iso = time of the last successful run (or null if the status page could not be read); limit = hours before it counts as outdated; extra = optional second line; forceBad = outdated for another reason */
+  function showFresh(id, iso, limit, extra, forceBad) {
+    var el = $(id); if (!el) return;
+    var h = iso ? LIB.hoursOld(iso) : Infinity, bad = forceBad || !(h <= limit);
+    el.textContent = '';
+    var main = document.createElement('span');
+    if (!iso) main.textContent = "⚠️ Warning: can't read the status page, so it is unknown whether this data is current.";
+    else if (bad) main.textContent = '⚠️ Warning: Outdated data. Last successful run: ' + fmtTime(iso) + ' (' + LIB.agoText(h) + ')';
+    else { var dot = document.createElement('span'); dot.className = 'dot'; dot.setAttribute('aria-hidden', 'true'); el.appendChild(dot); main.textContent = 'Updated ' + fmtTime(iso) + ' (' + LIB.agoText(h) + ')'; }
+    el.appendChild(main);
+    if (extra) { var s = document.createElement('span'); s.className = 'sub'; s.textContent = extra; el.appendChild(s); }
+    el.classList.toggle('bad', bad);
+  }
   function loadStatus() {
-    var parts = [['FFG', BASE + '/ffg/status.json'], ['Record dots', BASE + '/records/status.json']];
-    Promise.all(parts.map(function (p) {
-      return fetch(p[1], { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
-    })).then(function (res) {
-      var bad = false, txt = [];
-      res.forEach(function (st, i) {
-        if (!st) { bad = true; txt.push(parts[i][0] + ": can't reach the status page"); return; }
-        var stale = LIB.isStale(st.generatedUtc); bad = bad || stale;
-        txt.push(parts[i][0] + ' ' + fmtTime(st.generatedUtc) + (stale ? ' (older than ' + LIB.STALE_HOURS + ' hours)' : ''));
-      });
-      $('status').textContent = 'Last build: ' + txt.join(' · ');
-      $('status').classList.toggle('bad', bad);
+    fetchJson(BASE + '/ffg/status.json').then(function (st) {
+      if (!st) return showFresh('fresh-ffg', null, 0);
+      var dt = LIB.ffgDataTime(st.grib), extra = dt ? 'Rainfall data from ' + (st.source || '').replace(/\s*\S*$/, '').trim() + ' valid ' + fmtTime(dt) + ' (' + LIB.agoText(LIB.hoursOld(dt)) + ')' : '';
+      showFresh('fresh-ffg', st.generatedUtc, LIB.STALE_AFTER.ffg, extra, !!dt && LIB.hoursOld(dt) > LIB.FFG_DATA_STALE_HOURS);
+    });
+    fetchJson(BASE + '/records/status.json').then(function (st) { showFresh('fresh-records', st && st.generatedUtc, LIB.STALE_AFTER.records); });
+    // river flood dots: its own repo and status file (updated_utc is "YYYY-MM-DD HH:MM UTC")
+    fetchJson(CFG.riverBase + '/status.json').then(function (st) {
+      var m = st && /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}) UTC$/.exec(st.updated_utc || '');
+      showFresh('fresh-river', m ? m[1] + 'T' + m[2] + ':00Z' : null, LIB.STALE_AFTER.river, m ? (st.gauges_shown || 0) + ' gauges shown' : '');
     });
   }
-
-  // river flood dots: its own repo and status file (updated_utc is "YYYY-MM-DD HH:MM UTC")
-  (function () {
-    var el = $('river-status'); if (!el) return;
-    fetch(CFG.riverBase + '/status.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }).then(function (st) {
-      var m = st && /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}) UTC$/.exec(st.updated_utc || '');
-      if (!m) { el.textContent = "Can't reach the river dots status page right now."; return; }
-      var iso = m[1] + 'T' + m[2] + ':00Z', stale = LIB.isStale(iso);
-      el.textContent = 'Updated ' + fmtTime(iso) + (stale ? ' (older than ' + LIB.STALE_HOURS + ' hours)' : '') + ' · ' + (st.gauges_shown || 0) + ' gauges shown';
-      el.classList.toggle('bad', stale);
-    });
-  })();
 
   // ---------------------------------------------------------------- tabs
   var tabs = [].slice.call(document.querySelectorAll('[role=tab]'));

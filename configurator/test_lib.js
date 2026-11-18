@@ -62,6 +62,9 @@ t('staleness', function () {
   assert.strictEqual(L.isStale('2026-11-04T10:00:00Z', now), false);
   assert.strictEqual(L.isStale('2026-11-04T08:30:00Z', now), true);
   assert.strictEqual(L.isStale('garbage', now), true);
+  assert.strictEqual(L.agoText(0.5), '30 min ago'); assert.strictEqual(L.agoText(1), '1 hour ago'); assert.strictEqual(L.agoText(5.2), '5 hours ago'); assert.strictEqual(L.agoText(60), '3 days ago');
+  assert.strictEqual(L.ffgDataTime('5kmffg_2026111723.g2'), '2026-11-17T23:00:00Z'); assert.strictEqual(L.ffgDataTime('latest_ffg.grib2'), null);
+  assert.deepStrictEqual(L.STALE_AFTER, { ffg: 3, records: 12, river: 2 });
 });
 t('recolor', function () {
   var bins = new Uint8ClampedArray([0, 0, 0, 255, 6, 6, 6, 255, 255, 255, 255, 255, 3, 3, 3, 0]);

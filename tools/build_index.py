@@ -67,10 +67,9 @@ def main():
     rec_help_html = f'<section class="help mdoc">{rec_help}</section>' if rec_help else ''
     river_url = f'{RIVER_BASE}/observed_rivers.kmz'
     river_help = docs.get('river-flood-dots-in-max', '')
-    panels = (f'<div role="tabpanel" id="panel-river" aria-labelledby="tab-river" hidden><h2>River flood dots</h2>'
+    panels = (f'<div role="tabpanel" id="panel-river" aria-labelledby="tab-river" hidden><div class="fresh" id="fresh-river" role="status">Checking when this layer was last updated...</div><h2>River flood dots</h2>'
               f'<p class="muted">River gauges as dots colored by the NWS observed flood category, for the whole country. One address for everyone; it never changes and updates twice an hour.</p>'
               f'<table class="urls"><tr><th>All gauges</th><td class="url">{e(river_url)}</td><td><button type="button" class="small" data-copy="{e(river_url)}" data-what="the river flood dots link" aria-label="Copy the river flood dots address">Copy</button></td></tr></table>'
-              f'<p class="muted" id="river-status" role="status">Checking when the river dots were last updated...</p>'
               f'<p class="muted">Purple = major, red = moderate, orange = minor, yellow = action, green = no flooding. Gauges with no flood stages, stale observations or out of service are hidden.</p>'
               f'<div class="mdoc">{river_help}</div></div>')
     for ap_ in apps:

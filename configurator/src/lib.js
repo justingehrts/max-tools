@@ -95,6 +95,21 @@ var LIB = (function () {
     return isNaN(t) ? Infinity : ((nowMs === undefined ? Date.now() : nowMs) - t) / 3600000;
   }
   function isStale(isoUtc, nowMs) { return !(hoursOld(isoUtc, nowMs) <= STALE_HOURS); }
+  // The public page flags each layer as outdated after its own number of hours.
+  var STALE_AFTER = { ffg: 3, records: 12, river: 2 };
+  var FFG_DATA_STALE_HOURS = 9;        // the source file itself (WPC / IEM) is this old: the source has stalled even though we keep rebuilding
+  /** "32 min ago", "5 hours ago", "2 days ago" */
+  function agoText(hours) {
+    if (!(hours >= 0)) return '';
+    if (hours < 1) { var m = Math.max(1, Math.round(hours * 60)); return m + ' min ago'; }
+    if (hours < 48) { var h = Math.round(hours); return h + (h === 1 ? ' hour ago' : ' hours ago'); }
+    return Math.round(hours / 24) + ' days ago';
+  }
+  /** The data time inside a WPC file name such as "WPC hourly 5kmffg_2026111723.g2" -> "2026-11-17T23:00:00Z", or null. */
+  function ffgDataTime(grib) {
+    var m = /_(\d{4})(\d{2})(\d{2})(\d{2})\D/.exec(String(grib || ''));
+    return m ? m[1] + '-' + m[2] + '-' + m[3] + 'T' + m[4] + ':00:00Z' : null;
+  }
 
   /**
    * Recolor a bin map. bins: RGBA bytes of the grayscale bin PNG (R = band 0..6, 255 = none).
@@ -121,7 +136,7 @@ var LIB = (function () {
   /** The preset whose colors equal these, or null. */
   function matchPreset(colors) { for (var i = 0; i < PRESETS.length; i++) if (sameColors(colors, PRESETS[i].colors)) return PRESETS[i]; return null; }
 
-  return { STANDARD: STANDARD, NONE: NONE, normColor: normColor, PRESETS: PRESETS, matchPreset: matchPreset, BOUNDS: BOUNDS, HOURS: HOURS, TYPES: TYPES, DAYS: DAYS, STALE_HOURS: STALE_HOURS,
+  return { STANDARD: STANDARD, NONE: NONE, normColor: normColor, PRESETS: PRESETS, matchPreset: matchPreset, BOUNDS: BOUNDS, HOURS: HOURS, TYPES: TYPES, DAYS: DAYS, STALE_HOURS: STALE_HOURS, STALE_AFTER: STALE_AFTER, FFG_DATA_STALE_HOURS: FFG_DATA_STALE_HOURS, agoText: agoText, ffgDataTime: ffgDataTime,
            bandLabel: bandLabel, normHex: normHex, sameColors: sameColors, isStandard: isStandard, savePayload: savePayload,
            colorErrors: colorErrors, serverErrors: serverErrors, ffgUrls: ffgUrls, recordUrl: recordUrl,
            allRecordUrls: allRecordUrls, hoursOld: hoursOld, isStale: isStale, recolor: recolor, filterMarkets: filterMarkets };

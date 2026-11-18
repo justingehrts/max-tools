@@ -133,3 +133,9 @@ tab keyboard handling), `src/template.html` CSS tokens and scope panel. **Drop**
 
 ## Out of scope for v1
 Editing map boxes (market-wide, maintained by Justin), editable thresholds, user accounts, per-station FFG durations.
+
+**Freshness lines (public page, Nov 18):** the FFG, Record dots and River flood dots tabs each start with one line: a green dot and
+"Updated 6:45 PM (32 min ago)", or "Warning: Outdated data. Last successful run: Nov 16, 6:45 PM (2 days ago)" on a red background.
+Outdated after: FFG 3 h, record dots 12 h, river dots 2 h (`STALE_AFTER` in `configurator/src/lib.js`). The FFG line also shows the
+rainfall data's own time (from the WPC file name) and turns red if that is over 9 h old, so a stalled WPC feed is caught even though we keep rebuilding.
+The time is from each layer's `status.json`, which only a successful run writes (a failed run is not deployed over it).
