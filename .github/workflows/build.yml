@@ -23,6 +23,9 @@ on:
       - 'configs.json'
       - 'markets.json'
       - 'content/**'
+      - 'public/**'                  # the public page's own source
+      - 'configurator/src/**'        # the demo and the public page's shared lib.js are built from these
+      - 'static/**'
       - '.github/workflows/build.yml'
 
 permissions:
