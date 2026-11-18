@@ -73,9 +73,10 @@ const [PAGE, SHOTS] = process.argv.slice(2);
   await old.unroute('https://justingehrts.github.io/river-flood-dots/status.json'); await old.route('https://justingehrts.github.io/river-flood-dots/status.json', riverAt(100)); await old.reload();
   await old.waitForFunction(() => /Updated/.test(document.getElementById('fresh-river').textContent));
   // some markets failed to render in the last build: they are named on the FFG tab
+  const GRIB = '5kmffg_' + new Date().toISOString().slice(0, 13).replace(/\D/g, '') + '.g2';      // this hour, so the test never ages out
   const part = await ctx.newPage();
   await part.route('**/ffg/status.json', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
-    generatedUtc: new Date().toISOString().replace(/\.\d+Z$/, 'Z'), grib: '5kmffg_2026111723.g2', source: 'WPC hourly 5kmffg_2026111723.g2',
+    generatedUtc: new Date().toISOString().replace(/\.\d+Z$/, 'Z'), grib: GRIB, source: 'WPC hourly ' + GRIB,
     failed: [{ file: 'markets/columbus-oh/Custom_FFG_1hr.kmz', error: 'x' }, { file: 'markets/columbus-oh/Custom_FFG_3hr.kmz', error: 'x' }, { file: 'markets/denver-co/Custom_FFG_1hr.kmz', error: 'x' }] }) }));
   await part.goto(PAGE);
   await part.waitForFunction(() => /using older files/.test(document.getElementById('fresh-ffg').textContent));
