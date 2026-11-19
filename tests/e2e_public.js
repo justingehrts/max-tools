@@ -57,6 +57,7 @@ const [PAGE, SHOTS] = process.argv.slice(2);
   assert.match(await p.textContent('#panel-river'), /river-flood-dots\/observed_rivers\.kmz/);
   await p.waitForFunction(() => /6860 gauges/.test(document.getElementById('fresh-river').textContent));
   assert.ok(!(await p.getAttribute('#fresh-river', 'class') || '').includes('bad'));
+  await p.$eval('#panel-river img', i => i.scrollIntoView()); await p.waitForFunction(() => { const m = document.querySelector('#panel-river img'); return m && m.complete && m.naturalWidth > 0; });
   await p.click('#panel-river button[data-copy]'); assert.strictEqual(await p.evaluate(() => navigator.clipboard.readText()), 'https://justingehrts.github.io/river-flood-dots/observed_rivers.kmz');
   // every app tab, with a link out and loaded screenshots
   for (const [id, url] of [['astrographics', 'https://astrographics.streamlit.app/'], ['graph-maker', 'https://maxgraphmaker.streamlit.app/'], ['gridded-climo', 'https://gridded-climo.streamlit.app/']]) {
