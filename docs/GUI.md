@@ -39,8 +39,8 @@ per market, shared by every station in it. Remember the choice in localStorage a
   checked by `tools/check_ramps.py`: lightness changes in one direction and every neighbouring band stays distinguishable for normal,
   protan, deutan and tritan vision (CIEDE2000 >= 8 after Machado 2009 simulation), following Rosen et al. 2026 (JOM 14(13): prefer
   single-hue or one-direction multi-hue sequential ramps for deterministic data, 5-7 bins, colour-blind safe, mind dark backgrounds).
-  Default since Nov 4: "Standard" = the former "Standard, refined" ramp. The old ramp is the "Original" preset (legacy: its two
-  lightest bands invert lightness and are close for protan viewers).
+  Default since Nov 4: "Standard" = the former "Standard, refined" ramp. The old ramp is no longer a preset (removed Nov 19: no market used it); it
+  only survives as `ORIGINAL` in `tools/build_ffg.py` for the legacy Ohio URLs.
 - Hide a band (Nov 4): each row has a **Show** checkbox. A hidden band is stored as `"none"` instead of a color and drawn fully
   transparent in the KMZ; at least one band must stay visible (schema `contains`, PHP, page and Python all enforce it; shared vectors).
 - Preview overlays county and state lines (toggle "County lines"): `static/lines/<market>.json`, cut from Census 2023 1:5M

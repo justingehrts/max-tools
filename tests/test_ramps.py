@@ -18,7 +18,6 @@ class Ramps(unittest.TestCase):
     def test_standard_preset_is_the_pipeline_standard(self):
         ps = {p['id']: p for p in check_ramps.presets()}
         self.assertEqual(ps['standard']['colors'], build_ffg.STANDARD)
-        self.assertEqual(ps['original']['colors'], build_ffg.ORIGINAL)
 
     def test_checker_catches_bad_ramps(self):
         self.assertFalse(check_ramps.check(['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3'])['ok'])  # rainbow

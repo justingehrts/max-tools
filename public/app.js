@@ -83,7 +83,7 @@
     short.forEach(function (s) { var e = document.createElement('span'); e.textContent = s; sc.appendChild(e); });
     var cap = document.createElement('div'); cap.className = 'rscale'; cap.style.margin = '0 0 .6rem'; cap.textContent = 'Flash flood guidance, inches of rain (most urgent band on the left)';
     sc.parentNode.insertBefore(cap, sc);
-    LIB.PRESETS.filter(function (p) { return !p.legacy; }).forEach(function (p) {      // the old look stays in the configurator only
+    LIB.PRESETS.forEach(function (p) {
       var d = document.createElement('div'); d.className = 'ramp';
       var n = document.createElement('div'); var nm = document.createElement('span'); nm.className = 'rname'; nm.textContent = p.name; n.appendChild(nm);
       if (p.id === 'standard') { var b = document.createElement('span'); b.className = 'rbadge'; b.textContent = 'Default'; n.appendChild(b); }

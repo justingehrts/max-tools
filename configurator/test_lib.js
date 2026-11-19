@@ -85,7 +85,7 @@ t('presets', function () {
   assert.ok(L.PRESETS.length >= 4);
   L.PRESETS.forEach(function (p) { assert.strictEqual(p.colors.length, 7); p.colors.forEach(function (c) { assert.strictEqual(L.normHex(c), c); }); });
   assert.deepStrictEqual(L.PRESETS[0].colors, L.STANDARD);
-  assert.ok(L.PRESETS.some(function (p) { return p.id === 'original' && p.legacy; }));
+  assert.ok(!L.PRESETS.some(function (p) { return p.id === 'original'; }));
   assert.strictEqual(L.matchPreset(L.STANDARD.map(function (c) { return c.toUpperCase(); })).id, 'standard');
   assert.strictEqual(L.matchPreset(['#000000', '#000000', '#000000', '#000000', '#000000', '#000000', '#000000']), null);
 });
