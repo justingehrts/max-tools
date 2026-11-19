@@ -43,6 +43,19 @@ Graph Maker builds chart graphics for on-air weather segments and exports them a
 ![Climo Band for Columbus: daily highs and lows over the record-high, normal and record-low bands, with new records marked](images/graph-maker-climo-band.png)
 *Climo Band: this year's daily highs and lows (blue) over the record-high (warm), normal (green) and record-low (cool) bands, with new records marked in yellow.*
 
+### Examples of the basic charts
+
+Charts you build from your own numbers. These use made-up but realistic data, with the sidebar settings left mostly at their defaults, shown here on a white background. Your download is a transparent PNG.
+
+![Vertical bar chart of average monthly precipitation, January to December, with the values on each bar](images/graph-maker-vertical-bar.png)
+*Vertical bars: average monthly precipitation, with **Show Values on Chart** on and **Decimal Places** set to 2.*
+
+![Horizontal bar chart of storm-total rainfall for eight Ohio cities, sorted from most to least](images/graph-maker-horizontal-bar.png)
+*Horizontal bars (**Bar direction** set to Horizontal): storm-total rainfall by city, sorted so the biggest is on top, with values shown.*
+
+![Line chart of a seven-day forecast with a high and a low temperature line and the values on each point](images/graph-maker-line.png)
+*Line chart with **Show Second Series** on: a seven-day forecast of highs (blue) and lows (gray), with values shown.*
+
 ### Chart controls
 
 Everything below is in the sidebar on the left, in sections you can open and close. These apply to every chart type; the starred presets add a **Preset Options** section at the top for their own settings (highlighted year, band style, bar or line style and so on). The chart redraws as you change things.
@@ -51,7 +64,8 @@ Everything below is in the sidebar on the left, in sections you can open and clo
 *The sidebar sections, shown with a second series turned on.*
 
 **Canvas & Chart**
-- **Width and Height** in pixels. The default is 1920 x 1080 (full-screen HD); match whatever your Max graphic needs.
+- **Partial screen** and **Full screen** buttons set the canvas to a ready-made Max size in one click (1352 x 649 and 1744 x 649 pixels; hover a button to see its size).
+- **Width and Height** in pixels, if you want your own size. The default is 1920 x 1080 (full-screen HD); match whatever your Max graphic needs.
 - **Bar charts:** **Bar direction** is vertical or horizontal (horizontal suits named rows such as rankings, cities or event types). **Bar Spacing / Gap** sets how much space is between bars, from 0 (touching) to 0.9 (thin bars).
 - **Line charts:** **Line Thickness**, **Point Size** and **Marker Style** (the shape at each point: circle, square, triangle or diamond).
 - **Show Second Series** adds a second column of values, drawn next to the first bar or as a second line. Use it to compare, such as this year against last.
@@ -79,7 +93,7 @@ Everything below is in the sidebar on the left, in sections you can open and clo
 - **Y minimum / Y maximum** fix the ends of the value axis, such as 0 to 100 for a percent, so graphics compare fairly from one to the next. Leave them blank for automatic.
 
 **Gridlines**
-- **Show Gridlines** turns them on or off. Set the **color** (white, WI Navy or gray), **Opacity**, **Thickness** and **Style** (solid, dashed or dotted; solid by default).
+- **Show Gridlines** turns them on or off. Set the **color** (WI Navy or gray), **Opacity**, **Thickness** and **Style** (solid, dashed or dotted; solid by default).
 
 ### Where the numbers come from
 
