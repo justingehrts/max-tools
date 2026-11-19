@@ -28,6 +28,7 @@ input[type=search]{font:inherit;color:var(--ink);background:var(--panel);border:
 .rscale,.rstrip{display:flex;gap:2px}.rscale{margin:.7rem 0 .2rem;font-size:.7rem;color:var(--muted);text-align:center}.rscale span{flex:1;min-width:0}
 .rstrip span{flex:1;height:26px;border-radius:3px;border:1px solid rgba(0,0,0,.15)}
 .ramp{margin:.55rem 0 .9rem}.ramp .rname{font-weight:600}.ramp .rbadge{margin-left:.5rem;padding:1px 8px;font-size:.75rem;font-weight:600;background:var(--accent);color:var(--accent-ink);border-radius:10px}
+.ramp .rpic{display:block;width:100%;height:auto;margin-top:.5rem;border-radius:6px;border:1px solid var(--line)}
 .ramp .rnote{margin:.1rem 0 .35rem;font-size:.85rem;color:var(--muted)}
 .fresh.warn{background:var(--warn-bg)}
 .fresh .dot{display:inline-block;width:.7em;height:.7em;border-radius:50%;background:#2e9e4f;margin-right:.5em}
@@ -82,7 +83,7 @@ table.urls td.url{width:100%}
   </div>
   <section class="ramps" aria-labelledby="ramps-h">
     <h3 id="ramps-h">Flash flood colors</h3>
-    <p class="muted">Every market starts with the <b>Standard</b> colors. A market can switch to one of the other presets, or pick its own colors and hide bands, in the private configurator.</p>
+    <p class="muted">Every market starts with the <b>Standard</b> colors. A market can switch to one of the other presets, or pick its own colors and hide bands, in the private configurator. The pictures show each one on a sample 6-hour flash flood threshold map in Max.</p>
     <div class="rscale" id="ramp-scale" aria-hidden="true"></div>
     <div id="ramp-list"></div>
   </section>

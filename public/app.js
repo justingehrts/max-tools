@@ -91,7 +91,10 @@
       var strip = document.createElement('div'); strip.className = 'rstrip'; strip.setAttribute('role', 'img');
       strip.setAttribute('aria-label', p.name + ' colors for the seven bands, most urgent first: ' + p.colors.join(', '));
       p.colors.forEach(function (c, i) { var s = document.createElement('span'); s.style.background = c; s.title = LIB.bandLabel(i); strip.appendChild(s); });
-      d.appendChild(n); d.appendChild(note); d.appendChild(strip); list.appendChild(d);
+      var pic = document.createElement('img'); pic.className = 'rpic'; pic.loading = 'lazy'; pic.width = 1100; pic.height = 619;
+      pic.alt = 'The ' + p.name + ' colors on a sample 6-hour flash flood threshold map of central Ohio, as seen in Max';
+      pic.src = CFG.base + '/help/images/ffg-sample-' + p.id + '.jpg'; pic.onerror = function () { pic.remove(); };
+      d.appendChild(n); d.appendChild(note); d.appendChild(strip); d.appendChild(pic); list.appendChild(d);
     });
   })();
 

@@ -36,6 +36,11 @@ const [PAGE, SHOTS] = process.argv.slice(2);
   assert.match(await p.textContent('#ramp-list .ramp:first-child'), /Default/);
   assert.strictEqual(await p.$$eval('#ramp-list .rstrip span', s => s.length), 28);
   assert.strictEqual(await p.$eval('#ramp-list .rstrip span', s => s.style.backgroundColor), 'rgb(109, 0, 26)');   // Standard's first band, #6d001a
+  // each ramp has its sample picture, and they load
+  assert.deepStrictEqual(await p.$$eval('#ramp-list img', i => i.map(x => x.getAttribute('src').replace(/^.*\//, ''))), ['ffg-sample-standard.jpg', 'ffg-sample-reds.jpg', 'ffg-sample-blues.jpg', 'ffg-sample-dark-maps.jpg']);
+  await p.$$eval('#ramp-list img', i => i.forEach(x => x.scrollIntoView()));
+  await p.waitForFunction(() => [...document.querySelectorAll('#ramp-list img')].every(m => m.complete && m.naturalWidth > 0));
+  await p.evaluate(() => window.scrollTo(0, 0));
   // change market (keyboard: Enter picks the first match)
   await p.click('#change'); assert.strictEqual(await p.evaluate(() => document.activeElement.id), 'mq');
   await p.fill('#mq', 'seattle'); await p.keyboard.press('Enter');
