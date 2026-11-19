@@ -31,6 +31,11 @@ const [PAGE, SHOTS] = process.argv.slice(2);
   // remembered on this device
   await p.reload(); await p.waitForSelector('#chosen:not([hidden])');
   assert.strictEqual(await p.textContent('#ffg-title'), 'Flash flood guidance for Columbus, OH');
+  // the default ramp and the presets are shown, Standard first and marked as the default
+  assert.deepStrictEqual(await p.$$eval('#ramp-list .rname', e => e.map(x => x.textContent)), ['Standard', 'Reds', 'Blues', 'For dark maps', 'Original']);
+  assert.match(await p.textContent('#ramp-list .ramp:first-child'), /Default/);
+  assert.strictEqual(await p.$$eval('#ramp-list .rstrip span', s => s.length), 35);
+  assert.strictEqual(await p.$eval('#ramp-list .rstrip span', s => s.style.backgroundColor), 'rgb(109, 0, 26)');   // Standard's first band, #6d001a
   // change market (keyboard: Enter picks the first match)
   await p.click('#change'); assert.strictEqual(await p.evaluate(() => document.activeElement.id), 'mq');
   await p.fill('#mq', 'seattle'); await p.keyboard.press('Enter');

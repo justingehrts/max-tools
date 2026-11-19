@@ -24,6 +24,11 @@ input[type=search]{font:inherit;color:var(--ink);background:var(--panel);border:
 .setup p{margin:0;flex:1 1 18rem}.setup a.go{font-weight:600}
 .fresh{margin:.2rem 0 1rem;padding:6px 12px;font-size:.9rem;background:var(--ok-bg);border:1px solid var(--line);border-radius:6px}
 .fresh.bad{background:var(--warn-bg);color:var(--bad);font-weight:600}
+.ramps{margin-top:1.4rem;padding-top:1rem;border-top:1px solid var(--line)}.ramps h3{margin:0 0 .3rem}
+.rscale,.rstrip{display:flex;gap:2px}.rscale{margin:.7rem 0 .2rem;font-size:.7rem;color:var(--muted);text-align:center}.rscale span{flex:1;min-width:0}
+.rstrip span{flex:1;height:26px;border-radius:3px;border:1px solid rgba(0,0,0,.15)}
+.ramp{margin:.55rem 0 .9rem}.ramp .rname{font-weight:600}.ramp .rbadge{margin-left:.5rem;padding:1px 8px;font-size:.75rem;font-weight:600;background:var(--accent);color:var(--accent-ink);border-radius:10px}
+.ramp .rbadge.old{background:var(--tab);color:var(--muted)}.ramp .rnote{margin:.1rem 0 .35rem;font-size:.85rem;color:var(--muted)}
 .fresh.warn{background:var(--warn-bg)}
 .fresh .dot{display:inline-block;width:.7em;height:.7em;border-radius:50%;background:#2e9e4f;margin-right:.5em}
 .fresh .sub{display:block;font-weight:400;font-size:.85rem;color:var(--muted)}
@@ -75,6 +80,12 @@ table.urls td.url{width:100%}
     <table class="urls" id="ffg-urls"></table>
     <p class="custom" id="custom" hidden>Want different colors for your market? <a id="customize" target="_blank" rel="noopener">Customize your colors (password required)</a></p>
   </div>
+  <section class="ramps" aria-labelledby="ramps-h">
+    <h3 id="ramps-h">Flash flood colors</h3>
+    <p class="muted">Every market starts with the <b>Standard</b> colors. A market can switch to one of the other presets, or pick its own colors and hide bands, in the private configurator.</p>
+    <div class="rscale" id="ramp-scale" aria-hidden="true"></div>
+    <div id="ramp-list"></div>
+  </section>
   <noscript><p>This page needs JavaScript to show your market's addresses.</p></noscript>
 </div>
 

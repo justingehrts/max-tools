@@ -76,6 +76,26 @@
     });
   }
 
+  // ---------------------------------------------------------------- the default color ramp and the presets
+  (function () {
+    var short = ['<0.5', '0.5-0.75', '0.75-1', '1-1.5', '1.5-2', '2-3', '3+'];
+    var sc = $('ramp-scale'), list = $('ramp-list'); if (!sc || !list) return;
+    short.forEach(function (s) { var e = document.createElement('span'); e.textContent = s; sc.appendChild(e); });
+    var cap = document.createElement('div'); cap.className = 'rscale'; cap.style.margin = '0 0 .6rem'; cap.textContent = 'Flash flood guidance, inches of rain (most urgent band on the left)';
+    sc.parentNode.insertBefore(cap, sc);
+    LIB.PRESETS.forEach(function (p) {
+      var d = document.createElement('div'); d.className = 'ramp';
+      var n = document.createElement('div'); var nm = document.createElement('span'); nm.className = 'rname'; nm.textContent = p.name; n.appendChild(nm);
+      if (p.id === 'standard') { var b = document.createElement('span'); b.className = 'rbadge'; b.textContent = 'Default'; n.appendChild(b); }
+      if (p.legacy) { var o = document.createElement('span'); o.className = 'rbadge old'; o.textContent = 'Old look'; n.appendChild(o); }
+      var note = document.createElement('div'); note.className = 'rnote'; note.textContent = p.note;
+      var strip = document.createElement('div'); strip.className = 'rstrip'; strip.setAttribute('role', 'img');
+      strip.setAttribute('aria-label', p.name + ' colors for the seven bands, most urgent first: ' + p.colors.join(', '));
+      p.colors.forEach(function (c, i) { var s = document.createElement('span'); s.style.background = c; s.title = LIB.bandLabel(i); strip.appendChild(s); });
+      d.appendChild(n); d.appendChild(note); d.appendChild(strip); list.appendChild(d);
+    });
+  })();
+
   // ---------------------------------------------------------------- tabs
   var tabs = [].slice.call(document.querySelectorAll('[role=tab]'));
   function tabFromHash() { return tabs.filter(function (t) { return '#' + t.getAttribute('data-hash') === location.hash; })[0]; }
