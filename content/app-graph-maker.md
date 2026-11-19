@@ -53,7 +53,7 @@ Everything below is in the sidebar on the left, in sections you can open and clo
 **Canvas & Chart**
 - **Width and Height** in pixels. The default is 1920 x 1080 (full-screen HD); match whatever your Max graphic needs.
 - **Bar charts:** **Bar direction** is vertical or horizontal (horizontal suits named rows such as rankings, cities or event types). **Bar Spacing / Gap** sets how much space is between bars, from 0 (touching) to 0.9 (thin bars).
-- **Line charts:** **Line Thickness**, **Point Size** and **Marker Style** (the shape at each point).
+- **Line charts:** **Line Thickness**, **Point Size** and **Marker Style** (the shape at each point: circle, square, triangle or diamond).
 - **Show Second Series** adds a second column of values, drawn next to the first bar or as a second line. Use it to compare, such as this year against last.
 
 **Colors**
