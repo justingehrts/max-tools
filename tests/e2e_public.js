@@ -15,7 +15,7 @@ const [PAGE, SHOTS] = process.argv.slice(2);
   // first visit: the market picker, no login anywhere, the setup box links to the private configurator
   await p.waitForSelector('#picker:not([hidden])');
   assert.strictEqual(await p.getAttribute('.setup a.go', 'href'), 'https://www.justingehrts.com/max/');
-  assert.match(await p.textContent('.setup'), /A password is required/);
+  assert.match(await p.textContent('.setup'), /A password is required\. Contact Justin Gehrts for login information\./);
   assert.strictEqual(await p.evaluate(() => document.activeElement.tagName), 'BODY', 'page load must not steal focus');
   await p.fill('#mq', 'wbns');
   assert.deepStrictEqual(await p.$$eval('#mlist button', b => b.map(x => x.textContent)), ['Columbus, OH']);   // call letters search, names shown
@@ -37,11 +37,13 @@ const [PAGE, SHOTS] = process.argv.slice(2);
   assert.match(await p.textContent('#ffg-title'), /Seattle/);
   // record dots: 28 copy buttons + copy all, no market needed
   await p.click('#tab-records');
+  assert.strictEqual(await p.isVisible('.setup'), false);
   assert.strictEqual(await p.$$eval('#rec-urls button[data-copy]', b => b.length), 28);
   await p.click('#copy-all'); assert.strictEqual((await p.evaluate(() => navigator.clipboard.readText())).split('\n').length, 28);
   assert.match(await p.textContent('#panel-records'), /Changing how the dots look in Max/);
-  // river flood dots: the address is copyable
+  // river flood dots: the address is copyable (and the station setup box belongs to the FFG tab only)
   await p.click('#tab-river');
+  assert.strictEqual(await p.isVisible('.setup'), false);
   assert.match(await p.textContent('#panel-river'), /river-flood-dots\/observed_rivers\.kmz/);
   await p.waitForFunction(() => /6860 gauges/.test(document.getElementById('fresh-river').textContent));
   assert.ok(!(await p.getAttribute('#fresh-river', 'class') || '').includes('bad'));

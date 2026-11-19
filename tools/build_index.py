@@ -54,7 +54,7 @@ def main():
     except (OSError, ValueError): configurator_url = ''
     if not re.match(r'^https://[A-Za-z0-9.-]+(/[^\s"\'<>]*)?$', configurator_url or ''): configurator_url = ''        # only a plain https address is ever linked
     setup = (f'<div class="setup"><p><b>Station setup:</b> to change your station\'s flash flood colors, use the private configurator. '
-             f'<b>A password is required.</b></p><a class="go" href="{e(configurator_url)}" target="_blank" rel="noopener">Open the configurator (password required)</a></div>') if configurator_url else ''
+             f'<b>A password is required.</b> Contact Justin Gehrts for login information.</p><a class="go" href="{e(configurator_url)}" target="_blank" rel="noopener">Open the configurator (password required)</a></div>') if configurator_url else ''
     static = Path(a.root) / 'static'          # files kept in the repo and published as-is (e.g. lines/ for the preview)
     if static.is_dir():
         shutil.copytree(static, site, dirs_exist_ok=True)
