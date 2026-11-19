@@ -59,18 +59,18 @@ Everything below is in the sidebar on the left, in sections you can open and clo
 **Colors**
 - Colors come only from the Weather Impact 2.0 palette: WI Navy, Highlight Blue, Breaking Red, Blue, Yellow, Green, Coral and Gray, plus a few darker and lighter shades. Click a chip to pick it; the name of the chosen color is shown above the chips. There is no free color picker, so every graphic stays on brand.
 - Each series has its own color (**Series 1**, **Series 2**).
-- **Highlight Points** picks which points of Series 1 are drawn in the highlight color, so you can call out one bar or day (for example today, or the record year). Choose the highlight color just below it.
+- **Highlight Points** picks which points of Series 1 are drawn in the highlight color, so you can call out one bar or day (for example today, or the record year). Choose Select All, or just the individual points you want, then choose the highlight color just below it.
 - Text, axis lines, data labels and call-outs are always WI Navy, because Max's background is white.
 
 **Fonts and text size**
 - There is one font, set by the app, so there is no font menu. You control **size** instead: **Data Label Font Size** (the numbers on the chart), **Y Axis Value Size** and **X Axis Label Size**.
 - **X Label Rotation** tilts the bottom labels (-90 to 90 degrees) when they crowd. **X Axis Labels** chooses which bars get a label; if labels collide, pick a wider spacing, a smaller size or rotate them. A highlighted bar always keeps its label.
-- **Navy strip behind X axis labels** (on by default) puts white labels on a WI Navy strip under the chart, as on Weather Impact bar graphics. Turn it off for plain navy labels.
+- **Navy strip behind X axis labels** (on by default) puts white labels on a WI Navy strip under the chart, as on Weather Impact bar graphics. Turn it off and the labels are navy on a transparent background instead.
 
 **Data Labels & Number Format**
 - **Show Values on Chart** prints each value on its bar or point. **Label position** is past the end of the bar or inside it (bar charts).
 - **Values are** Numbers or Dates. Dates (for example a last-frost date per year) show as "Oct 18"; this is picked automatically when you paste or import dates.
-- **Decimal Places:** Auto shows up to 3 decimals and drops trailing zeros; or choose a fixed number.
+- **Decimal Places:** Auto (up to 3 decimals, dropping trailing zeros), or exactly 0, 1, 2 or 3.
 - **Prefix and Suffix** add symbols such as $, a degree sign, % or " (inches). **Thousands Separator** shows 1,000 instead of 1000. **Prefix/Suffix on Y Axis Too** repeats them on the value axis.
 
 **Axes**
@@ -79,7 +79,7 @@ Everything below is in the sidebar on the left, in sections you can open and clo
 - **Y minimum / Y maximum** fix the ends of the value axis, such as 0 to 100 for a percent, so graphics compare fairly from one to the next. Leave them blank for automatic.
 
 **Gridlines**
-- **Show Gridlines** turns them on or off. Set the **color** (white, WI Navy or gray), **Opacity**, **Thickness** and **Style** (solid by default).
+- **Show Gridlines** turns them on or off. Set the **color** (white, WI Navy or gray), **Opacity**, **Thickness** and **Style** (solid, dashed or dotted; solid by default).
 
 ### Where the numbers come from
 
