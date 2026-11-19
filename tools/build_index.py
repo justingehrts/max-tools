@@ -65,11 +65,16 @@ def main():
     tabs = tab('ffg', 'Flash flood guidance', 'ffg') + tab('records', 'Record dots', 'record-dots') + tab('river', 'River flood dots', 'river-flood-dots')
     rec_help = docs.get('record-dots-in-max', '')
     rec_help_html = f'<section class="help mdoc">{rec_help}</section>' if rec_help else ''
-    river_url = f'{RIVER_BASE}/observed_rivers.kmz'
+    river_obs = f'{RIVER_BASE}/observed_rivers.kmz'
+    river_fc = f'{RIVER_BASE}/forecast_rivers.kmz'
+    def river_row(label, url, what):
+        return (f'<tr><th>{label}</th><td class="url">{e(url)}</td><td><button type="button" class="small" data-copy="{e(url)}" data-what="the {what} link" '
+                f'aria-label="Copy the {what} address">Copy</button></td></tr>')
     river_help = docs.get('river-flood-dots-in-max', '')
     panels = (f'<div role="tabpanel" id="panel-river" aria-labelledby="tab-river" hidden><div class="fresh" id="fresh-river" role="status">Checking when this layer was last updated...</div><h2>River flood dots</h2>'
-              f'<p class="muted">River gauges as dots colored by the NWS observed flood category, for the whole country. One address for everyone; it never changes and updates twice an hour.</p>'
-              f'<table class="urls"><tr><th>All gauges</th><td class="url">{e(river_url)}</td><td><button type="button" class="small" data-copy="{e(river_url)}" data-what="the river flood dots link" aria-label="Copy the river flood dots address">Copy</button></td></tr></table>'
+              f'<p class="muted">River gauges as dots colored by NWS flood category, for the whole country. Two layers, the same for everyone; the addresses never change.</p>'
+              f'<table class="urls">{river_row("Observed", river_obs, "observed river dots")}{river_row("Forecast max", river_fc, "forecast river dots")}</table>'
+              f'<p class="muted"><b>Observed</b> shows each gauge\'s current flood category. <b>Forecast max</b> shows the highest category each gauge is forecast to reach during its forecast period, in the same colors. Only gauges with a current forecast appear, and each dot\'s description gives the peak stage and when it is expected.</p>'
               f'<p class="muted">Purple = major, red = moderate, orange = minor, yellow = action, green = no flooding. Gauges with no flood stages, stale observations or out of service are hidden.</p>'
               f'<div class="mdoc">{river_help}</div></div>')
     for ap_ in apps:

@@ -58,7 +58,9 @@ const [PAGE, SHOTS] = process.argv.slice(2);
   await p.waitForFunction(() => /6860 gauges/.test(document.getElementById('fresh-river').textContent));
   assert.ok(!(await p.getAttribute('#fresh-river', 'class') || '').includes('bad'));
   await p.$eval('#panel-river img', i => i.scrollIntoView()); await p.waitForFunction(() => { const m = document.querySelector('#panel-river img'); return m && m.complete && m.naturalWidth > 0; });
-  await p.click('#panel-river button[data-copy]'); assert.strictEqual(await p.evaluate(() => navigator.clipboard.readText()), 'https://justingehrts.github.io/river-flood-dots/observed_rivers.kmz');
+  assert.deepStrictEqual(await p.$$eval('#panel-river button[data-copy]', b => b.map(x => x.getAttribute('data-copy'))),
+    ['https://justingehrts.github.io/river-flood-dots/observed_rivers.kmz', 'https://justingehrts.github.io/river-flood-dots/forecast_rivers.kmz']);
+  await p.click('#panel-river tr:nth-child(2) button[data-copy]'); assert.strictEqual(await p.evaluate(() => navigator.clipboard.readText()), 'https://justingehrts.github.io/river-flood-dots/forecast_rivers.kmz');
   // every app tab, with a link out and loaded screenshots
   for (const [id, url] of [['astrographics', 'https://astrographics.streamlit.app/'], ['graph-maker', 'https://maxgraphmaker.streamlit.app/'], ['gridded-climo', 'https://gridded-climo.streamlit.app/']]) {
     await p.click('#tab-' + id);
