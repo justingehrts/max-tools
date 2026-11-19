@@ -2,7 +2,10 @@
 
 HostGator shared hosting uses cPanel (Customer Portal > Hosting > cPanel). The steps below are in cPanel.
 
-## 1. Hourly build trigger (cron)
+## 1. Hourly build trigger (cron) - MOVED to cron-job.org on Nov 19, 2026
+
+**Current instructions: docs/CRON.md.** The HostGator cron below is the old way; remove it from cPanel > Cron Jobs once cron-job.org is
+firing the build. Keep the `.maxtools_token` file: the save endpoint (section 2) still uses it.
 
 GitHub's own schedule is unreliable (the old `ffg` repo's "hourly" job ran about every 5 hours in October). A HostGator cron job
 asks GitHub to run the build at :45 every hour, after WPC posts the hourly FFG at ~:38. GitHub's schedule stays as a backup.
