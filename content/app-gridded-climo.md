@@ -31,15 +31,12 @@ Gridded Climo makes climate maps for broadcast: average first and last freeze da
 2. On the **Map** tab in the sidebar, choose the **Area**, then a **Variable** (Temperature, Precipitation or Sun) and a **Map type**.
 3. Fill in the short form for that map type: the threshold, the dates or years, the statistic. A "Will make" box at the bottom of the sidebar says exactly what the map will be.
 4. Click **Generate map**.
-5. Look at the result in the main panel, then switch between **Map** (on a basemap), **Image** (the colored overlay by itself, with its legend) and **Band colors** (edit each color band).
+5. Look at the result in the main panel: the **Map** (on a basemap, with its legend below it), or switch to **Band colors** to edit each color band.
 6. On the **Look** tab, adjust the ramp, steps and grouping. Changes apply right away and never refetch the data.
 7. On the **Export** tab, click **Download KMZ** and bring it into Max.
 
-![A finished map: average date of the first 32 degree low across Ohio and neighboring states, with stations shown on the basemap](images/gridded-climo-map.png)
-*A finished map: the average date of the first low of 32 degrees or colder, 1991-2020, built from 375 stations.*
-
-![The map as a plain colored overlay with its legend](images/gridded-climo-image.png)
-*The Image view: the colored overlay by itself on a neutral gray, with its legend (the legend is also included in the KMZ).*
+![A finished map: average date of the first 32 degree low across Ohio and neighboring states, with stations shown on the basemap and the legend below](images/gridded-climo-map.png)
+*A finished map: the average date of the first low of 32 degrees or colder, 1991-2020, built from 608 stations, with its legend below. The legend is also included in the KMZ.*
 
 ![The Look tab with preset, color ramp, shading and date grouping controls](images/gridded-climo-look.png)
 *The Look tab: color ramp, shading, steps and how dates are grouped.*
