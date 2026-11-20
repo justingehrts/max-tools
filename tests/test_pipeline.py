@@ -116,10 +116,10 @@ class Carry(unittest.TestCase):
         srv = http.server.HTTPServer(('127.0.0.1', 0), Handler); threading.Thread(target=srv.serve_forever, daemon=True).start()
         base = f'http://127.0.0.1:{srv.server_port}'
         try:
-            self.assertEqual(carry_over.fetch(base + '/records/default/D1_HIMAX.kmz'), (200, b'KMZ'))
-            self.assertEqual(carry_over.fetch(base + '/records/default/D3_HIMAX.kmz')[0], 404)
+            self.assertEqual(carry_over.fetch(base + '/pages/D1_HIMAX.kmz'), (200, b'KMZ'))
+            self.assertEqual(carry_over.fetch(base + '/pages/D3_HIMAX.kmz')[0], 404)
             carry_over.time.sleep = lambda s: None          # do not wait out the retries in a test
-            self.assertIsNone(carry_over.fetch(base + '/records/default/D2_HIMAX.kmz')[0])
+            self.assertIsNone(carry_over.fetch(base + '/pages/D2_HIMAX.kmz')[0])
         finally:
             srv.shutdown()
 

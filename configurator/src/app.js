@@ -16,7 +16,7 @@
     edit: LIB.STANDARD.slice(),
     hour: 1,
     saving: false,
-    status: { ffg: null, records: null },
+    status: { ffg: null },
     bins: {},             // hour -> ImageData of the bin map
     lines: null,          // county/state lines for the preview ({w,h,county,state}) or 'error'
     keep: []              // last color of each hidden band, restored when it is shown again
@@ -51,7 +51,7 @@
 
   // ---------------------------------------------------------------- status strip
   function loadStatus() {
-    var parts = [['ffg', 'FFG', BASE + '/ffg/status.json'], ['records', 'Record dots', BASE + '/records/status.json']];
+    var parts = [['ffg', 'FFG', BASE + '/ffg/status.json']];
     Promise.all(parts.map(function (p) {
       return fetch(p[2], { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
     })).then(function (res) {

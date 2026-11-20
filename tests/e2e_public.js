@@ -8,6 +8,9 @@ const [PAGE, SHOTS] = process.argv.slice(2);
   const ctx = await browser.newContext({ viewport: { width: 1100, height: 900 } });
   await ctx.grantPermissions(['clipboard-read', 'clipboard-write']);
   const p = await ctx.newPage(); const errors = []; p.on('pageerror', e => errors.push(e.message)); p.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+  // the daily-record-dots site is another repo too: answer its status file here
+  await ctx.route('https://justingehrts.github.io/daily-record-dots/status.json', r => r.fulfill({ status: 200, contentType: 'application/json',
+    headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ generatedUtc: new Date().toISOString().replace(/\.\d+Z$/, 'Z'), kmz: 28 }) }));
   // the river-flood-dots site is another repo (and may not be published yet): answer its status file here
   await ctx.route('https://justingehrts.github.io/river-flood-dots/status.json', r => r.fulfill({ status: 200, contentType: 'application/json',
     headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ updated_utc: new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC', gauges_shown: 6860 }) }));
@@ -50,6 +53,7 @@ const [PAGE, SHOTS] = process.argv.slice(2);
   assert.strictEqual(await p.isVisible('.setup'), false);
   assert.strictEqual(await p.$$eval('#rec-urls button[data-copy]', b => b.length), 28);
   await p.click('#copy-all'); assert.strictEqual((await p.evaluate(() => navigator.clipboard.readText())).split('\n').length, 28);
+  assert.strictEqual((await p.evaluate(() => navigator.clipboard.readText())).split('\n')[0], 'https://justingehrts.github.io/daily-record-dots/D1_HIMAX.kmz');
   assert.match(await p.textContent('#panel-records'), /Changing how the dots look in Max/);
   // river flood dots: the address is copyable (and the station setup box belongs to the FFG tab only)
   await p.click('#tab-river');

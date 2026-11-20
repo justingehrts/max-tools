@@ -79,7 +79,8 @@ var LIB = (function () {
   function ffgUrls(base, market) {
     return HOURS.map(function (h) { return { hours: h, url: base + '/markets/' + market + '/Custom_FFG_' + h + 'hr.kmz' }; });
   }
-  function recordUrl(base, day, type) { return base + '/records/default/D' + day + '_' + type + '.kmz'; }
+  // The record dots live in their own repo and Pages site (daily-record-dots): base is that site's address, files are at its root.
+  function recordUrl(base, day, type) { return base + '/D' + day + '_' + type + '.kmz'; }
   function allRecordUrls(base) {
     var out = [];
     DAYS.forEach(function (d) { TYPES.forEach(function (t) { out.push(recordUrl(base, d, t)); }); });

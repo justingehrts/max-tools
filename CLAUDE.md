@@ -9,9 +9,9 @@ Read `docs/PLAN.md` first (decisions, status, work order; the repo layout is you
 ## The three pieces
 1. **FFG (flash flood guidance)**: Python (pygrib, scipy, matplotlib) on GitHub Actions, published to GitHub Pages.
    Exists today for Ohio only (repo `justingehrts/ffg`). Plan: one standard set per TV market (54) + optional per-market color ramps.
-2. **Record dots**: PowerShell script (repo `justingehrts/daily-record-dots`). Plan: run it in GitHub Actions under `pwsh`,
-   publish one shared KMZ set for everyone (stations restyle the dots in Max). Lives in `records/`;
-   per-market icon styling is parked in `parked/record-dot-icons/`.
+2. **Record dots**: PowerShell script, now in its own repo `justingehrts/daily-record-dots` (own Pages site and status file, hourly run
+   triggered from cron-job.org). Since Nov 20 this repo only links to it (public page, Record dots tab); see `docs/RECORDS.md`.
+   Per-market icon styling is parked in `parked/record-dot-icons/`.
 3. **Configurator**: static HTML page on HostGator behind basic auth, plus a small PHP endpoint (not built) that validates a
    station's choices and commits them to a registry file in GitHub. See `legacy/configurator-prototype/` (needs rework, see PLAN).
 
@@ -27,8 +27,6 @@ Read `docs/PLAN.md` first (decisions, status, work order; the repo layout is you
 - Don't claim something works on GitHub/Windows unless it was run there. PLAN.md lists what is verified and what is not.
 
 ## Commands that worked in the prototypes
-- Record dots, CI-style run: write `records/config.json`, then in `records/`: `pwsh -NoProfile -File ./FetchDailyRecords.ps1`, then
-  `python tools/records_status.py --site site --run-log records/run_log.txt`.
 - FFG: `python tools/build_ffg.py --site site [--grib file] [--only market-id]` (needs numpy scipy matplotlib pygrib requests). Then
   `python tools/carry_over.py --site site --base https://justingehrts.github.io/max-tools` restores anything not rebuilt.
 - Tests: `python -m unittest discover tests`. Contact sheet: `python reference/contact_sheet.py`.

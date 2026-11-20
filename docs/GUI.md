@@ -51,7 +51,7 @@ per market, shared by every station in it. Remember the choice in localStorage a
   The last-saved time comes from the registry entry's `updatedUtc`.
 
 **Record dots tab**
-- URL block: the same 28 URLs for every station (`records/default/`). Show the pattern and a 7-day x 4-type table of links with
+- URL block: the same 28 URLs for every station (hosted by the `daily-record-dots` repo's own Pages site since Nov 20). Show the pattern and a 7-day x 4-type table of links with
   Copy each, and `Copy all 28 links` as a text list. Nothing to save on this tab.
 - Help panel: "Changing how the dots look in Max". Same content as the public URL page: written once in
   `content/record-dots-in-max.md` (+ `content/images/`), published by the build as `help/record-dots-in-max.html`. The page fetches

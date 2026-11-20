@@ -124,6 +124,12 @@ with no software installed locally and an optional way to change how the layers 
 - Still to do: fuzzy matching of Justin's market names to dataset names (e.g. "Miami-Ft. Lauderdale, FL" was not found as typed),
   and the contact-sheet image (outline + kept/dropped pieces + box per market).
 
+## Record dots moved to their own repo (Nov 20, Justin)
+The record-dot pipeline now lives in `justingehrts/daily-record-dots` (own Pages site, own status file, hourly trigger from cron-job.org).
+`max-tools` removed `records/`, `tools/records_status.py`, the record steps in `build.yml` and the record files in `tools/expected.py`, and
+its Record dots tab points at the new addresses (`docs/RECORDS.md`). The old `max-tools/records/default/` URLs had never been shared.
+Earlier lines in this file that describe `records/` in this repo are history.
+
 ## Two pages (Nov 13, Justin)
 Public page = everyday home (pick market, Copy buttons, record dots, river flood dots, apps); private page = customizing FFG colors
 only (renamed "Customize flash flood colors"), with a link back carrying `?market=`. One copy of each thing, no login for daily use.

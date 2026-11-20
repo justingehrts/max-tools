@@ -17,6 +17,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import apps as apps_mod, expected, registry
 
+RECORDS_BASE = 'https://justingehrts.github.io/daily-record-dots'    # the daily-record-dots repo's own Pages site
 RIVER_BASE = 'https://justingehrts.github.io/river-flood-dots'      # the river-flood-dots repo's own Pages site
 ROOT = Path(__file__).resolve().parent.parent      # where the page's own source lives (public/, configurator/src/lib.js)
 
@@ -86,7 +87,7 @@ def main():
                    f'<a class="open-app" href="{e(ap_["url"])}" target="_blank" rel="noopener">Open {e(ap_["name"])}</a>'
                    f'<div class="appdoc">{body}</div></div>')
 
-    cfg = {'base': base, 'riverBase': RIVER_BASE, 'configuratorUrl': configurator_url,
+    cfg = {'base': base, 'riverBase': RIVER_BASE, 'recordsBase': RECORDS_BASE, 'configuratorUrl': configurator_url,
            'markets': sorted(({'id': m['id'], 'name': m['name'], 'stations': m.get('stations', [])} for m in markets.values()), key=lambda m: m['name'])}
     safe = lambda s: s.replace('</', '<\\/')
     page = (ROOT / 'public' / 'template.html').read_text(encoding='utf-8')

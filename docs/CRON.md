@@ -8,7 +8,7 @@ instructions are in docs/HOSTGATOR.md section 1.)
 | Repo | Workflow file | Minute | Why that minute |
 |---|---|---|---|
 | `justingehrts/max-tools` | `build.yml` | :45 | after WPC posts the hourly FFG at about :38 |
-| `justingehrts/daily-record-dots` | set by that repo's README | decided there | |
+| `justingehrts/daily-record-dots` | `record-dots.yml` | hourly (see that repo's README) | |
 | `justingehrts/river-flood-dots` | `update.yml` | set in its own chat | |
 
 ## Make a token (once per repo, or one token covering several repos)

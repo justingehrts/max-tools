@@ -13,9 +13,9 @@ def have_playwright():
 class PublicPage(unittest.TestCase):
     def test_flow(self):
         site = Path(tempfile.mkdtemp()) / 'site'
-        for d in ('ffg', 'records'): (site / d).mkdir(parents=True)
+        for d in ('ffg',): (site / d).mkdir(parents=True)
         now = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-        for d in ('ffg', 'records'): (site / d / 'status.json').write_text(json.dumps({'generatedUtc': now}))
+        for d in ('ffg',): (site / d / 'status.json').write_text(json.dumps({'generatedUtc': now}))
 
         class H(http.server.SimpleHTTPRequestHandler):
             def __init__(s, *a, **k): super().__init__(*a, directory=str(site), **k)

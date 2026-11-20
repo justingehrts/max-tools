@@ -10,16 +10,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import registry
 
-DAYS = range(1, 8)
-TYPES = ('himax', 'lomax', 'himin', 'lomin')
 FFG_HOURS = (1, 3, 6)
-RECORD_FILES = [f'D{d}_{t.upper()}.kmz' for d in DAYS for t in TYPES]
 FFG_FILES = [f'Custom_FFG_{h}hr.kmz' for h in FFG_HOURS]
-
-
-def records_files():
-    """One shared set for everyone (stations restyle the dots in Max)."""
-    return [f'records/default/{f}' for f in RECORD_FILES] + ['records/status.json']
 
 
 def ffg_files(markets):
@@ -31,7 +23,7 @@ def ffg_files(markets):
 
 def expected(root=registry.ROOT):
     markets, _ = registry.load_markets(root)
-    return {'records': records_files(), 'ffg': ffg_files(markets)}
+    return {'ffg': ffg_files(markets)}
 
 
 if __name__ == '__main__':

@@ -27,7 +27,7 @@
   document.addEventListener('click', function (ev) {
     var b = ev.target.closest('[data-copy]'); if (b) copy(b.getAttribute('data-copy'), b.getAttribute('data-what'));
   });
-  $('copy-all').addEventListener('click', function () { copy(LIB.allRecordUrls(BASE).join('\n'), 'all 28 links'); });
+  $('copy-all').addEventListener('click', function () { copy(LIB.allRecordUrls(CFG.recordsBase).join('\n'), 'all 28 links'); });
 
   // ---------------------------------------------------------------- freshness of each layer (one line at the top of its tab)
   function fmtTime(iso) {
@@ -68,7 +68,7 @@
       if (older.length) lines.push('\u26a0\ufe0f ' + older.length + (older.length === 1 ? ' market is' : ' markets are') + ' using older files because the newest build failed for them: ' + older.join('; ') + '.');
       showFresh('fresh-ffg', st.generatedUtc, LIB.STALE_AFTER.ffg, lines, !!dt && LIB.hoursOld(dt) > LIB.FFG_DATA_STALE_HOURS, older.length > 0);
     });
-    fetchJson(BASE + '/records/status.json').then(function (st) { showFresh('fresh-records', st && st.generatedUtc, LIB.STALE_AFTER.records); });
+    fetchJson(CFG.recordsBase + '/status.json').then(function (st) { showFresh('fresh-records', st && st.generatedUtc, LIB.STALE_AFTER.records); });
     // river flood dots: its own repo and status file (updated_utc is "YYYY-MM-DD HH:MM UTC")
     fetchJson(CFG.riverBase + '/status.json').then(function (st) {
       var m = st && /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}) UTC$/.exec(st.updated_utc || '');
@@ -118,11 +118,11 @@
   });
 
   // ---------------------------------------------------------------- record dots (the same for everyone)
-  $('rec-pattern').textContent = BASE + '/records/default/D<day>_<TYPE>.kmz';
+  $('rec-pattern').textContent = CFG.recordsBase + '/D<day>_<TYPE>.kmz';
   $('rec-urls').innerHTML = '<tr><th></th>' + LIB.TYPES.map(function (t) { return '<th scope="col">' + t + '</th>'; }).join('') + '</tr>' +
     LIB.DAYS.map(function (d) {
       return '<tr><th scope="row">Day ' + d + '</th>' + LIB.TYPES.map(function (t) {
-        var u = LIB.recordUrl(BASE, d, t);
+        var u = LIB.recordUrl(CFG.recordsBase, d, t);
         return '<td><button type="button" class="small" data-copy="' + esc(u) + '" data-what="Day ' + d + ' ' + t + '" aria-label="Copy the Day ' + d + ' ' + t + ' address" title="' + esc(u) + '">Copy</button></td>';
       }).join('') + '</tr>';
     }).join('');

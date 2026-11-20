@@ -37,9 +37,8 @@ class Browser(unittest.TestCase):
         site = Path(os.environ['MAXTOOLS_E2E_SITE']) if os.environ.get('MAXTOOLS_E2E_SITE') else tmp / 'site'
         if not os.environ.get('MAXTOOLS_E2E_SITE'): synthetic_site(site)
         now = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-        (site / 'ffg').mkdir(parents=True, exist_ok=True); (site / 'records').mkdir(parents=True, exist_ok=True)
+        (site / 'ffg').mkdir(parents=True, exist_ok=True)
         if not (site / 'ffg' / 'status.json').exists(): (site / 'ffg' / 'status.json').write_text(json.dumps({'generatedUtc': now}))
-        (site / 'records' / 'status.json').write_text(json.dumps({'generatedUtc': now}))
 
         gh = http.server.ThreadingHTTPServer(('127.0.0.1', 0), FakeGitHub)
         threading.Thread(target=gh.serve_forever, daemon=True).start()

@@ -54,8 +54,8 @@ t('server errors map to rows', function () {
 t('urls', function () {
   assert.strictEqual(L.ffgUrls('https://x/m', 'columbus-oh')[2].url, 'https://x/m/markets/columbus-oh/Custom_FFG_6hr.kmz');
   var all = L.allRecordUrls('https://x/m');
-  assert.strictEqual(all.length, 28); assert.strictEqual(all[0], 'https://x/m/records/default/D1_HIMAX.kmz');
-  assert.strictEqual(all[27], 'https://x/m/records/default/D7_LOMIN.kmz');
+  assert.strictEqual(all.length, 28); assert.strictEqual(all[0], 'https://x/m/D1_HIMAX.kmz');
+  assert.strictEqual(all[27], 'https://x/m/D7_LOMIN.kmz');
 });
 t('staleness', function () {
   var now = Date.parse('2026-11-04T12:00:00Z');

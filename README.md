@@ -9,13 +9,12 @@ Public data tools for WSI Max: NOAA/NWS data turned into KMZ layers that Max loa
 | `static/` | Published as-is: `lines/<market>.json` county/state lines for the preview (`tools/make_county_lines.py`). |
 | `configurator/` | The private "Customize flash flood colors" page (also built as a login-free click-through demo at `/demo/`): `src/` (page), `build.py` -> `dist/index.html` (upload to HostGator), `api/save.php` (save endpoint). |
 | `content/` | Text you edit: help for Max (`record-dots-in-max.md`, optional `river-flood-dots-in-max.md`), the web apps (`apps.json` + `app-<id>.md`) and `images/`. Shown on the public page and in the configurator. |
-| `records/` | Record dots: `FetchDailyRecords.ps1` (runs under `pwsh`), `stations.csv` (NOAA station list), `icons/`. |
-| `tools/records_status.py` | Checks the 28 shared record-dot KMZs and writes `records/status.json`. |
 | `parked/record-dot-icons/` | Per-market record-dot icon styling, set aside (stations restyle in Max). README says how to restore it. |
 | `public/`, `tools/build_index.py` | The public page (`index.html`): pick a market, Copy buttons, record dots, river flood dots, a tab per web app. Source in `public/`, built by `build_index.py`. |
 | `tools/build_ffg.py`, `tools/carry_over.py`, `tools/expected.py` | FFG builder; restores last-good files before deploy; list of every file the site must contain. |
 | `.github/workflows/build.yml` | Hourly build of everything and one Pages deploy. |
-| `docs/RECORDS.md` | Record-dots setup notes (one shared set at `records/default/`). |
+| `docs/RECORDS.md` | Where the record dots live now (their own repo, `daily-record-dots`) and how this page uses them. |
+| `docs/CRON.md` | The hourly cron-job.org triggers for the repos that need them. |
 | `legacy/configurator-prototype/` | Old local-installer configurator, kept for its validation code and the parked icon editor. Rework is step 6. |
 | `reference/` | Prototype scripts for the FFG and market-box work (steps 3-4). |
 
